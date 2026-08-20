@@ -1,31 +1,45 @@
+<div align="center">
+
 # ToAPIs Documentation
 
-This repository contains the official documentation for [ToAPIs](https://toapis.com) — a unified API gateway providing access to cutting-edge AI image and video generation models.
+**Official documentation for the ToAPIs unified AI API gateway** — OpenAI-compatible chat, plus unified async image and video generation.
 
-## ✨ Supported APIs
+[![Website](https://img.shields.io/badge/Website-toapis.com-2563EB?style=flat-square)](https://toapis.com)
+[![Documentation](https://img.shields.io/badge/Docs-docs.toapis.com-2563EB?style=flat-square)](https://docs.toapis.com)
+[![Dashboard](https://img.shields.io/badge/API_Keys-toapis.com/console-2563EB?style=flat-square)](https://toapis.com/console/token)
 
-### 🖼️ Image Generation
+</div>
 
-- **GPT-4o** - OpenAI's multimodal image generation
-- **GPT-Image-2** - OpenAI-compatible image generation with reference images
-- **Gemini 2.5 Flash** - Google's fast image generation
-- **Seedream 4.0 / 4.5** - ByteDance's image generation models
+This repository contains the public documentation source for [ToAPIs](https://toapis.com), a unified AI API gateway. It is a read-only source mirror — the canonical, live documentation is published at [docs.toapis.com](https://docs.toapis.com).
 
-### 🎬 Video Generation
+## Supported APIs
 
-- **Veo3** - Google's video generation model
-- **Sora2** - OpenAI's video generation model
-- **MiniMax Hailuo** - MiniMax video generation
-- **Doubao Seedance** - ByteDance's video generation
-- **Wan 2.6** - Alibaba's video generation model
+### Chat
 
-## 🌍 Languages
+OpenAI-compatible completions plus Anthropic Messages and OpenAI Responses formats, covering GPT-5, Claude, DeepSeek, Gemini, Qwen, Kimi, GLM, MiniMax and more.
 
-- 🇺🇸 [English](/docs/en/)
-- 🇨🇳 [简体中文](/docs/cn/)
-- 🇷🇺 [Русский](/docs/ru/)
+### Image Generation
 
-## 🛠️ Development
+GPT-Image-2, GPT-4o, Gemini, Seedream, Flux, Grok Image and more.
+
+### Video Generation
+
+Veo 3, Sora 2, Kling, Wan, MiniMax Hailuo, Doubao Seedance, Seedance, Gemini Omni Flash and more.
+
+### Platform
+
+Task status polling, uploads, rate limits, webhooks, and account / API-key management.
+
+## Languages
+
+- [English](https://docs.toapis.com/docs/en)
+- [简体中文](https://docs.toapis.com/docs/cn)
+- [繁體中文](https://docs.toapis.com/docs/zh-Hant)
+- [日本語](https://docs.toapis.com/docs/ja)
+- [한국어](https://docs.toapis.com/docs/ko)
+- [Русский](https://docs.toapis.com/docs/ru)
+
+## Development
 
 ```bash
 # Install Mintlify CLI
@@ -35,16 +49,12 @@ npm i -g mintlify
 mintlify dev
 ```
 
-## 🔗 Links
+## Links
 
-- 📖 [Live Documentation](https://docs.toapis.com)
-- 🌐 [ToAPIs Website](https://toapis.com)
-- 🎯 [Dashboard](https://toapis.com/dashboard)
-- 💬 [Discord Community](https://discord.gg/hvnszCrJ73)
-- 🐦 [X (Twitter)](https://x.com/toapisai)
-- 💼 [LinkedIn](https://linkedin.com/company/ToAPIs)
-- 📱 [WeChat](https://toapis.com/wechat)
+- [Website](https://toapis.com)
+- [Documentation](https://docs.toapis.com)
+- [Dashboard / API Keys](https://toapis.com/console/token)
 
-## 📄 License
+## License
 
 See [LICENSE](./LICENSE) for details.
