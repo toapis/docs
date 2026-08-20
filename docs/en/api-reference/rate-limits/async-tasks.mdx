@@ -1,0 +1,48 @@
+---
+title: "Async task rate limits"
+description: "Per-user submit and query limits for ToAPIs asynchronous image and video tasks"
+---
+
+ToAPIs applies separate token buckets to asynchronous task submission and task-status queries. These limits do not consume the normal synchronous model-request allowance.
+
+| Group | Submit RPM | Submit RPS | 10s burst | Query RPM | Query RPS | 10s burst |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `default` | 300 | 5 | 50 | 3,000 | 50 | 500 |
+| `vip` | 1,000 | 16.7 | 167 | 10,000 | 166.7 | 1,667 |
+| `svip` | 2,000 | 33.3 | 334 | 30,000 | 500 | 5,000 |
+
+Limits are counted by user ID, not Token. All Tokens owned by one user share the same allowance. Submit and query buckets are independent. Business failures consume allowance; requests rejected with `429` do not. One batch-status request counts once and may contain at most 100 task IDs.
+
+Every limited response can include:
+
+```text
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+X-RateLimit-Category: async_submit | async_query
+Retry-After
+```
+
+```json 429
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "Async task request rate exceeded"
+  }
+}
+```
+
+If the submit limiter is temporarily unavailable, ToAPIs returns `503` with code `rate_limit_unavailable`. Status queries are allowed during this degradation so existing jobs remain observable.
+
+```json 503
+{
+  "error": {
+    "code": "rate_limit_unavailable",
+    "message": "The async task submit limiter is temporarily unavailable"
+  }
+}
+```
+
+Use Webhooks as the primary completion signal and polling as a fallback. Poll no faster than every 5–10 seconds, add random jitter, honor `Retry-After`, and use exponential backoff after `429` or `503`.
+
+See [Task Webhooks](/docs/en/api-reference/webhooks/task-webhooks).

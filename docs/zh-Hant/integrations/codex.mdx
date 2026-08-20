@@ -1,0 +1,82 @@
+---
+title: "Codex 設定指南"
+sidebarTitle: "Codex"
+description: "透過 CC Switch 在 Codex CLI 中使用 ToAPIs"
+---
+
+## 準備工作
+
+開始前請準備：
+
+1. **ToAPIs API 密鑰**：前往 [ToAPIs 控制台](https://toapis.com/console/token) 建立密鑰。
+2. **Codex CLI**：依照 [Codex 官方文件](https://developers.openai.com/codex/cli) 安裝，或執行：
+
+   ```bash
+   npm install -g @openai/codex
+   ```
+
+3. **CC Switch**：只從 [CC Switch 官網](https://ccswitch.io) 或 [官方 GitHub Releases](https://github.com/farion1231/cc-switch/releases) 下載。
+
+## 在 CC Switch 中新增 ToAPIs
+
+1. 開啟 CC Switch，在應用切換器中選擇 **Codex**。
+2. 點擊右上角 **+**，選擇 **應用專屬供應商**。
+3. 選擇 **自訂** 預設並填寫：
+
+| 設定項 | 填寫內容 |
+| --- | --- |
+| 名稱 | `ToAPIs` |
+| API Key | 您的 ToAPIs API 密鑰 |
+| API 端點 / Base URL | `https://toapis.com/v1` |
+| 模型 | `gpt-5.3-codex` |
+| API 協議 | `Responses` |
+| 需要本地路由映射 | **關閉** |
+
+4. 點擊 **新增**，再於 ToAPIs 供應商卡片點擊 **啟用**。
+5. 關閉正在執行的 Codex 和終端機，重新開啟終端機使設定生效。
+
+<Note>
+ToAPIs 原生支援 `POST /v1/responses`，因此不要開啟「需要本地路由映射」。該選項用於只支援 Chat Completions 的供應商。
+</Note>
+
+## 啟動並驗證
+
+```bash
+codex
+```
+
+輸入一個簡單任務，例如：
+
+```text
+檢查目前專案並說明主要目錄結構。
+```
+
+Codex 能正常回覆即表示設定成功。
+
+## 切換模型
+
+如帳戶開放其他 Responses 模型，可編輯 ToAPIs 供應商並更換模型。CC Switch 可從 `/v1/models` 取得清單，也可查看 [ToAPIs 模型一覽](../api-reference/chat/models)。
+
+一般程式任務建議使用 `gpt-5.3-codex`，重視回應速度可選 `gpt-5.3-codex-spark`，只有需要官方直連渠道時才使用 `gpt-5.3-codex-official`。實際可用模型請以 CC Switch 從 `/v1/models` 取得的清單為準。
+
+## 常見問題
+
+### 仍在使用舊供應商
+
+Codex 不會熱重載供應商設定。請完全退出 Codex，重新開啟終端機後再執行 `codex`。
+
+### `401 Unauthorized`
+
+- 檢查 CC Switch 中的 API Key 是否完整
+- 在 [ToAPIs 控制台](https://toapis.com/console/token) 確認密鑰有效
+- 確認帳戶餘額充足
+
+### `404` 或 Responses 路徑錯誤
+
+確認 Base URL 為 `https://toapis.com/v1`、協議為 `Responses`，並關閉本地路由映射。
+
+## 設定檔與密鑰安全
+
+CC Switch 會管理 `~/.codex/auth.json` 和 `~/.codex/config.toml`。請勿將這些檔案、API Key 或包含密鑰的截圖提交到 Git。
+
+更多操作請參閱 [CC Switch 官方使用手冊](https://github.com/farion1231/cc-switch/tree/main/docs/user-manual/zh)。

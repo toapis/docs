@@ -1,0 +1,184 @@
+---
+title: "Генерация видео Kling v3"
+sidebarTitle: "Kling v3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Официальный Kling v3 с явным разделением обычных референсов и управления первым/последним кадром"
+---
+
+- Асинхронный API задач, после отправки возвращает ID задачи
+- Поддерживает текст-в-видео, изображение-в-видео, явное управление первым/последним кадром и видео со звуком
+- `mode=std` соответствует 720P, `mode=pro` соответствует 1080P
+- `audio=true` включает генерацию звука и тарифицируется как Sound
+- `duration` поддерживает `3s`, `4s`, `5s`, `6s`, `7s`, `8s`, `9s`, `10s`, `11s`, `12s`, `13s`, `14s`, `15s`
+
+<Warning>
+Используйте публично доступные URL изображений. Не передавайте base64-данные напрямую; сначала загрузите изображение через [API загрузки изображений](../../uploads/images).
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" required>
+  Название модели генерации видео, фиксированное значение `kling-v3`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый промпт. Опишите объект, действие, сцену, движение камеры и стиль.
+</ParamField>
+
+<ParamField body="mode" type="string" default="std">
+  Режим генерации.
+
+  - `std` - стандартный режим, 720P
+  - `pro` - профессиональный режим, 1080P
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Длительность видео в секундах.
+
+  Варианты: `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон видео. Частые значения: `16:9`, `9:16`, `1:1`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  Обычные референсные изображения.
+
+  - Это только референсы
+  - Вторая картинка больше не интерпретируется автоматически как последний кадр
+  - Для управления кадрами используйте `image_with_roles`
+</ParamField>
+
+<ParamField body="image_with_roles" type="object[]">
+  Явный массив изображений с ролями для управления кадрами или смешанного ввода.
+
+  <Expandable title="Показать поля image_with_roles">
+    <ParamField body="url" type="string" required>
+      Публично доступный URL изображения.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Роль изображения.
+
+      Поддерживаемые значения:
+      - `first_frame`
+      - `last_frame`
+      - `reference`
+      - `reference_image`
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    Последний кадр отправляется только если `last_frame` явно указан в `image_with_roles`. Система больше не выводит его из `reference_images[1]`.
+  </Warning>
+</ParamField>
+
+<ParamField body="audio" type="boolean" default="false">
+  Генерировать ли видео со звуком.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Дополнительные параметры.
+
+  <Expandable title="Показать поля metadata">
+    <ParamField body="negative_prompt" type="string">
+      Негативный промпт для описания нежелательного контента.
+    </ParamField>
+
+    <ParamField body="watermark" type="boolean">
+      Добавить ли водяной знак.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Правила ввода
+
+| Форма ввода | Поведение |
+|-------------|-----------|
+| Только `reference_images` | Обычные референсы |
+| Только `image_with_roles` с ролями `first_frame` / `last_frame` | Управление кадрами |
+| Одновременное использование обоих полей или смешанные frame/reference роли | Смешанный режим |
+
+## Примеры
+
+### Текст-в-видео
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Золотой кот бежит по залитому солнцем лугу, замедленная съёмка, кинематографическое качество",
+  "mode": "std",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### Обычный референс
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Используй внешность персонажа из референса и добавь лёгкую улыбку",
+  "reference_images": ["https://example.com/reference.jpg"],
+  "mode": "std",
+  "duration": 5
+}
+```
+
+### Управление первым и последним кадром
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Город плавно переходит от дня к ночи",
+  "image_with_roles": [
+    { "url": "https://example.com/day.jpg", "role": "first_frame" },
+    { "url": "https://example.com/night.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### Смешанный ввод: референс и кадры
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Сохрани идентичность персонажа и выполни переход сцены",
+  "reference_images": ["https://example.com/character-reference.jpg"],
+  "image_with_roles": [
+    { "url": "https://example.com/start-scene.jpg", "role": "first_frame" },
+    { "url": "https://example.com/end-scene.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### Видео со звуком
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Певец выступает на сцене, толпа аплодирует, мигают огни",
+  "mode": "std",
+  "duration": 5,
+  "audio": true
+}
+```
+
+<Note>
+  Генерация видео асинхронная. Используйте [эндпоинт статуса видео-задачи](../../tasks/video-status) для запроса прогресса и результата.
+</Note>

@@ -1,0 +1,288 @@
+---
+title: "Kling Video O1 Video Generation"
+sidebarTitle: "Kling Video O1"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos with Kling Video O1 using official Omni references: image_list, video_list, and element_list"
+---
+
+- Async task API, returns a task ID after submission
+- Uses the official Omni reference structures: `image_list`, `video_list`, and `element_list`
+- `mode=std` maps to 720P, `mode=pro` maps to 1080P
+- `audio=true` generates an audio video and is billed as Sound
+- Requests with `video_list` are billed as Video
+- `audio` and `video_list` are mutually exclusive
+
+<Warning>
+Use publicly accessible image or video URLs. Do not pass base64 media data. Upload local images with the [Upload Image API](../../uploads/images) first.
+</Warning>
+
+## Authorization
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Request Parameters
+
+<ParamField body="model" type="string" required>
+  Video generation model name, fixed as `kling-video-o1`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Text prompt. Use official Omni placeholders to reference input assets:
+  - `<<<image_N>>>` references `metadata.image_list`
+  - `<<<video_N>>>` references `video_list`
+  - `<<<element_N>>>` references `metadata.element_list`
+
+  Example: `"Make the person in <<<image_1>>> wave at the camera"`
+
+  <Note>
+    List order must match the placeholder order in the prompt. The system does not auto-prepend a first frame or insert placeholders for you.
+  </Note>
+</ParamField>
+
+<ParamField body="mode" type="string" default="std">
+  Generation mode. This also determines the billing resolution.
+
+  - `std` - standard mode, 720P
+  - `pro` - professional mode, 1080P
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Video duration in seconds. Options: `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Video aspect ratio. Common values: `16:9`, `9:16`, `1:1`
+</ParamField>
+
+<ParamField body="audio" type="boolean" default="false">
+  Whether to generate an audio video.
+
+  <Warning>
+    `audio` and `video_list` are mutually exclusive. Do not pass `audio=true` when `video_list` is provided.
+  </Warning>
+</ParamField>
+
+<ParamField body="video_list" type="object[]">
+  Official Omni reference video list. Reference videos in the prompt with `<<<video_1>>>`, `<<<video_2>>>`, and so on.
+
+  <Expandable title="Show video_list object fields">
+    <ParamField body="video_url" type="string" required>
+      Reference video URL. It must be publicly accessible.
+    </ParamField>
+
+    <ParamField body="refer_type" type="string" default="base">
+      Reference type: `base` for source video editing, or `feature` for feature/motion reference.
+    </ParamField>
+
+    <ParamField body="keep_original_sound" type="string" default="no">
+      Whether to keep the original video sound: `yes` or `no`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters.
+
+  <Expandable title="Show metadata fields">
+    <ParamField body="image_list" type="object[]">
+      Official Omni image list. Reference images in the prompt with `<<<image_1>>>`, `<<<image_2>>>`, and so on.
+
+      <Expandable title="Show image_list object fields">
+        <ParamField body="image_url" type="string" required>
+          Image URL. It must be publicly accessible.
+        </ParamField>
+
+        <ParamField body="type" type="string">
+          Image type. For first/end frame semantics, use `first_frame` or `end_frame`. If `end_frame` is provided, `first_frame` is required too.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="element_list" type="object[]">
+      Official Omni subject/role reference list. Reference elements in the prompt with `<<<element_1>>>`, `<<<element_2>>>`, and so on.
+
+      <Expandable title="Show element_list object fields">
+        <ParamField body="url" type="string" required>
+          Subject image, character asset, or another official supported asset URL.
+        </ParamField>
+
+        <ParamField body="type" type="string">
+          Element type, such as `image` or `video`.
+        </ParamField>
+
+        <ParamField body="role" type="string">
+          Role semantics supported by the official model.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="watermark" type="boolean">
+      Whether to add watermark.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Omni Reference Syntax
+
+| Syntax | Description |
+|--------|-------------|
+| `<<<image_1>>>` | References the first item in `metadata.image_list` |
+| `<<<video_1>>>` | References the first item in `video_list` |
+| `<<<element_1>>>` | References the first item in `metadata.element_list` |
+
+<Warning>
+The order of `image_list`, `video_list`, and `element_list` must match the order of the corresponding placeholders in `prompt`.
+</Warning>
+
+## Examples
+
+### Text-to-Video
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Golden hour city skyline, cinematic lens quality",
+  "mode": "std",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### Image Reference
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Make the person in <<<image_1>>> wave at the camera",
+  "mode": "pro",
+  "duration": 5,
+  "metadata": {
+    "image_list": [
+      {"image_url": "https://example.com/portrait.jpg"}
+    ]
+  }
+}
+```
+
+### First and End Frame
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Transition from <<<image_1>>> to <<<image_2>>>",
+  "mode": "pro",
+  "duration": 5,
+  "metadata": {
+    "image_list": [
+      {"image_url": "https://example.com/start.jpg", "type": "first_frame"},
+      {"image_url": "https://example.com/end.jpg", "type": "end_frame"}
+    ]
+  }
+}
+```
+
+### Reference Video Input
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Transform <<<video_1>>> into a moonlit cyberpunk street",
+  "mode": "std",
+  "video_list": [
+    {
+      "video_url": "https://example.com/source-video.mp4",
+      "refer_type": "base",
+      "keep_original_sound": "no"
+    }
+  ]
+}
+```
+
+### Subject plus Motion Reference
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Make <<<element_1>>> imitate the motion from <<<video_1>>>",
+  "mode": "pro",
+  "video_list": [
+    {
+      "video_url": "https://example.com/motion-reference.mp4",
+      "refer_type": "feature",
+      "keep_original_sound": "no"
+    }
+  ],
+  "metadata": {
+    "element_list": [
+      {"url": "https://example.com/character.jpg", "type": "image", "role": "subject"}
+    ]
+  }
+}
+```
+
+<Note>
+  Video generation is asynchronous. Use the [Get Video Task Status](../../tasks/video-status) endpoint to query progress and results.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "kling-video-o1",
+    "prompt": "Make the person in <<<image_1>>> wave at the camera",
+    "mode": "std",
+    "duration": 5,
+    "metadata": {
+      "image_list": [{"image_url": "https://example.com/portrait.jpg"}]
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={"Authorization": "Bearer <token>", "Content-Type": "application/json"},
+    json={
+        "model": "kling-video-o1",
+        "prompt": "Make the person in <<<image_1>>> wave at the camera",
+        "mode": "std",
+        "duration": 5,
+        "metadata": {"image_list": [{"image_url": "https://example.com/portrait.jpg"}]},
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer <token>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "kling-video-o1",
+    prompt: "Make the person in <<<image_1>>> wave at the camera",
+    mode: "std",
+    duration: 5,
+    metadata: {
+      image_list: [{ image_url: "https://example.com/portrait.jpg" }]
+    }
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>

@@ -1,0 +1,253 @@
+---
+title: "GPT-Image-2 Official Channel 이미지 생성"
+sidebarTitle: "gpt-image-2-official"
+api: "POST https://toapis.com/v1/images/generations"
+description: "Generate images with the official OpenAI gpt-image-2-official model — text-to-image, image-to-image, and inpainting (mask) in one API, with 1K / 2K / 4K resolution tiers"
+---
+
+- Official OpenAI `gpt-image-2-official` model
+- Async processing — returns a task ID for subsequent polling
+- Supports text-to-image, multi-reference image-to-image, and mask-based inpainting
+- 13 aspect ratios with 1K / 2K / 4K resolution tiers
+- Up to 4 images per request, up to 16 reference images
+
+<Warning>
+**Note**: `gpt-image-2-official` does not support transparent backgrounds. Passing `background: "transparent"` will be silently downgraded to `auto`.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication
+
+  Get your API Key from the [API Key Management Page](https://toapis.com/console/token)
+
+  Add to request header:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gpt-image-2-official" required>
+  Image generation model name
+
+  Use `gpt-image-2-official`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Text prompt describing the image to generate
+
+  Supports English and Chinese; detailed descriptions of scene, style, and composition are recommended
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  Aspect ratio
+
+  Supported values, or pass `auto` to let the server choose:
+
+  `1:1` · `3:2` · `2:3` · `4:3` · `3:4` · `5:4` · `4:5` · `16:9` · `9:16` · `2:1` · `1:2` · `21:9` · `9:21`
+
+  <Warning>
+    4K tier only supports 6 ratios: `16:9` / `9:16` / `2:1` / `1:2` / `21:9` / `9:21`. Use `1K` or `2K` for all other ratios.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Resolution tier
+
+  - `1k` — 1024-base, fast and cost-effective (default)
+  - `2k` — 2048-base, suitable for posters and high-definition needs
+  - `4k` — 3840-base, only supports the 6 ratios above; `high` quality can take >120s
+</ParamField>
+
+### Size Reference Table
+
+| size | 1K | 2K | 4K |
+| --- | --- | --- | --- |
+| `1:1` | `1024x1024` | `2048x2048` | Not supported |
+| `3:2` | `1536x1024` | `2048x1360` | Not supported |
+| `2:3` | `1024x1536` | `1360x2048` | Not supported |
+| `4:3` | `1024x768` | `2048x1536` | Not supported |
+| `3:4` | `768x1024` | `1536x2048` | Not supported |
+| `5:4` | `1280x1024` | `2560x2048` | Not supported |
+| `4:5` | `1024x1280` | `2048x2560` | Not supported |
+| `16:9` | `1536x864` | `2048x1152` | `3840x2160` |
+| `9:16` | `864x1536` | `1152x2048` | `2160x3840` |
+| `2:1` | `2048x1024` | `2688x1344` | `3840x1920` |
+| `1:2` | `1024x2048` | `1344x2688` | `1920x3840` |
+| `21:9` | `2016x864` | `2688x1152` | `3840x1648` |
+| `9:21` | `864x2016` | `1152x2688` | `1648x3840` |
+
+<ParamField body="quality" type="string" default="high">
+  Image quality
+
+  - `low` — fast and economical, suitable for drafts/previews
+  - `medium` — balanced speed and quality
+  - `high` — maximum detail, default value (4K + high can take 120s+)
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  Output format
+
+  - `png` — default
+  - `jpeg` — smaller file size (supports compression)
+
+  <Note>Azure OpenAI does not support `webp` format.</Note>
+</ParamField>
+
+<ParamField body="output_compression" type="integer" default={100}>
+  JPEG compression level, range `0–100` (`0` = no compression, `100` = maximum compression, default `100`)
+
+  Only applies when `output_format` is `"jpeg"`
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  Number of images to generate
+
+  Range: `1 ~ 10`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URL array for image-to-image generation
+
+  - Maximum **16 images**, must be publicly accessible stable URLs
+  - Use the [Upload 이미지 API](../../uploads/images) to upload local files and get URLs
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  Mask image URL for inpainting
+
+  Must be used together with `image_urls`. The mask must match the dimensions of the first reference image and include an Alpha channel (transparent areas indicate regions to be repainted)
+</ParamField>
+
+## 응답
+
+<ResponseField name="id" type="string">
+  Unique task identifier for status queries
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  모델 name used
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status
+  - `queued` — waiting to be processed
+  - `in_progress` — processing
+  - `completed` — successfully completed
+  - `failed` — failed
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Task progress percentage (0-100)
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp (Unix timestamp)
+</ResponseField>
+
+<RequestExample>
+```bash Text-to-Image
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "Ancient castle under the starry sky, cinematic lighting, hyper-realistic style",
+    "size": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "n": 1
+  }'
+```
+
+```bash 4K Wallpaper
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "Snowy mountain sunrise panorama, extreme detail",
+    "size": "16:9",
+    "resolution": "4k",
+    "quality": "high",
+    "output_format": "jpeg",
+    "output_compression": 90
+  }'
+```
+
+```bash Image-to-Image
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "Merge these two reference images into an illustrated poster, preserving the subject outlines",
+    "size": "1:1",
+    "quality": "high",
+    "image_urls": [
+      "https://example.com/input-a.png",
+      "https://example.com/input-b.png"
+    ]
+  }'
+```
+
+```bash Inpainting (Mask)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "Replace the background with a desert sunset",
+    "size": "1:1",
+    "quality": "medium",
+    "image_urls": ["https://example.com/photo.png"],
+    "mask_url": "https://example.com/mask.png"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'gpt-image-2-official',
+    prompt: 'Ancient castle under the starry sky, cinematic lighting, hyper-realistic style',
+    size: '16:9',
+    resolution: '2k',
+    quality: 'high',
+    n: 1
+  })
+});
+
+const task = await response.json();
+console.log(task.id, task.status);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_img_01KPTXXXXXXXXXXXXXXX",
+  "object": "generation.task",
+  "model": "gpt-image-2-official",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

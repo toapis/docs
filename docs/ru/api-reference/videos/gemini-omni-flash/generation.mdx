@@ -1,0 +1,127 @@
+---
+title: "Генерация видео Gemini Omni Flash"
+sidebarTitle: "Gemini Omni Flash"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео через неофициальный канал Gemini Omni Flash с текстом или до 3 референсными изображениями"
+---
+
+- Укажите `gemini-omni-flash` (или настроенный псевдоним `gemini_omni_flash`) в поле `model`
+- Поддерживает text-to-video и генерацию по референсным изображениям
+- Поддерживаемая длительность: 4 / 6 / 10 секунд
+- Поддерживаются `720p` и `1080p`; `1080p` доступно только в landscape
+- Асинхронный API задач: после отправки используйте ID задачи для проверки статуса
+
+<Note>
+Эта страница описывает неофициальный устаревший канал Gemini Omni Flash в стиле FlowReverse (`omni_flash`). Он использует настроенный для канала upstream endpoint и API key, а не Vertex AI Interactions API; у других устаревших реализаций ограничения могут отличаться. Для канала Vertex Service Account/OAuth используйте отдельную страницу `gemini-omni-flash-preview-official`.
+</Note>
+
+<Warning>
+Сначала загрузите локальные изображения через [Upload Image API](../../uploads/images), затем передайте полученные URL в `image_urls`. Не передавайте base64 изображения напрямую.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  Используйте Bearer Token:
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-omni-flash" required>
+  Название модели. Используйте `gemini-omni-flash`; некоторые каналы предоставляют псевдоним `gemini_omni_flash`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый prompt для генерации видео.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Длительность видео. Поддерживаемые значения: `4`, `6`, `10` секунд.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон:
+
+  - `16:9` landscape
+  - `9:16` portrait
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Разрешение видео: `720p` или `1080p`; `1080p` доступно только для landscape.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Необязательный массив публичных URL референсных изображений, до `3` элементов. Не передавайте его для text-to-video. Base64/data URI и входные видео этот канал не поддерживает.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  ID задачи для проверки статуса.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, обычно `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Название модели, использованной в запросе.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed`, `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи.
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+  URL сгенерированного видео после завершения задачи.
+</ResponseField>
+
+## Examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-omni-flash",
+    "prompt": "Синяя бутылка с помпой медленно вращается в белой студии, коммерческое product video",
+    "duration": 6,
+    "aspect_ratio": "9:16",
+    "resolution": "720p",
+    "image_urls": ["https://example.com/reference.jpg"]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01JZEXAMPLE",
+  "object": "generation.task",
+  "model": "gemini-omni-flash",
+  "status": "queued",
+  "created_at": 1779247407
+}
+```
+</ResponseExample>
+
+## Query Task
+
+Эндпоинт генерации возвращает ID задачи. Используйте общий эндпоинт статуса видео, чтобы получить статус и результат:
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

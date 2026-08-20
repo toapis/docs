@@ -1,0 +1,346 @@
+---
+title: "Sora2 VVIP 視頻生成"
+sidebarTitle: "Sora2 VVIP"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 sora-2-vvip 模型生成高質量視頻"
+---
+
+- `sora-2-vvip` 視頻生成模型
+- 支持文本到視頻、圖生視頻、角色引用
+- 異步任務管理，通過任務 ID 查詢結果
+
+<Warning>
+**重要變更**：爲了更好的性能和成本控制，我們不再支持在 `image_urls` 中直接傳入 base64 圖片數據。請先使用 [上傳圖片接口](../../uploads/images) 上傳圖片，獲取 URL 後再調用本接口。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="sora-2-vvip" required>
+  視頻生成模型名稱
+
+  支持的模型：`sora-2-vvip` - VVIP版，僅支持固定時長檔位
+
+  示例：`"sora-2-vvip"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻生成的文本描述
+
+  **💡 @角色引用功能：**
+
+  您可以在提示詞中使用 `@username` 格式引用之前創建的角色，將其包含在生成的視頻中。
+
+  - 角色的 `username` 可通過 [查詢角色 API](./get-personas) 獲取
+  - 支持同時引用多個角色
+
+  示例：`"一隻貓和一隻狗一起開車 @duksvfkf.cruisingki @zdqwahgj.baronbarki"`
+</ParamField>
+
+<ParamField body="duration" type="integer">
+  視頻時長（秒）
+
+  僅支持 `4`、`8` 或 `12` 秒
+
+  示例：`4`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  視頻寬高比
+
+  支持的格式：
+  - `16:9` (橫屏)
+  - `9:16` (豎屏)
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  用於圖生視頻的參考圖像 URL 數組
+
+  **⚠️ 僅支持 URL 格式（不再支持 base64）**
+
+  - 公開可訪問的圖像 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+</ParamField>
+
+
+<ParamField body="thumbnail" type="boolean">
+  是否生成視頻縮略圖
+
+  - `true` - 生成視頻縮略圖用於預覽和展示
+
+  如果不需要縮略圖，可以省略此參數
+</ParamField>
+
+<ParamField body="metadata.n" type="integer" default="1">
+  生成不同變體的數量
+
+  取值範圍：1-4
+
+  默認值：`1`
+</ParamField>
+
+<ParamField body="metadata.watermark" type="boolean" default="false">
+  是否爲生成的視頻添加水印
+
+  - `false` - 無水印
+  - `true` - 爲視頻添加 Sora 官方水印
+
+  默認值：`false`
+</ParamField>
+
+<ParamField body="metadata.private" type="boolean" default="false">
+  是否啓用隱私模式
+
+  - `true` - 視頻不會被髮布，且無法被 remix（重新編輯）
+  - `false` - 視頻可以被髮布和 remix
+
+  默認值：`false`
+</ParamField>
+
+<ParamField body="metadata.style" type="string">
+  視頻風格
+
+  支持的值：
+  - `thanksgiving` - 感恩節風格
+  - `comic` - 漫畫風格
+  - `news` - 新聞風格
+  - `selfie` - 自拍風格
+  - `nostalgic` - 懷舊/復古風格
+  - `anime` - 動漫風格
+
+  示例：`"anime"`
+</ParamField>
+
+<ParamField body="metadata.storyboard" type="boolean">
+  是否使用故事板功能，更精細地控制視頻生成細節
+
+  - `true` - 啓用故事板功能
+  - `false` - 不使用故事板
+
+  示例：`true`
+</ParamField>
+
+<ParamField body="metadata.character_url" type="string">
+  用於角色提取的參考視頻 URL
+
+  用於在生成的視頻中重用參考視頻中的角色
+
+  示例：`"https://filesystem.site/cdn/20251030/javYrU4etHVFDqg8by7mViTWHlMOZy.mp4"`
+
+  **⚠️ 注意：** 使用此參數時，生成的視頻時長會減少 1 秒
+</ParamField>
+
+<ParamField body="metadata.character_timestamps" type="string">
+  角色出現的時間戳
+
+  指定參考視頻中角色出現的時間範圍，僅支持 2 秒片段
+
+  格式：`"起始秒,結束秒"`
+
+  示例：`"1,3"` 表示參考視頻中第 1 秒到第 3 秒的角色
+
+  **⚠️ 注意：** 使用此參數時，生成的視頻時長會減少 1 秒
+</ParamField>
+
+<ParamField body="metadata.character_create" type="boolean" default="false">
+  創建視頻完成後，自動根據生成的視頻創建角色
+
+  - `true` - 自動創建角色
+  - `false` - 不創建角色
+
+  默認值：`false`
+</ParamField>
+
+<ParamField body="metadata.character_from_task" type="string">
+  根據已經生成的任務 ID 來創建角色
+
+  可以引用之前生成的視頻任務 ID，從該視頻中提取角色
+
+  示例：`"video_01K8SGYNNNVBQTXNR4MM964S7K"`
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據
+</ResponseField>
+
+<RequestExample>
+```bash cURL（文生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "一隻金毛犬在草地上奔跑，陽光明媚",
+    "duration": 4,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL（圖生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "讓這隻狗動起來，在草地上奔跑",
+    "image_urls": ["https://example.com/dog.jpg"],
+    "duration": 4,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL（帶風格參數）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "一隻可愛的卡通大象",
+    "aspect_ratio": "16:9",
+    "duration": 4,
+    "metadata": {
+      "style": "anime",
+      "watermark": false
+    }
+  }'
+```
+
+```bash cURL（sora-2-vvip 固定時長）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "一隻小青蛙在舞臺上跳舞，燈光明亮",
+    "duration": 4,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL（使用角色引用）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "一隻貓和一隻狗一起開車 @duksvfkf.cruisingki @zdqwahgj.baronbarki",
+    "duration": 4,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```python Python（帶 metadata 參數）
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "sora-2-vvip",
+        "prompt": "一隻金毛犬在草地上奔跑，陽光明媚",
+        "duration": 4,
+        "aspect_ratio": "16:9",
+        "metadata": {
+            "style": "anime",
+            "watermark": False,
+            "n": 2
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```javascript JavaScript（帶 metadata 參數）
+const response = await fetch('https://toapis.com/v1/videos/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'sora-2-vvip',
+    prompt: '一隻金毛犬在草地上奔跑，陽光明媚',
+    duration: 4,
+    aspect_ratio: '16:9',
+    metadata: {
+      style: 'anime',
+      watermark: false,
+      n: 2
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01K8SGYNNNVBQTXNR4MM964S7K",
+  "object": "generation.task",
+  "model": "sora-2-vvip",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {
+    "size": "720x720"
+  }
+}
+```
+</ResponseExample>

@@ -1,0 +1,189 @@
+---
+title: "GPT-5.4 Чат"
+sidebarTitle: "gpt-5.4"
+api: "POST https://toapis.com/v1/chat/completions"
+description: "GPT-5 четвертого поколения с улучшенным общим рассуждением и мультимодальными возможностями"
+---
+
+- OpenAI-совместимый Chat Completions API
+- Выбор модели `gpt-5.4` через параметр `model`
+- Поддержка потоковой передачи (SSE)
+- Поддержка многоходового диалога, системных промптов и vision input
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все API требуют аутентификации Bearer Token
+
+  Получите API Key на [странице управления API ключами](https://toapis.com/console/token)
+
+  Добавьте в заголовок:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="gpt-5.4" required>
+  Название модели
+
+  Пример: `"gpt-5.4"`
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  Список сообщений диалога в хронологическом порядке
+
+  <Expandable title="messages[n]">
+    <ParamField body="role" type="string" required>
+      Роль сообщения — `system`, `user` или `assistant`
+    </ParamField>
+    <ParamField body="content" type="string" required>
+      Содержимое сообщения — строка или массив content blocks (поддерживаются изображения)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  Включить потоковый вывод (Server-Sent Events)
+
+  - `true`: токены возвращаются постепенно
+  - `false`: ответ возвращается целиком
+</ParamField>
+
+<ParamField body="max_tokens" type="integer">
+  Максимальное количество токенов для генерации
+
+  Если не задано, используется лимит модели по умолчанию
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  Температура сэмплирования, управляет случайностью ответа
+
+  Диапазон: `0`–`2`
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  Порог nucleus sampling
+
+  Диапазон: `0`–`1`
+</ParamField>
+
+<ParamField body="stop" type="string | string[]">
+  Stop sequences — генерация останавливается при встрече этих строк
+
+  Максимум 4 stop sequences
+</ParamField>
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  Уникальный идентификатор запроса
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `chat.completion`
+</ResponseField>
+
+<ResponseField name="created" type="integer">
+  Время создания запроса (Unix timestamp)
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Фактически использованная модель
+</ResponseField>
+
+<ResponseField name="choices" type="object[]">
+  Список сгенерированных результатов
+
+  - `choices[].message.role`: роль сообщения, всегда `assistant`
+  - `choices[].message.content`: сгенерированный текст
+  - `choices[].finish_reason`: причина остановки — `stop` / `length` / `content_filter`
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  Статистика использования токенов
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Привет, представься"
+      }
+    ]
+  }'
+```
+
+```bash cURL (Streaming)
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.4",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Ты профессиональный помощник по программированию"
+      },
+      {
+        "role": "user",
+        "content": "Напиши quicksort на Python"
+      }
+    ],
+    "stream": true
+  }'
+```
+
+```python Python (openai SDK)
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-5.4",
+    messages=[
+        {"role": "user", "content": "Привет, представься"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1703884800,
+  "model": "gpt-5.4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Привет! Я GPT-5.5, последняя модель серии GPT-5. Чем могу помочь?"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 24,
+    "total_tokens": 34
+  }
+}
+```
+</ResponseExample>

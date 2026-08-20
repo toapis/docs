@@ -1,0 +1,253 @@
+---
+title: "GPT-Image-2 官方渠道 圖像生成"
+sidebarTitle: "gpt-image-2-official"
+api: "POST https://toapis.com/v1/images/generations"
+description: "使用 OpenAI 官方 gpt-image-2-official 模型生成圖像，支持文生圖 / 圖生圖 / 局部重繪（mask）三合一，1K / 2K / 4K 分辨率檔位"
+---
+
+- OpenAI 官方 `gpt-image-2-official` 模型
+- 異步處理模式，返回任務 ID 用於後續查詢
+- 支持文生圖、多參考圖圖生圖、遮罩局部重繪（inpainting）
+- 支持 13 種寬高比，可選 1K / 2K / 4K 三檔分辨率
+- 單次最多生成 4 張圖，參考圖最多 16 張
+
+<Warning>
+**注意**：`gpt-image-2-official` 不支持透明背景，傳入 `background: "transparent"` 會被靜默降級爲 `auto`。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gpt-image-2-official" required>
+  圖像生成模型名稱
+
+  固定填寫 `gpt-image-2-official`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  圖像生成的文本描述
+
+  支持中英文，建議詳細描述場景、風格和構圖
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  畫面寬高比
+
+  支持以下比例，也可傳 `auto` 由服務端根據 prompt 自動選擇：
+
+  `1:1` · `3:2` · `2:3` · `4:3` · `3:4` · `5:4` · `4:5` · `16:9` · `9:16` · `2:1` · `1:2` · `21:9` · `9:21`
+
+  <Warning>
+    4K 檔僅支持 6 個比例：`16:9` / `9:16` / `2:1` / `1:2` / `21:9` / `9:21`，其餘比例請使用 `1K` 或 `2K`。
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  分辨率檔位
+
+  - `1k` — 1024 基準，速度快，日常夠用（默認）
+  - `2k` — 2048 基準，適合海報 / 高清需求
+  - `4k` — 3840 基準，僅支持上述 6 個比例，`high` 質量下耗時可達 130s
+</ParamField>
+
+### 尺寸對照表
+
+| size | 1K | 2K | 4K |
+| --- | --- | --- | --- |
+| `1:1` | `1024x1024` | `2048x2048` | 不支持 |
+| `3:2` | `1536x1024` | `2048x1360` | 不支持 |
+| `2:3` | `1024x1536` | `1360x2048` | 不支持 |
+| `4:3` | `1024x768` | `2048x1536` | 不支持 |
+| `3:4` | `768x1024` | `1536x2048` | 不支持 |
+| `5:4` | `1280x1024` | `2560x2048` | 不支持 |
+| `4:5` | `1024x1280` | `2048x2560` | 不支持 |
+| `16:9` | `1536x864` | `2048x1152` | `3840x2160` |
+| `9:16` | `864x1536` | `1152x2048` | `2160x3840` |
+| `2:1` | `2048x1024` | `2688x1344` | `3840x1920` |
+| `1:2` | `1024x2048` | `1344x2688` | `1920x3840` |
+| `21:9` | `2016x864` | `2688x1152` | `3840x1648` |
+| `9:21` | `864x2016` | `1152x2688` | `1648x3840` |
+
+<ParamField body="quality" type="string" default="high">
+  圖片質量
+
+  - `low` — 快速省錢，適合草稿/預覽
+  - `medium` — 平衡速度與質量
+  - `high` — 最高精度，默認值（4K + high 耗時可達 120s+）
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  輸出格式
+
+  - `png` — 默認
+  - `jpeg` — 文件更小（支持壓縮）
+
+  <Note>Azure OpenAI 不支持 `webp` 格式。</Note>
+</ParamField>
+
+<ParamField body="output_compression" type="integer" default={100}>
+  JPEG 壓縮強度，範圍 `0–100`（`0` 不壓縮，`100` 最大壓縮，默認 `100`）
+
+  僅對 `output_format: "jpeg"` 有效
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  生成圖片張數
+
+  取值範圍：`1 ~ 10`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖 URL 數組，用於圖生圖
+
+  - 最多 **16 張**，須爲公網可訪問的穩定 URL
+  - 可先使用 [上傳圖片接口](../../uploads/images) 獲取 URL
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  遮罩圖 URL，用於局部重繪（inpainting）
+
+  需搭配 `image_urls` 使用，遮罩圖尺寸須與首張參考圖一致，且需包含 Alpha 通道（透明區域爲待重繪區域）
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` — 排隊等待處理
+  - `in_progress` — 處理中
+  - `completed` — 成功完成
+  - `failed` — 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<RequestExample>
+```bash 文生圖
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "星空下的古老城堡，電影感光影，超寫實風格",
+    "size": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "n": 1
+  }'
+```
+
+```bash 4K 壁紙
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "雪山日出全景，極致細節",
+    "size": "16:9",
+    "resolution": "4k",
+    "quality": "high",
+    "output_format": "jpeg",
+    "output_compression": 90
+  }'
+```
+
+```bash 圖生圖（多參考圖）
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "將兩張參考圖融合成一張插畫海報，保留主體輪廓",
+    "size": "1:1",
+    "quality": "high",
+    "image_urls": [
+      "https://example.com/input-a.png",
+      "https://example.com/input-b.png"
+    ]
+  }'
+```
+
+```bash 局部重繪（mask）
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2-official",
+    "prompt": "把背景換成沙漠日落",
+    "size": "1:1",
+    "quality": "medium",
+    "image_urls": ["https://example.com/photo.png"],
+    "mask_url": "https://example.com/mask.png"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'gpt-image-2-official',
+    prompt: '星空下的古老城堡，電影感光影，超寫實風格',
+    size: '16:9',
+    resolution: '2k',
+    quality: 'high',
+    n: 1
+  })
+});
+
+const task = await response.json();
+console.log(task.id, task.status);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_img_01KPTXXXXXXXXXXXXXXX",
+  "object": "generation.task",
+  "model": "gpt-image-2-official",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

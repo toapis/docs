@@ -1,0 +1,138 @@
+---
+title: "Grok Video 1.5 Generation"
+sidebarTitle: "Grok Video 1.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate video from exactly one required first-frame image using grok-video-1.5"
+---
+
+- Supports image-to-video only; text-to-video is not supported.
+- Requires exactly one public first-frame image URL.
+- Supports durations from `1` to `15` seconds; default is `8`.
+- Supports `480p` and `720p`.
+- Async task API: poll video task status with the returned task ID.
+
+<Warning>
+Do not pass base64 image data. Upload local files with the [Upload 画像API](../../uploads/images), then pass the returned public URL in `image`.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All API requests require Bearer Token authentication.
+
+  ```text
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="grok-video-1.5" required>
+  Use `grok-video-1.5`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Describe the motion, camera movement, and visual direction for the reference image.
+</ParamField>
+
+<ParamField body="image" type="string" required>
+  Pass exactly one required public first-frame image URL.
+
+  - Maximum: `1`
+  - Supported URL schemes: `http://`, `https://`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="8">
+  Video duration.
+
+  Supported range: `1`–`15` seconds
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Video resolution. Supported values: `480p`, `720p`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Video aspect ratio. Supported values: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`.
+</ParamField>
+
+## Pricing
+
+| Billing unit | Price |
+| --- | --- |
+| Generated second | `$0.01 / second` |
+
+## レスポンス
+
+<ResponseField name="id" type="string">
+  Task identifier for polling video status.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  モデル name used for the task.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+## Create a video task
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "grok-video-1.5",
+    "prompt": "Animate this product photo into a cinematic commercial video with a subtle camera push-in",
+    "image": "https://example.com/product.jpg",
+    "duration": 10,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```python Python
+import requests
+
+task = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "grok-video-1.5",
+        "prompt": "Animate this product photo into a cinematic commercial video",
+        "image": "https://example.com/product.jpg",
+        "duration": 15,
+        "aspect_ratio": "16:9",
+    },
+).json()
+
+print(task["id"])
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_abc123def456",
+  "object": "generation.task",
+  "model": "grok-video-1.5",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>
+
+## Query task status
+
+Use the returned `id` with [Video Task ステータス](../../tasks/video-status).

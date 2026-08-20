@@ -1,0 +1,255 @@
+---
+title: "GLM-5 對話"
+sidebarTitle: "glm-5"
+api: "POST https://toapis.com/v1/chat/completions"
+description: "智譜 AI 新一代旗艦模型，強大的推理能力與長上下文理解"
+---
+
+- 兼容 OpenAI Chat Completions API 格式
+- 通過 `model` 參數指定 `glm-5` 模型
+- 支持流式輸出（SSE）
+- 支持多輪對話、系統提示詞
+- 僅支持文本輸入，不支持視覺輸入（圖片）
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="glm-5" required>
+  模型名稱
+
+  示例：`"glm-5"`
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  對話消息列表，按時間順序排列
+
+  <Expandable title="messages[n]">
+    <ParamField body="role" type="string" required>
+      消息角色，可選值 `system`、`user`、`assistant`
+    </ParamField>
+    <ParamField body="content" type="string" required>
+      消息內容，字符串或內容塊數組
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  是否啓用流式輸出（Server-Sent Events）
+
+  - `true`：逐 token 流式返回
+  - `false`：等待完整響應後一次性返回
+</ParamField>
+
+<ParamField body="max_tokens" type="integer">
+  生成內容的最大 token 數量
+
+  不設置時使用模型默認上限
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  採樣溫度，控制輸出隨機性
+
+  - 範圍：`0` ~ `2`
+  - 值越低輸出越穩定，值越高輸出越隨機
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  核採樣概率閾值
+
+  範圍：`0` ~ `1`，建議不要同時修改 `temperature` 和 `top_p`
+</ParamField>
+
+<ParamField body="stop" type="string | string[]">
+  停止序列，遇到指定字符串時停止生成
+
+  最多 4 個停止序列
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  本次請求的唯一標識符
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `chat.completion`
+</ResponseField>
+
+<ResponseField name="created" type="integer">
+  請求創建時間（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  實際使用的模型名稱
+</ResponseField>
+
+<ResponseField name="choices" type="object[]">
+  生成結果列表
+
+  - `choices[].message.role`：消息角色，固定爲 `assistant`
+  - `choices[].message.content`：生成的文本內容
+  - `choices[].finish_reason`：結束原因，`stop` / `length` / `content_filter`
+  - `choices[].index`：結果索引
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  本次請求的 token 消耗統計
+
+  - `usage.prompt_tokens`：輸入 token 數
+  - `usage.completion_tokens`：輸出 token 數
+  - `usage.total_tokens`：總 token 數
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "glm-5",
+    "messages": [
+      {
+        "role": "user",
+        "content": "你好，請介紹一下你自己"
+      }
+    ]
+  }'
+```
+
+```bash cURL（流式輸出）
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "glm-5",
+    "messages": [
+      {
+        "role": "system",
+        "content": "你是一個專業的代碼助手"
+      },
+      {
+        "role": "user",
+        "content": "用 Python 寫一個快速排序"
+      }
+    ],
+    "stream": true
+  }'
+```
+
+```python Python (openai SDK)
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="glm-5",
+    messages=[
+        {"role": "user", "content": "你好，請介紹一下你自己"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+```python Python（流式輸出）
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+stream = client.chat.completions.create(
+    model="glm-5",
+    messages=[
+        {"role": "system", "content": "你是一個專業的代碼助手"},
+        {"role": "user", "content": "用 Python 寫一個快速排序"}
+    ],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+```javascript JavaScript (openai SDK)
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "your-ToAPIs-key",
+  baseURL: "https://toapis.com/v1",
+});
+
+const response = await client.chat.completions.create({
+  model: "glm-5",
+  messages: [{ role: "user", content: "你好，請介紹一下你自己" }],
+});
+
+console.log(response.choices[0].message.content);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1703884800,
+  "model": "glm-5",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "你好！我是 GLM-5，由智譜 AI 開發的新一代大語言模型。我具備強大的推理能力和長上下文理解能力，可以幫助你回答問題、分析信息、編寫代碼等。有什麼我可以幫你的嗎？"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 48,
+    "total_tokens": 63
+  }
+}
+```
+
+```json 400
+{
+  "error": {
+    "code": "invalid_request_error",
+    "message": "The 'messages' field is required.",
+    "param": "messages",
+    "type": "invalid_request_error"
+  }
+}
+```
+
+```json 401
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Invalid API key",
+    "type": "authentication_error"
+  }
+}
+```
+</ResponseExample>

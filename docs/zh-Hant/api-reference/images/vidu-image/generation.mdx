@@ -1,0 +1,251 @@
+---
+title: "Vidu 圖片生成"
+description: "使用 Vidu 圖片系列模型生成圖片或基於參考圖生成圖片，返回統一 generation.task。"
+---
+
+## 接口地址
+
+`POST /v1/images/generations`
+
+## 支援模型
+
+- `vidu-image`
+- `viduq3-fast`
+- `viduq2-pro`
+- `viduq2-fast`
+
+## 模型說明
+
+| 模型 | 類型 | 解析度 | 比例 |
+| --- | --- | --- | --- |
+| `vidu-image` | 通用參考圖生圖 | `1K` / `2K` / `4K` | `1:1` / `4:3` / `3:4` / `16:9` / `9:16` / `3:2` / `2:3` |
+| `viduq3-fast` | Vidu Q3 Fast 參考圖生圖 | `1K` / `2K` / `4K` | 同上 |
+| `viduq2-pro` | Vidu Q2 Pro 參考圖生圖 | `1K` / `2K` / `4K` | 同上 |
+| `viduq2-fast` | Vidu Q2 Fast 參考圖生圖 | `1K` | 同上 |
+
+## 請求參數
+
+<ParamField body="model" type="string" required>
+  只支援這 4 個模型名：
+  - `vidu-image`
+  - `viduq3-fast`
+  - `viduq2-pro`
+  - `viduq2-fast`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  文字提示詞
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖 URL，支援 0-7 張
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  僅支援 `1`
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  支援比例值，也支援像素值，例如 `1024*1024`
+
+  支援的比例值：
+  - `1:1`
+  - `4:3`
+  - `3:4`
+  - `16:9`
+  - `9:16`
+  - `3:2`
+  - `2:3`
+</ParamField>
+
+<ParamField body="metadata.resolution" type="string" default="1K">
+  當 `size` 傳比例值時可選解析度：
+  - `1K`
+  - `2K`
+  - `4K`
+
+  `viduq2-fast` 僅支援 `1K`。當 `size` 使用比例值且 `metadata.resolution` 為 `2K` 或 `4K` 時會直接報錯。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  隨機種子
+</ParamField>
+
+<ParamField body="metadata.watermark" type="boolean" default={false}>
+  是否加浮水印
+</ParamField>
+
+## 請求示例
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <YOUR_API_KEY>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "viduq3-fast",
+    "prompt": "生成一張電影級產品海報，保持參考圖主體結構一致，背景更乾淨。",
+    "image_urls": [
+      "https://example.com/reference-1.png",
+      "https://example.com/reference-2.png"
+    ],
+    "size": "1:1",
+    "metadata": {
+      "resolution": "2K",
+      "watermark": false
+    },
+    "seed": 42,
+    "n": 1
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer <YOUR_API_KEY>",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "viduq3-fast",
+        "prompt": "生成一張電影級產品海報，保持參考圖主體結構一致，背景更乾淨。",
+        "image_urls": [
+            "https://example.com/reference-1.png",
+            "https://example.com/reference-2.png",
+        ],
+        "size": "1:1",
+        "metadata": {
+            "resolution": "2K",
+            "watermark": False,
+        },
+        "seed": 42,
+        "n": 1,
+    },
+)
+
+task = response.json()
+print(task["id"])
+print(task["status"])
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer <YOUR_API_KEY>',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'viduq3-fast',
+    prompt: '生成一張電影級產品海報，保持參考圖主體結構一致，背景更乾淨。',
+    image_urls: [
+      'https://example.com/reference-1.png',
+      'https://example.com/reference-2.png'
+    ],
+    size: '1:1',
+    metadata: {
+      resolution: '2K',
+      watermark: false
+    },
+    seed: 42,
+    n: 1
+  })
+});
+
+const task = await response.json();
+console.log(task.id);
+console.log(task.status);
+```
+</RequestExample>
+
+## 提交成功回應
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_01KABCDEF1234567890",
+  "object": "generation.task",
+  "model": "viduq3-fast",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1784169600
+}
+```
+</ResponseExample>
+
+如果請求中帶了 `client_business_id`，回應頂層也會帶出該欄位。
+
+## 查詢任務
+
+`GET /v1/images/generations/{task_id}`
+
+### 處理中
+
+```json
+{
+  "id": "task_01KABCDEF1234567890",
+  "object": "generation.task",
+  "model": "viduq3-fast",
+  "status": "in_progress",
+  "progress": 50,
+  "created_at": 1784169600
+}
+```
+
+### 成功
+
+```json
+{
+  "id": "task_01KABCDEF1234567890",
+  "object": "generation.task",
+  "model": "viduq3-fast",
+  "status": "completed",
+  "progress": 100,
+  "created_at": 1784169600,
+  "completed_at": 1784169660,
+  "expires_at": 1784256060,
+  "result": {
+    "type": "image",
+    "data": [
+      {
+        "url": "https://cdn.toapis.com/images/task_01KABCDEF1234567890/0.png"
+      }
+    ]
+  }
+}
+```
+
+### 失敗
+
+```json
+{
+  "id": "task_01KABCDEF1234567890",
+  "object": "generation.task",
+  "model": "viduq2-fast",
+  "status": "failed",
+  "progress": 100,
+  "created_at": 1784169600,
+  "completed_at": 1784169620,
+  "error": {
+    "code": "InvalidParameter",
+    "message": "resolution 4K is not supported for viduq2-fast"
+  }
+}
+```
+
+## 計費與行為說明
+
+- 這 4 個模型都走統一圖片非同步任務接口：`POST /v1/images/generations`
+- 回傳值中的 `object` 固定為 `generation.task`
+- 結果完成後透過 `result.data[].url` 返回圖片地址
+- `viduq2-fast` 是輕量規格，只保留 `1K`
+- 如需更高解析度，優先使用 `vidu-image`、`viduq3-fast` 或 `viduq2-pro`
+
+## 說明
+
+- Vidu 圖片渠道會先在上游建立任務，再輪詢上游任務狀態。
+- 成功結果會鏡像到 ToAPIs 自有 R2，再返回統一圖片任務回應。
+- `expires_at` 為 `completed_at + 24h`。

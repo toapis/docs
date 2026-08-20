@@ -1,0 +1,139 @@
+---
+title: "Gemini Omni Flash 動画生成"
+sidebarTitle: "Gemini Omni Flash Preview Official"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Gemini Omni Flash でテキスト、最大 10 枚の参照画像、または最大 3 本の入力動画から動画を生成・編集"
+---
+
+- Use `gemini-omni-flash-preview-official` in the `model` field
+- Supports text-to-video, image/reference-to-video, and video editing
+- Supports up to 10 reference images or up to 3 input videos; images and videos cannot be mixed
+- Video duration is limited to 10 seconds; the Playground offers 4 / 6 / 8 / 10 second presets
+- Only `720p` resolution is supported; both `16:9` and `9:16` aspect ratios are available
+- Async task API: submit a task, then query by task ID
+
+<Note>
+This page documents `gemini-omni-flash-preview-official`. The platform routes it through the Vertex AI Interactions API with Service Account OAuth, not the Vertex AI Publisher Model `predictLongRunning` endpoint. It is separate from the legacy `gemini-omni-flash` / `gemini_omni_flash` model.
+</Note>
+
+<Warning>
+Upload local images with the [Upload 画像API](../../uploads/images) and local videos with the [Upload Video API](../../uploads/videos) first, then pass the returned URLs. Do not pass base64 media data directly.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  Use Bearer Token authentication:
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-omni-flash-preview-official" required>
+  モデル name. Use `gemini-omni-flash-preview-official`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Text prompt for video generation.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Video duration in seconds. The maximum is `10`; the Playground offers `4`, `6`, `8`, and `10` second presets.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Video aspect ratio:
+
+  - `16:9` landscape
+  - `9:16` portrait
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Video resolution:
+
+  - `720p` default resolution
+  - Only `720p` is supported; Veo-specific parameters are not accepted
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Optional reference image URL array with up to `10` items. Omit it for text-to-video. This field cannot be combined with `video_list`.
+</ParamField>
+
+<ParamField body="video_list" type="object[]">
+  Optional input videos for video editing, with up to `3` items. Each object must contain `video_url`. This field cannot be combined with `image_urls`.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Optional generation controls: `temperature`, `topP` / `top_p`, `candidateCount` / `candidate_count`, `previous_interaction_id`, and `task` (`text_to_video`, `image_to_video`, `reference_to_video`, or `edit`).
+</ParamField>
+
+## レスポンス
+
+<ResponseField name="id" type="string">
+  Task ID for status polling.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, usually `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  モデル name used for the request.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp.
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+  Generated video URL when the task completes.
+</ResponseField>
+
+## Examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-omni-flash-preview-official",
+    "prompt": "A blue pump bottle slowly rotates in a clean white studio, commercial product video",
+    "duration": 6,
+    "aspect_ratio": "9:16",
+    "resolution": "720p",
+    "image_urls": ["https://example.com/reference.jpg"]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01JZEXAMPLE",
+  "object": "generation.task",
+  "model": "gemini-omni-flash-preview-official",
+  "status": "queued",
+  "created_at": 1779247407
+}
+```
+</ResponseExample>
+
+## Query Task
+
+The generation endpoint returns a task ID. Use the common video task status endpoint to fetch status and results:
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

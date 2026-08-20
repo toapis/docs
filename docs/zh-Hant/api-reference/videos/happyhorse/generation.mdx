@@ -1,0 +1,206 @@
+---
+title: "HappyHorse 1.1 視頻生成"
+sidebarTitle: "happyhorse-1.1"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 HappyHorse 1.1 生成、參考圖生成或編輯視頻"
+---
+
+- 對外模型固定爲 `happyhorse-1.1`
+- 通過 `action` 區分文生視頻、首幀圖生視頻、參考圖生視頻和視頻編輯
+- 未傳 `action` 時，存在首幀圖會自動按圖生視頻處理，否則按文生視頻處理
+- 異步任務管理，通過任務 ID 查詢結果
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證。
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="happyhorse-1.1" required>
+  視頻生成模型名稱，固定爲 `happyhorse-1.1`。
+</ParamField>
+
+<ParamField body="action" type="string" default="text-to-video">
+  生成模式。
+
+  可選項：
+  - `text-to-video` - 文生視頻
+  - `image-to-video` - 首幀圖生視頻
+  - `reference-to-video` - 參考圖生視頻
+  - `video-edit` - 視頻編輯
+
+  如果省略該字段，服務端會根據是否傳入首幀圖自動判斷。
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  視頻內容描述。
+
+  文生視頻、參考圖生視頻和視頻編輯必填。首幀圖生視頻可選，但建議填寫以控制畫面運動和風格。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  圖生視頻首幀圖片 URL。僅使用第一張圖片。
+
+  也可以使用兼容字段 `input_reference`、`images`、`image` 或 `image_with_roles[{ role: "first_frame" }]`。
+
+  圖片要求：
+  - 格式：`JPEG`、`JPG`、`PNG`、`BMP`、`WEBP`
+  - 文件大小：不超過 `10MB`
+  - 寬高：不小於 `300px`
+  - 寬高比：`1:2.5` 到 `2.5:1`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  參考圖片 URL 列表。
+
+  `reference-to-video` 必填，支持 `1` 到 `9` 張；`video-edit` 可選，最多 `5` 張。
+</ParamField>
+
+<ParamField body="url" type="string">
+  視頻編輯的輸入視頻 URL。`action=video-edit` 時必填。
+</ParamField>
+
+<ParamField body="audio_setting" type="string" default="auto">
+  視頻編輯的聲音控制。僅 `action=video-edit` 有效。
+
+  可選項：
+  - `auto`
+  - `origin`
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  視頻時長，單位秒。可選範圍：`3` 到 `15`。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1080P">
+  視頻分辨率。
+
+  可選項：
+  - `720P`
+  - `1080P`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  文生視頻寬高比。圖生視頻會根據首幀圖決定畫幅。
+
+  可選項：
+  - `16:9`
+  - `9:16`
+  - `1:1`
+  - `4:3`
+  - `3:4`
+
+  也可以使用兼容字段 `size`。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  隨機種子，用於控制生成結果的確定性。
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={true}>
+  是否添加水印。
+</ParamField>
+
+## 文生視頻示例
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "text-to-video",
+    "prompt": "夜晚的鐵路橋下，一個塗鴉少年從牆上活過來，一邊快速演唱英文 rap，一邊做出充滿活力的說唱動作。",
+    "duration": 10,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9",
+    "seed": 42,
+    "watermark": true
+  }'
+```
+
+## 圖生視頻示例
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "image-to-video",
+    "prompt": "讓圖片中的角色自然動起來，保持原始畫面風格。",
+    "image_urls": ["https://example.com/first-frame.png"],
+    "duration": 5,
+    "resolution": "1080P"
+  }'
+```
+
+## 參考圖生視頻示例
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "reference-to-video",
+    "prompt": "圖 1 中的主角在圖 2 的場景中奔跑，隨後拿起圖 3 中的道具。畫面保持 3D 卡通風格。",
+    "reference_images": [
+      "https://example.com/image-01.jpg",
+      "https://example.com/image-02.png",
+      "https://example.com/image-03.jpeg"
+    ],
+    "duration": 5,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9",
+    "watermark": false
+  }'
+```
+
+## 視頻編輯示例
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "video-edit",
+    "prompt": "讓視頻中的場景更有電影感，保留主體動作。",
+    "url": "https://example.com/input.mp4",
+    "reference_images": ["https://example.com/reference.png"],
+    "resolution": "1080P",
+    "audio_setting": "origin",
+    "seed": 42
+  }'
+```
+
+## 查詢任務
+
+提交接口會返回任務 ID。使用通用視頻任務查詢接口獲取狀態和結果：
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 渠道配置
+
+HappyHorse 使用 DashScope API Key。默認上游地址爲 `https://dashscope.aliyuncs.com`。
+
+如需使用國際站，在管理後臺將該渠道的 Base URL 覆蓋爲：
+
+```text
+https://dashscope-intl.aliyuncs.com
+```

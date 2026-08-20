@@ -1,0 +1,68 @@
+---
+title: "Seedance 2.5 동영상 생성"
+sidebarTitle: "Seedance 2.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "seedance-2-5 모델로 동영상 생성"
+---
+
+Seedance 2.5의 공개 모델명은 `seedance-2-5`이며 Volcengine 상위 모델 ID는 `doubao-seedance-2-5-260628`입니다.
+
+- 텍스트-동영상, 첫 프레임/첫·마지막 프레임 이미지-동영상, 편집, 동영상 연장 및 멀티모달 참조를 지원합니다.
+- 이미지·동영상·오디오 참조와 오디오만 사용하는 참조를 지원합니다.
+- 비동기 작업입니다. 제출 결과의 `generation.task`를 작업 상태 API로 조회합니다.
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>모든 요청은 Bearer Token 인증이 필요합니다. [API Key 관리](https://toapis.com/console/token)에서 키를 발급받고 `Authorization: Bearer YOUR_API_KEY`를 사용하세요.</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="seedance-2-5" required>ToAPIs 공개 모델명입니다. `seedance-2-5`를 사용합니다.</ParamField>
+<ParamField body="prompt" type="string">장면, 카메라 움직임, 피사체 동작, 스타일과 오디오 분위기를 설명합니다. 참조 자료는 “이미지 1”, “동영상 1”, “오디오 1”처럼 지정합니다.</ParamField>
+<ParamField body="video_operation" type="string" default="generate">동영상 작업: `generate`, `edit`, `extend`. 편집과 연장에는 하나 이상의 `video_with_roles`가 필요하며, 연장에는 양수 `duration`가 필요합니다. 세 작업은 같은 엔드포인트를 사용합니다.</ParamField>
+<ParamField body="client_business_id" type="string">주문 번호 또는 내부 작업 ID입니다. `GET /v1/videos/generations/{client_business_id}`로 조회할 수 있습니다.</ParamField>
+<ParamField body="duration" type="integer">초 단위 길이입니다. 공식 범위는 `4`–`30`이며 `-1`은 자동 길이입니다. 편집·연장·상위 API가 지정한 프레임 작업에서는 `-1`을 사용합니다.</ParamField>
+<ParamField body="aspect_ratio" type="string">`21:9`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `adaptive` 중 하나입니다. 편집·연장·첫/마지막 프레임 작업은 `adaptive`를 사용합니다.</ParamField>
+<ParamField body="image_urls" type="string[]">호환용 이미지 URL 배열입니다. 새 연동에는 역할을 명시하는 `image_with_roles`를 권장하며 두 필드는 함께 보낼 수 없습니다.</ParamField>
+<ParamField body="image_with_roles" type="array">`url`과 `role`을 포함하는 이미지 배열입니다. role은 `first_frame`, `last_frame`, `reference_image`이며 최대 30장입니다. 프레임 모드와 참조 이미지 모드는 함께 사용할 수 없습니다.</ParamField>
+<ParamField body="video_with_roles" type="array">참조 동영상 배열입니다. role은 `reference_video`이며 최대 10개입니다.</ParamField>
+<ParamField body="audio_with_roles" type="array">참조 오디오 배열입니다. role은 `reference_audio`이며 최대 10개입니다. 오디오만 참조하는 요청도 지원합니다.</ParamField>
+<ParamField body="resolution" type="string">해상도: `480p` 또는 `720p`.</ParamField>
+<ParamField body="output_format" type="string" default="mp4">`mp4`와 `mov`를 지원합니다.</ParamField>
+<ParamField body="generate_audio" type="boolean" default={true}>동기화된 오디오를 생성할지 여부입니다.</ParamField>
+<ParamField body="return_last_frame" type="boolean" default={false}>완료 결과에 마지막 프레임 이미지를 포함할지 여부입니다.</ParamField>
+<ParamField body="tools" type="array">사용 가능한 도구는 `[{ "type": "web_search" }]`입니다. 텍스트 전용 요청에서만 사용할 수 있습니다.</ParamField>
+<ParamField body="callback_url" type="string">ToAPIs 작업 완료 콜백 주소입니다. [작업 Webhook](/docs/ko/api-reference/webhooks/task-webhooks)을 참고하세요.</ParamField>
+<ParamField body="trace_id" type="string">호출자가 지정하는 추적 ID입니다.</ParamField>
+
+## 참조 자료 제한
+
+총 50개까지 가능합니다(이미지 30장, 동영상 10개, 오디오 10개). 명시적인 역할을 사용하세요.
+
+<Warning>잘못된 조합은 비동기 처리 중 `InvalidParameter.TaskTypeConstraint`로 실패할 수 있습니다. 편집·연장·첫/마지막 프레임 작업에는 `aspect_ratio=adaptive`를 지정하세요.</Warning>
+
+## Response
+
+<ResponseField name="id" type="string">상태 조회에 사용하는 작업 ID.</ResponseField>
+<ResponseField name="client_business_id" type="string">요청에 지정한 경우 반환됩니다.</ResponseField>
+<ResponseField name="object" type="string">`generation.task`로 고정됩니다.</ResponseField>
+<ResponseField name="model" type="string">요청한 모델명.</ResponseField>
+<ResponseField name="status" type="string">`queued`, `in_progress`, `completed`, `failed`.</ResponseField>
+<ResponseField name="progress" type="integer">`0`–`100` 진행률.</ResponseField>
+<ResponseField name="created_at" type="integer">생성 시각 타임스탬프.</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"model":"seedance-2-5","prompt":"영화 같은 제품 클로즈업, 카메라가 천천히 전진한다.","duration":10,"aspect_ratio":"16:9","resolution":"720p","generate_audio":true}'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{"id":"tsk_vid_xxx","object":"generation.task","model":"seedance-2-5","status":"in_progress","progress":10,"created_at":1781577600}
+```
+</ResponseExample>

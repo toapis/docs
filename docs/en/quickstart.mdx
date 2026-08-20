@@ -1,0 +1,105 @@
+---
+title: "Quick Start"
+sidebarTitle: "Guides"
+description: "Call text, image, and video models through ToAPIs"
+---
+
+# Quick Start
+
+ToAPIs provides OpenAI-compatible text endpoints plus unified asynchronous image and video generation APIs. This guide uses currently available models for your first requests.
+
+## Step 1: Get an API Key
+
+1. Open the [API Key Management page](https://toapis.com/console/token)
+2. Sign in and create an API key
+3. Save it securely when shown; it is displayed only once
+
+## Step 2: Choose a Model
+
+| Type | Suggested starter model | Description |
+| --- | --- | --- |
+| Text | `gpt-5.6-terra` | Balanced performance and cost for chat and agent workflows |
+| Image | `gpt-image-2` | Text-to-image and reference-image generation |
+| Video | `sora-2-vvip` | Text-to-video, image-to-video, and character references |
+
+Use the [model list endpoint](./api-reference/chat/list-models) and individual model pages as the source of truth for availability.
+
+## Step 3: Send Requests
+
+### Text generation
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "Hello, please introduce yourself"}
+    ]
+  }'
+```
+
+### Image generation
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "A cute panda with cinematic lighting",
+    "size": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+### Video generation
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "Waves crashing against the shore, cinematic camera movement",
+    "duration": 12,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+## Step 4: Check Asynchronous Tasks
+
+Text requests return directly. Image and video requests return a task ID; use the matching endpoint to retrieve the result:
+
+```bash
+# Image task
+curl https://toapis.com/v1/images/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Video task
+curl https://toapis.com/v1/videos/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Configure Task Webhooks
+
+Set the Token's default HTTPS callback URL and generate a signing secret. A task may include a same-origin `callback_url`. Verify `X-ToAPIs-Webhook-*` against the raw body with HMAC-SHA256, deduplicate by event ID, and keep polling only as a fallback. On `429`, honor `Retry-After`. See [Task Webhooks](/docs/en/api-reference/webhooks/task-webhooks).
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="View API docs" icon="book" href=".">
+    Browse all endpoints, models, and parameters.
+  </Card>
+  <Card title="Claude Code Integration" icon="code" href="./integrations/claude-code">
+    Use ToAPIs with Claude Code.
+  </Card>
+  <Card title="Codex Integration" icon="terminal" href="./integrations/codex">
+    Use ToAPIs with Codex through CC Switch.
+  </Card>
+</CardGroup>

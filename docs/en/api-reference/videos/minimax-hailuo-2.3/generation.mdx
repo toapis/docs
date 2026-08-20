@@ -1,0 +1,285 @@
+---
+title: "MiniMax-Hailuo-2.3 Video Generation"
+sidebarTitle: "MiniMax-Hailuo-2.3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos using MiniMax Hailuo 2.3 series models, supporting text-to-video and image-to-video with optional Fast mode"
+---
+
+- Async task API, returns task ID upon submission
+- Supported models: `MiniMax-Hailuo-2.3`, `MiniMax-Hailuo-2.3-Fast`
+- `MiniMax-Hailuo-2.3`: Supports text-to-video and image-to-video, best quality
+- `MiniMax-Hailuo-2.3-Fast`: **Image-to-video only** (first frame image required), faster generation
+
+<Warning>
+Please provide publicly accessible image URLs. Do not pass base64 image data directly in `image_urls`; upload local images first using the [Upload Image API](../../uploads/images) to get URLs.
+</Warning>
+
+## Authentication
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Request Parameters
+
+<ParamField body="model" type="string" required>
+  Model name.
+
+  Options:
+  - `MiniMax-Hailuo-2.3` - Supports text-to-video and image-to-video
+  - `MiniMax-Hailuo-2.3-Fast` - Image-to-video only (`image_urls` required)
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Video content description, max **2000 characters**.
+
+  Supports 15 camera directives (e.g., `[Push in]`, `[Pull out]`, `[Pan left, Pedestal up]`), see the Camera Directives table below.
+
+  Example: `"A cat running in a garden [Push in], then stops and looks at the camera [Static shot]"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Video duration in seconds.
+
+  Options: `6` or `10`
+
+  <Warning>
+  When using `1080P` resolution, only `6` seconds is supported.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="768P">
+  Video resolution.
+
+  Options:
+  - `768P` - HD (default)
+  - `1080P` - Full HD (6-second duration only)
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  First frame image URL array.
+
+  - Not provided: text-to-video (`MiniMax-Hailuo-2.3-Fast` does not support this, must provide)
+  - 1 image: image-to-video, image used as video starting frame
+
+  Image requirements:
+  - Format: JPG, JPEG, PNG, WebP
+  - Size: under 20MB
+  - Dimensions: short side > 300px, aspect ratio between 2:5 and 5:2
+
+  Example: `["https://example.com/first-frame.jpg"]`
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters.
+
+  <Expandable title="Show metadata fields">
+    <ParamField body="prompt_optimizer" type="boolean" default="true">
+      Auto-optimize prompt. Set to `false` for more precise control.
+    </ParamField>
+
+    <ParamField body="fast_pretreatment" type="boolean" default="false">
+      Shorten prompt optimization time. Speeds up processing when enabled.
+    </ParamField>
+
+    <ParamField body="aigc_watermark" type="boolean" default="false">
+      Whether to add watermark to the generated video.
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      ToAPIs final Task Webhook. Configure the Token URL and signing secret first; see [Task Webhooks](/docs/en/api-reference/webhooks/task-webhooks).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Model Comparison
+
+| Model | Text-to-Video | Image-to-Video | Resolution | Duration |
+|-------|:-------------:|:--------------:|------------|----------|
+| `MiniMax-Hailuo-2.3` | ✅ | ✅ | `768P` / `1080P` | 6s / 10s |
+| `MiniMax-Hailuo-2.3-Fast` | ❌ | ✅ (first frame required) | `768P` / `1080P` | 6s / 10s |
+
+## Resolution and Duration Combinations
+
+| Resolution | Supported Durations | Note |
+|------------|---------------------|------|
+| 768P | 6s, 10s | Default resolution |
+| 1080P | 6s | 10s not supported |
+
+## Camera Directives
+
+Use `[directive]` syntax in `prompt` to control camera movement:
+
+| Category | Directives |
+|----------|------------|
+| Pan | `[Pan left]` `[Pan right]` |
+| Tilt | `[Tilt up]` `[Tilt down]` |
+| Push/Pull | `[Push in]` `[Pull out]` |
+| Pedestal | `[Pedestal up]` `[Pedestal down]` |
+| Truck | `[Truck left]` `[Truck right]` |
+| Zoom | `[Zoom in]` `[Zoom out]` |
+| Other | `[Shake]` `[Tracking shot]` `[Static shot]` |
+
+**Usage rules:**
+- Combine up to 3 directives in one bracket for simultaneous movement, e.g., `[Pan left, Pedestal up]`
+- Sequence directives in the prompt for ordered camera moves, e.g., `"...[Push in], then...[Pull out]"`
+
+## Response
+
+<ResponseField name="id" type="string">
+  Task ID for querying task status.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Model name used for this request.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp.
+</ResponseField>
+
+## Examples
+
+### Text-to-Video
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "A cat running in a garden, camera slowly pushing in, cinematic feel",
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Image-to-Video
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "The person in the image slowly turns around and smiles",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Image-to-Video (Fast Mode)
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3-Fast",
+  "prompt": "Person starts walking from a still position",
+  "image_urls": ["https://example.com/person.jpg"],
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### Camera Control
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "A man picks up a book [Pedestal up], then reads [Static shot]",
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### 10-Second Long Video
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "Waves crashing on the beach at sunset, golden light shimmering on the water",
+  "duration": 10,
+  "resolution": "768P",
+  "metadata": {
+    "prompt_optimizer": true,
+    "fast_pretreatment": true
+  }
+}
+```
+
+<Note>
+Video generation is an async task. Use [Get Video Task Status](../../tasks/video-status) to query progress and results.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-Hailuo-2.3",
+    "prompt": "A cat running in a garden, camera slowly pushing in, cinematic feel",
+    "duration": 6,
+    "resolution": "1080P"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "MiniMax-Hailuo-2.3",
+        "prompt": "A cat running in a garden, camera slowly pushing in, cinematic feel",
+        "duration": 6,
+        "resolution": "1080P",
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer your-ToAPIs-key",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "MiniMax-Hailuo-2.3",
+    prompt: "A cat running in a garden, camera slowly pushing in, cinematic feel",
+    duration: 6,
+    resolution: "1080P"
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01J9HA7JPQ9A0Z6JZ3V8M9W6PZ",
+  "object": "generation.task",
+  "model": "MiniMax-Hailuo-2.3",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>

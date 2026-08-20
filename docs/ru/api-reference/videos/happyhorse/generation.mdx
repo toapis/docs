@@ -1,0 +1,106 @@
+---
+title: "HappyHorse 1.1 Генерация видео"
+sidebarTitle: "happyhorse-1.1"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация, reference-to-video и редактирование видео с HappyHorse 1.1"
+---
+
+- Публичное имя модели: `happyhorse-1.1`
+- Используйте `action` для выбора text-to-video, image-to-video, reference-to-video или video editing
+- Если `action` не указан, запрос с first-frame изображением считается image-to-video, иначе text-to-video
+- Асинхронное управление задачами через стандартный эндпоинт статуса video task
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все запросы требуют Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="happyhorse-1.1" required>
+  Название модели генерации видео. Фиксированное значение: `happyhorse-1.1`.
+</ParamField>
+
+<ParamField body="action" type="string" default="text-to-video">
+  Режим генерации.
+
+  Варианты:
+  - `text-to-video`
+  - `image-to-video`
+  - `reference-to-video`
+  - `video-edit`
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Текстовое описание видео. Обязательно для text-to-video, reference-to-video и video-edit.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  URL first-frame изображения для image-to-video. Используется только первое изображение.
+
+  Также принимаются совместимые поля: `input_reference`, `images`, `image` или `image_with_roles[{ role: "first_frame" }]`.
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  URL reference изображений. Для `reference-to-video` требуется от `1` до `9` изображений; для `video-edit` можно передать до `5`.
+</ParamField>
+
+<ParamField body="url" type="string">
+  URL входного видео для редактирования. Обязательно при `action=video-edit`.
+</ParamField>
+
+<ParamField body="audio_setting" type="string" default="auto">
+  Управление аудио для video-edit: `auto` или `origin`.
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  Длительность видео в секундах. Диапазон: `3`–`15`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1080P">
+  Разрешение видео: `720P` или `1080P`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон для text-to-video: `16:9`, `9:16`, `1:1`, `4:3`, `3:4`.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed для воспроизводимой генерации.
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={true}>
+  Добавлять ли watermark.
+</ParamField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "text-to-video",
+    "prompt": "A cinematic city scene at night",
+    "duration": 10,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9"
+  }'
+```
+</RequestExample>
+
+## Проверка задачи
+
+Эндпоинт создания возвращает task ID. Используйте стандартный video task status endpoint для получения результата:
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

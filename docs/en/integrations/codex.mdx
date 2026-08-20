@@ -1,0 +1,94 @@
+---
+title: "Codex Setup Guide"
+sidebarTitle: "Codex"
+description: "Use ToAPIs in Codex CLI through CC Switch"
+---
+
+## Prerequisites
+
+Before you begin, prepare:
+
+1. **A ToAPIs API key** from the [ToAPIs Console](https://toapis.com/console/token).
+2. **Codex CLI**, installed from the [official Codex documentation](https://developers.openai.com/codex/cli) or with:
+
+   ```bash
+   npm install -g @openai/codex
+   ```
+
+3. **CC Switch**, downloaded only from [ccswitch.io](https://ccswitch.io) or the [official GitHub Releases](https://github.com/farion1231/cc-switch/releases).
+
+## Add ToAPIs in CC Switch
+
+1. Open CC Switch and select **Codex** in the application switcher.
+2. Click **+** and choose **App-specific provider**.
+3. Select the **Custom** preset and enter:
+
+| Field | Value |
+| --- | --- |
+| Name | `ToAPIs` |
+| API Key | Your ToAPIs API key |
+| API endpoint / Base URL | `https://toapis.com/v1` |
+| Model | `gpt-5.3-codex` |
+| API protocol | `Responses` |
+| Local routing/model mapping | **Off** |
+
+4. Click **Add**, then click **Enable** on the ToAPIs provider card.
+5. Exit any running Codex session and reopen the terminal so the new configuration is loaded.
+
+<Note>
+ToAPIs natively supports `POST /v1/responses`. Do not enable local routing/model mapping; that option is intended for providers that only expose Chat Completions.
+</Note>
+
+## Start and Verify
+
+```bash
+codex
+```
+
+Send a simple task, for example:
+
+```text
+Inspect this project and summarize its main directory structure.
+```
+
+If Codex responds normally, the setup is complete.
+
+## Change the Model
+
+Edit the ToAPIs provider to use another Responses-compatible model available to your account. CC Switch can fetch models from `/v1/models`; you can also review the [ToAPIs model list](../api-reference/chat/models).
+
+Common choices:
+
+| Model | Best for |
+| --- | --- |
+| `gpt-5.3-codex` | Recommended default for most coding tasks |
+| `gpt-5.3-codex-spark` | Coding tasks that prioritize response speed |
+| `gpt-5.3-codex-official` | Workloads that specifically require the official direct channel |
+
+Availability depends on your account and channel configuration. Prefer the `/v1/models` list fetched by CC Switch.
+
+## Troubleshooting
+
+### Codex still uses the previous provider
+
+Codex does not hot-reload provider configuration. Fully exit Codex, reopen the terminal, and run `codex` again.
+
+### `401 Unauthorized`
+
+- Confirm the API key in CC Switch is complete
+- Verify that the key is active in the [ToAPIs Console](https://toapis.com/console/token)
+- Ensure the account has sufficient balance
+
+### `404` or an incorrect Responses path
+
+Confirm the Base URL is `https://toapis.com/v1`, the protocol is `Responses`, and local routing/model mapping is disabled.
+
+### Model unavailable
+
+Use CC Switch's model-fetch button or call `GET https://toapis.com/v1/models` with the same API key.
+
+## Configuration and Key Safety
+
+CC Switch manages `~/.codex/auth.json` and `~/.codex/config.toml`. Do not commit these files, your API key, or screenshots containing the key to Git.
+
+See the [official CC Switch user manual](https://github.com/farion1231/cc-switch/tree/main/docs/user-manual/en) for additional provider-management instructions.

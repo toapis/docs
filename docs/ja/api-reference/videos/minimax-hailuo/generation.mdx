@@ -1,0 +1,304 @@
+---
+title: "MiniMax-Hailuo-02 動画生成"
+sidebarTitle: "MiniMax-Hailuo-02"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos using MiniMax Hailuo 02 model, supporting text-to-video, image-to-video, and first-last-frame generation"
+---
+
+- Async task API, returns task ID upon submission
+- Supported model: `MiniMax-Hailuo-02`
+- Three generation modes: text-to-video, image-to-video, first-last-frame generation
+- Supports 512P / 768P / 1080P resolution, 6-second and 10-second duration
+
+<Warning>
+Please provide publicly accessible image URLs. Do not pass base64 image data directly in `image_urls` or `metadata`; upload local images first using the [Upload 画像API](../../uploads/images) to get URLs.
+</Warning>
+
+## 認証
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## リクエストパラメータ
+
+<ParamField body="model" type="string" required>
+  モデル name, fixed as `MiniMax-Hailuo-02`.
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Video content description, max **2000 characters**.
+
+  - **必須** for text-to-video mode
+  - 任意 for image-to-video and first-last-frame modes (can describe desired motion)
+
+  Supports 15 camera directives (e.g., `[Push in]`, `[Pull out]`, `[Pan left, Pedestal up]`), see the Camera Directives table below.
+
+  Example: `"A mouse runs toward the camera, smiling and blinking"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Video duration in seconds.
+
+  Options: `6` or `10`
+
+  <Warning>
+  When using `1080P` resolution, only `6` seconds is supported.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="768P">
+  Video resolution.
+
+  Options:
+  - `512P` - Standard definition (available for image-to-video)
+  - `768P` - HD (default)
+  - `1080P` - Full HD (6-second duration only)
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  First frame image URL array.
+
+  - Not provided: text-to-video
+  - 1 image: image-to-video, image used as video starting frame
+
+  Image requirements:
+  - Format: JPG, JPEG, PNG, WebP
+  - Size: under 20MB
+  - Dimensions: short side > 300px, aspect ratio between 2:5 and 5:2
+
+  Example: `["https://example.com/first-frame.jpg"]`
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters.
+
+  <Expandable title="Show metadata fields">
+    <ParamField body="last_frame_image" type="string">
+      Last frame image URL for **first-last-frame generation mode**.
+
+      When provided, the system generates a transition video from the first frame to the last frame.
+
+      - When both `image_urls` (first frame) and `last_frame_image` (last frame) are provided, video dimensions follow the first frame
+      - If first and last frame sizes differ, the model crops the last frame based on the first frame
+      - First-last-frame mode **does not support 512P** resolution
+
+      Image requirements are the same as `image_urls`.
+
+      Example: `"https://example.com/last-frame.jpg"`
+    </ParamField>
+
+    <ParamField body="prompt_optimizer" type="boolean" default="true">
+      Auto-optimize prompt. Set to `false` for more precise control.
+    </ParamField>
+
+    <ParamField body="fast_pretreatment" type="boolean" default="false">
+      Shorten prompt optimization time. Speeds up processing when enabled.
+    </ParamField>
+
+    <ParamField body="aigc_watermark" type="boolean" default="false">
+      Whether to add watermark to the generated video.
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      ToAPIs 最終 Task Webhook。Token URL と secret を設定してください。[Webhook](/docs/ja/api-reference/webhooks/task-webhooks)。
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Three Generation Modes
+
+| Mode | image_urls | metadata.last_frame_image | 説明 |
+|------|:----------:|:-------------------------:|-------------|
+| Text-to-Video | Not provided | Not provided | Generate video from text description |
+| Image-to-Video | ✅ 1 image | Not provided | Generate video with image as first frame |
+| First-Last-Frame | ✅ 1 image (first frame) | ✅ Provided (last frame) | Generate transition video from first to last frame |
+
+## Resolution and Duration Combinations
+
+| Resolution | Supported Durations | Text-to-Video | Image-to-Video | First-Last-Frame |
+|------------|---------------------|:-------------:|:--------------:|:----------------:|
+| 512P | 6s, 10s | ✅ | ✅ | ❌ |
+| 768P | 6s, 10s | ✅ | ✅ | ✅ |
+| 1080P | 6s | ✅ | ✅ | ✅ |
+
+## Camera Directives
+
+Use `[directive]` syntax in `prompt` to control camera movement:
+
+| Category | Directives |
+|----------|------------|
+| Pan | `[Pan left]` `[Pan right]` |
+| Tilt | `[Tilt up]` `[Tilt down]` |
+| Push/Pull | `[Push in]` `[Pull out]` |
+| Pedestal | `[Pedestal up]` `[Pedestal down]` |
+| Truck | `[Truck left]` `[Truck right]` |
+| Zoom | `[Zoom in]` `[Zoom out]` |
+| Other | `[Shake]` `[Tracking shot]` `[Static shot]` |
+
+**Usage rules:**
+- Combine up to 3 directives in one bracket for simultaneous movement, e.g., `[Pan left, Pedestal up]`
+- Sequence directives in the prompt for ordered camera moves, e.g., `"...[Push in], then...[Pull out]"`
+
+## レスポンス
+
+<ResponseField name="id" type="string">
+  Task ID for querying task status.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  モデル name used for this request.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp.
+</ResponseField>
+
+## Examples
+
+### Text-to-Video
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "City night scene, neon lights flickering, traffic flowing [Push in]",
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Image-to-Video
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Person slowly turns around, smiling",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### First-Last-Frame Generation
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "A little girl grows up",
+  "image_urls": ["https://example.com/child.jpg"],
+  "duration": 6,
+  "resolution": "1080P",
+  "metadata": {
+    "last_frame_image": "https://example.com/adult.jpg"
+  }
+}
+```
+
+### Camera Control
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "A man picks up a book [Pedestal up], then reads [Static shot]",
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### 10-Second Long Video + Fast Preprocessing
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Waves crashing on the beach at sunset, golden light shimmering on the water",
+  "duration": 10,
+  "resolution": "768P",
+  "metadata": {
+    "prompt_optimizer": true,
+    "fast_pretreatment": true
+  }
+}
+```
+
+<Note>
+Video generation is an async task. Use [Get Video Task ステータス](../../tasks/video-status) to query progress and results.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-Hailuo-02",
+    "prompt": "City night scene, neon lights flickering, traffic flowing",
+    "duration": 6,
+    "resolution": "1080P"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "MiniMax-Hailuo-02",
+        "prompt": "City night scene, neon lights flickering, traffic flowing",
+        "duration": 6,
+        "resolution": "1080P",
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer your-ToAPIs-key",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "MiniMax-Hailuo-02",
+    prompt: "City night scene, neon lights flickering, traffic flowing",
+    duration: 6,
+    resolution: "1080P"
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01K8SGYNNNVBQTXNR4MM964S7K",
+  "object": "generation.task",
+  "model": "MiniMax-Hailuo-02",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>

@@ -1,0 +1,104 @@
+---
+title: "Генерация видео kling-3.0-turbo"
+sidebarTitle: "kling-3.0-turbo"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео через официальный модельный ID kling-3.0-turbo в стандартном асинхронном видео-эндпоинте ToAPIs"
+---
+
+- Асинхронный API задач, после отправки возвращает ID задачи
+- Использует новый официальный протокол Kling Turbo
+- Поддерживает текст-в-видео и изображение-в-видео, но только с первым кадром
+- `resolution` поддерживает `720p` и `1080p`
+- `duration` поддерживает `3s`, `4s`, `5s`, `6s`, `7s`, `8s`, `9s`, `10s`, `11s`, `12s`, `13s`, `14s`, `15s`
+- `aspect_ratio` применяется только к запросам текст-в-видео
+- `watermark` поддерживается только как булев переключатель без кастомного объекта
+
+<Warning>
+Используйте публично доступные URL изображений. Не передавайте base64-данные напрямую; сначала загрузите изображение через [API загрузки изображений](../../uploads/images).
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" required>
+  Название модели генерации видео, фиксированное значение `kling-3.0-turbo`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый промпт. Для image-to-video это значение будет отправлено в Kling Turbo как элемент `prompt` внутри `contents`.
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  Необязательные входные изображения. Для Kling Turbo image-to-video используется только первое изображение как `first_frame`.
+
+  <Warning>
+    Последний кадр в этой интеграции не поддерживается. Дополнительные изображения не отправляются как tail frame.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Разрешение видео.
+
+  Поддерживаемые значения:
+  - `720p`
+  - `1080p`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Длительность видео в секундах.
+
+  Поддерживаемые значения: `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон для текст-в-видео.
+
+  Поддерживаемые значения:
+  - `16:9`
+  - `9:16`
+  - `1:1`
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default="false">
+  Добавлять ли официальный водяной знак Kling.
+</ParamField>
+
+## Примеры
+
+### Текст-в-видео
+
+```json
+{
+  "model": "kling-3.0-turbo",
+  "prompt": "A cinematic shot of a red sports car driving through rain",
+  "resolution": "720p",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### Изображение-в-видео
+
+```json
+{
+  "model": "kling-3.0-turbo",
+  "prompt": "Animate the character with subtle camera motion",
+  "reference_images": ["https://example.com/first-frame.png"],
+  "resolution": "1080p",
+  "duration": 5,
+  "watermark": true
+}
+```
+
+<Note>
+  Генерация видео асинхронная. Используйте [эндпоинт статуса видео-задачи](../../tasks/video-status) для запроса прогресса и результата.
+</Note>

@@ -1,0 +1,126 @@
+---
+title: "Генерация видео MiniMax Hailuo H3"
+sidebarTitle: "MiniMax-H3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео MiniMax Hailuo H3 в 2K или 768p по тексту, первому/последнему кадру и мультимодальным референсам"
+---
+
+- Название модели: `MiniMax-H3`
+- Поддерживаются текст-в-видео, первый/последний кадр и совместные референсы изображений, видео и аудио
+- Поддерживаются разрешения `2K` и `768p`; по умолчанию используется `2K`. Длительность `4-15` секунд
+- Асинхронный API возвращает унифицированный объект `generation.task`
+
+<Warning>
+  Используйте публично доступные URL. Режим кадров нельзя смешивать с режимом референсов. Референсное аудио нельзя использовать без хотя бы одного изображения или видео.
+</Warning>
+
+## Аутентификация
+
+<ParamField header="Authorization" type="string" required>Передайте `Authorization: Bearer YOUR_API_KEY`.</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" default="MiniMax-H3" required>Фиксированное значение `MiniMax-H3`.</ParamField>
+<ParamField body="prompt" type="string" required>Описание видео, до `7000` символов.</ParamField>
+<ParamField body="duration" type="integer" default={5}>Целое число от `4` до `15` секунд.</ParamField>
+<ParamField body="resolution" type="string" default="2K">Поддерживаются `2K` и `768p`; значение по умолчанию — `2K`.</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Значения: `21:9`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `adaptive`.
+  Для текст-в-видео нельзя использовать `adaptive`. Режим кадров автоматически следует входному изображению, а режим референсов по умолчанию использует `adaptive`.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Совместимый массив URL: 1 изображение становится первым кадром, 2 — первым и последним, 3-9 — референсами. Для новых интеграций используйте `image_with_roles`.
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Массив объектов `url` и `role`. Роли: `first_frame` (не более 1), `last_frame` (не более 1), `reference_image` (не более 9).
+  Форматы JPG, JPEG, PNG, WebP, HEIC, HEIF; до `30 MB`, стороны `256-5760 px`, соотношение `0.4-2.5`.
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  До `3` референсных видео. Каждый объект содержит `url` и `role: reference_video`. MP4/MOV, до `50 MB`, `2-15` секунд каждое и не более `15` секунд суммарно.
+  <Note>ToAPIs определяет фактическую длительность для тарификации. Не передавайте рассчитанное клиентом поле длительности.</Note>
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  До `3` референсных аудио. Каждый объект содержит `url` и `role: reference_audio`. WAV/MP3, до `15 MB`, `2-15` секунд каждое и не более `15` секунд суммарно.
+  <Warning>Нужно добавить хотя бы одно референсное изображение или видео.</Warning>
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={false}>Добавить водяной знак AIGC.</ParamField>
+<ParamField body="client_business_id" type="string">Клиентский бизнес-ID, например номер заказа.</ParamField>
+<ParamField body="callback_url" type="string">Callback завершения задачи ToAPIs. См. [Webhook](/docs/ru/api-reference/webhooks/task-webhooks).</ParamField>
+
+## Режимы и ограничения
+
+| Режим | Вход | Соотношение |
+|------|------|-------------|
+| Текст-в-видео | `prompt` | Конкретное, по умолчанию `16:9` |
+| Первый/последний кадр | `prompt` + кадры | Автоматически `adaptive` |
+| Мультимодальные референсы | `prompt` + медиа | По умолчанию `adaptive` |
+
+Допускается до 9 изображений, 3 видео, 3 аудио и 12 медиафайлов суммарно. Роли кадров и референсов нельзя смешивать.
+
+## Пример
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "Следовать движениям и ритму камеры из видео 1, произнести реплику голосом из аудио 1",
+  "duration": 5,
+  "resolution": "768p",
+  "aspect_ratio": "adaptive",
+  "video_with_roles": [
+    {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+  ],
+  "audio_with_roles": [
+    {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+  ]
+}
+```
+
+## Ответ
+
+<ResponseField name="id" type="string">ID задачи ToAPIs.</ResponseField>
+<ResponseField name="object" type="string">Всегда `generation.task`.</ResponseField>
+<ResponseField name="model" type="string">Всегда `MiniMax-H3`.</ResponseField>
+<ResponseField name="status" type="string">`queued`, `in_progress`, `completed` или `failed`.</ResponseField>
+<ResponseField name="progress" type="integer">Прогресс `0-100`.</ResponseField>
+<ResponseField name="created_at" type="integer">Unix-время создания в секундах.</ResponseField>
+
+<Note>Опрашивайте [статус видеозадачи](../../tasks/video-status). После завершения URL находится в `result.data[0].url`.</Note>
+
+<RequestExample>
+```bash cURL (текст-в-видео)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"model":"MiniMax-H3","prompt":"Камера медленно приближается к астронавту на поверхности Луны","duration":5,"resolution":"2K","aspect_ratio":"16:9"}'
+```
+
+```bash cURL (референсы изображения, видео и аудио)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "Сохранить персонажа из изображения 1, следовать движению камеры из видео 1 и использовать голос из аудио 1",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "adaptive",
+    "image_with_roles": [{"url": "https://example.com/person.png", "role": "reference_image"}],
+    "video_with_roles": [{"url": "https://example.com/motion.mp4", "role": "reference_video"}],
+    "audio_with_roles": [{"url": "https://example.com/voice.mp3", "role": "reference_audio"}]
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{"id":"vid_01KZ3H3EXAMPLE00000000000","object":"generation.task","model":"MiniMax-H3","status":"queued","progress":0,"created_at":1785729000}
+```
+</ResponseExample>

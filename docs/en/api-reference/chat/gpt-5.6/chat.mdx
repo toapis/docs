@@ -1,0 +1,96 @@
+---
+title: "GPT-5.6 Family Chat"
+sidebarTitle: "gpt-5.6 family"
+api: "POST https://toapis.com/v1/chat/completions"
+description: "Use GPT-5.6 Sol, Terra, and Luna through the OpenAI-compatible Chat Completions API"
+---
+
+GPT-5.6 is a tiered model family for different quality, cost, and throughput requirements.
+
+| Model ID | Positioning | Recommended workloads |
+|----------|-------------|-----------------------|
+| `gpt-5.6-sol` | Flagship quality | Complex reasoning, high-value coding, and long-context analysis |
+| `gpt-5.6-terra` | Balanced performance and cost | General production traffic, agent workflows, and content generation |
+| `gpt-5.6-luna` | Efficient high-throughput tier | Classification, extraction, routing, batch jobs, and latency-sensitive tasks |
+
+<Note>
+OpenAI's `gpt-5.6` alias routes to Sol. ToAPIs documentation uses the explicit IDs currently exposed by the model catalog. Check the [model list endpoint](../list-models) before relying on an alias.
+</Note>
+
+## Key parameters
+
+<ParamField body="model" type="string" required>
+  Use `gpt-5.6-sol`, `gpt-5.6-terra`, or `gpt-5.6-luna`.
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  OpenAI Chat Completions messages using `system`, `user`, and `assistant` roles.
+</ParamField>
+
+<ParamField body="reasoning_effort" type="string" default="medium">
+  Supported values: `none`, `low`, `medium`, `high`, `xhigh`, and `max`.
+
+  Start with `medium`, then compare the same level and one level lower on representative requests. Reserve `max` for difficult quality-first workloads.
+</ParamField>
+
+<ParamField body="max_completion_tokens" type="integer">
+  Maximum output tokens. GPT-5.6 supports up to 128K output tokens, subject to account, channel, and input-context limits.
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  Set to `true` to stream the response over SSE.
+</ParamField>
+
+<Warning>
+The current GPT-5 gateway ignores `temperature` and `top_p`. Control behavior with the prompt, `reasoning_effort`, and an explicit output contract.
+</Warning>
+
+## Request examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.6-sol",
+    "messages": [
+      {"role": "system", "content": "You are a rigorous code-review assistant."},
+      {"role": "user", "content": "Review this database migration plan for major risks."}
+    ],
+    "reasoning_effort": "high",
+    "max_completion_tokens": 8192,
+    "stream": true
+  }'
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="gpt-5.6-terra",
+    messages=[
+        {"role": "user", "content": "Turn these requirements into an implementation plan."}
+    ],
+    reasoning_effort="medium",
+    max_completion_tokens=4096
+)
+
+print(response.choices[0].message.content)
+```
+</RequestExample>
+
+## Migration guidance
+
+- Evaluate `gpt-5.6-sol` first for GPT-5.5 or GPT-5.4 flagship workloads.
+- Evaluate Terra or Luna first for cost- or latency-sensitive routes instead of moving every workload to Sol.
+- Preserve the existing reasoning effort for the first baseline, then test one level lower.
+- Chat Completions function tools require effective reasoning `none`; confirm Responses API availability before moving reasoning-plus-tools workflows.
+
+See [Chat Completions API](../chat) for the complete shared request and response format.

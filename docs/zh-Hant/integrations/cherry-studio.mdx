@@ -1,0 +1,119 @@
+---
+title: "Cherry Studio 配置指南"
+sidebarTitle: "Cherry Studio"
+description: "在 Cherry Studio 中使用 ToAPIs 作爲 API 後端"
+---
+
+## 準備工作
+
+在開始之前，請確保：
+
+1. **已安裝 Cherry Studio**
+
+   從 [Cherry Studio 官網](https://cherry-ai.com) 下載並安裝適合您操作系統的版本
+
+2. **已獲取 ToAPIs API 密鑰**
+
+   登錄 [ToAPIs 控制檯](https://toapis.com/console/token) 獲取您的 API 密鑰（以 `sk-` 開頭）
+
+**提示：** 如果還沒有 ToAPIs 賬戶，請先在 [ToAPIs](https://toapis.com) 註冊並獲取 API 密鑰。
+
+## 配置步驟
+
+### 第一步：打開模型提供商設置
+
+1. 啓動 Cherry Studio
+2. 點擊左下角的 **設置** 圖標（齒輪圖標）
+3. 在設置頁面中選擇 **模型服務** 或 **提供商**
+
+### 第二步：添加 ToAPIs 提供商
+
+1. 點擊提供商列表右上角的 **+** 按鈕，添加新提供商
+2. 在彈出的對話框中：
+   - **名稱**：填寫 `ToAPIs`（或您喜歡的名稱）
+   - **提供商類型**：選擇 **New API**（兼容 OpenAI 格式）
+3. 點擊 **確認** 完成創建
+
+### 第三步：填寫 API 配置
+
+在 ToAPIs 提供商的配置頁面中，填寫以下信息：
+
+| 配置項 | 填寫內容 |
+| --- | --- |
+| **API 密鑰** | 您的 ToAPIs API 密鑰（`sk-xxxxxxxxxxxx`） |
+| **API 地址** | `https://toapis.com/v1/` |
+
+### 第四步：添加模型
+
+1. 在提供商配置頁面，點擊 **添加模型** 按鈕
+2. 填寫模型信息：
+   - **模型 ID**：輸入您想使用的模型 ID（見下方推薦模型列表）
+   - **端點類型**：選擇 **OpenAI**
+3. 點擊保存
+
+**推薦模型：**
+
+| 模型名稱 | 模型 ID | 特點 |
+| --- | --- | --- |
+| Claude Opus 4.6 | [`claude-opus-4-6`](../api-reference/chat/claude-opus-4-6/chat) | 最強大，適合複雜任務 |
+| Claude Sonnet 4.6 | [`claude-sonnet-4-6`](../api-reference/chat/claude-sonnet-4-6/chat) | 性能與速度平衡，推薦日常使用 |
+| Claude Haiku 4.5 | [`claude-haiku-4-5-20251001`](../api-reference/chat/claude-haiku-4-5/chat) | 快速響應，適合簡單任務 |
+| GPT-5 | [`gpt-5`](../api-reference/chat/models) | 最新 OpenAI 旗艦模型 |
+| GPT-4o | [`gpt-4o`](../api-reference/chat/models) | 高質量對話與多模態 |
+| GPT-4o Mini | [`gpt-4o-mini`](../api-reference/chat/models) | 快速且經濟 |
+| Gemini 2.5 Pro | [`gemini-2.5-pro`](../api-reference/chat/models) | Google 多模態旗艦 |
+
+您可以重複上述步驟，按需添加多個模型。
+
+### 第五步：啓用並驗證
+
+1. 確保提供商右側的開關處於**開啓**狀態
+2. 點擊 **檢查連接** 或 **測試** 按鈕，驗證配置是否正確
+3. 如果提示連接成功，說明配置完成
+
+## 開始使用
+
+配置完成後：
+
+1. 返回 Cherry Studio 主界面
+2. 在對話框頂部的模型選擇器中，選擇剛纔添加的 ToAPIs 模型
+3. 開始對話
+
+## 常見問題
+
+### Q1: 連接測試失敗？
+
+**解決方案：**
+
+1. 檢查 **API 密鑰** 是否正確，確認以 `sk-` 開頭
+2. 確認 **API 地址** 填寫爲 `https://toapis.com/v1/`（注意末尾的斜槓）
+3. 在 [ToAPIs 控制檯](https://toapis.com/console/token) 確認密鑰未過期且賬戶餘額充足
+4. 檢查網絡連接，確保能訪問 `https://toapis.com`
+
+### Q2: 模型列表中找不到我的模型？
+
+Cherry Studio 使用手動添加模型的方式，直接在添加模型時輸入模型 ID 即可。可在 [ToAPIs 模型列表](https://toapis.com/console/models) 查看所有可用模型 ID。
+
+### Q3: 常見錯誤碼說明
+
+| 錯誤信息 | 原因 | 解決方法 |
+| --- | --- | --- |
+| `401 Unauthorized` | API Key 無效或過期 | 重新獲取 API Key |
+| `429 Too Many Requests` | 請求頻率超限 | 稍等片刻後重試 |
+| `500 Internal Server Error` | 服務器臨時故障 | 等待幾分鐘後重試 |
+| `insufficient_quota` | 賬戶餘額不足 | 前往控制檯充值 |
+
+## 支持與幫助
+
+如果您在使用過程中遇到任何問題：
+
+- 📚 [ToAPIs 文檔中心](https://docs.toapis.com)
+- 📚 [Cherry Studio 官方文檔](https://docs.cherry-ai.com)
+- 💬 [Discord 社區](https://discord.gg/hvnszCrJ73)
+- 🐦 [Twitter @toapisai](https://x.com/toapisai)
+
+---
+
+[## 開始使用 ToAPIs
+
+立即註冊 ToAPIs，獲取您的 API 密鑰，在 Cherry Studio 中開啓高效 AI 之旅！](https://toapis.com)

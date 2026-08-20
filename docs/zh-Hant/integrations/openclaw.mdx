@@ -1,0 +1,121 @@
+---
+title: "在 OpenClaw 中使用 ToAPIs"
+sidebarTitle: "OpenClaw"
+description: ""
+---
+
+## 準備工作
+
+在開始之前，請確保：
+
+1. **已安裝 OpenClaw**
+
+   下載並安裝 OpenClaw，安裝完成後可在終端中運行 `openclaw` 命令
+
+2. **已獲取 ToAPIs API 密鑰**
+
+   登錄 [ToAPIs 控制檯](https://toapis.com/console/token) 獲取您的 API 密鑰（以 `sk-` 開頭）
+
+**提示：** 如果還沒有 ToAPIs 賬戶，請先在 [ToAPIs](https://toapis.com) 註冊並獲取 API 密鑰。
+
+## 配置步驟
+
+在終端中運行以下命令啓動初始化嚮導：
+
+```bash
+openclaw onboard
+```
+
+按照提示依次填寫以下信息：
+
+### 第一步：選擇模型/認證提供商
+
+```
+Model/auth provider:
+```
+
+使用**方向鍵**選擇 **Custom Provider**，然後按回車確認。
+
+### 第二步：填寫 API Base URL
+
+```
+API Base URL:
+```
+
+輸入以下地址：
+
+```
+https://toapis.com/v1
+```
+
+### 第三步：填寫 API Key
+
+```
+API Key:
+```
+
+粘貼您從 [ToAPIs 控制檯](https://toapis.com/console/token) 獲取的 API 密鑰（`sk-xxxxxxxxxxxx`）。
+
+### 第四步：選擇端點兼容性
+
+```
+Endpoint compatibility:
+```
+
+使用**方向鍵**選擇 **OpenAI-compatible**，然後按回車確認。
+
+### 第五步：填寫模型 ID
+
+```
+Model ID:
+```
+
+輸入您要使用的模型 ID，例如：
+
+```
+claude-sonnet-4-6
+```
+
+## 推薦模型
+
+| 模型名稱 | 模型 ID | 特點 |
+| --- | --- | --- |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | 性能與成本最佳平衡，適合大多數場景 |
+| Claude Opus 4.6 | `claude-opus-4-6` | 最強大的 Claude 模型，適合複雜任務 |
+| Claude Haiku 4.5 | `claude-haiku-4-5` | 快速且經濟，適合輕量任務 |
+| Qwen3 Max | `qwen3-max` | 阿里雲旗艦推理模型 |
+| Kimi K2.5 | `kimi-k2.5` | 月之暗面長上下文模型 |
+
+## 配置完成
+
+完成以上步驟後，OpenClaw 將使用 ToAPIs 作爲後端服務。您可以直接開始使用 AI 對話功能，所有請求將通過 ToAPIs 路由到對應的模型。
+
+## 常見問題
+
+### 認證失敗？
+
+- 確認 API Key 正確且以 `sk-` 開頭
+- 在 [ToAPIs 控制檯](https://toapis.com/console/token) 檢查密鑰是否有效
+- 確保賬戶餘額充足
+
+### 模型不可用？
+
+- 確認 API Base URL 填寫爲 `https://toapis.com/v1`（包含 `/v1` 後綴）
+- 確認 Endpoint compatibility 選擇了 **OpenAI-compatible**
+- 檢查模型 ID 是否拼寫正確
+
+## 支持與幫助
+
+如果您在使用過程中遇到任何問題：
+
+- 📚 [ToAPIs 文檔中心](https://docs.toapis.com)
+- 💬 [Discord 社區](https://discord.gg/hvnszCrJ73)
+- 🐦 [Twitter @toapisai](https://x.com/toapisai)
+- 📧 技術支持：[zhihong@toapis.com](mailto:zhihong@toapis.com)
+
+---
+
+
+[## 開始使用 ToAPIs
+
+立即註冊 ToAPIs，獲取您的 API 密鑰，在 OpenClaw 中開啓 AI 之旅！](https://toapis.com)

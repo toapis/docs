@@ -1,0 +1,128 @@
+---
+title: "MiniMax Hailuo H3 動画生成"
+sidebarTitle: "MiniMax-H3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "MiniMax Hailuo H3 でテキスト、先頭・末尾フレーム、マルチモーダル参照から 2K または 768p 動画を生成"
+---
+
+- モデル名は `MiniMax-H3` 固定です
+- テキスト動画、先頭/末尾フレーム、画像・動画・音声の複合参照に対応します
+- 出力解像度は `2K` と `768p` に対応し、既定値は `2K` です。長さは `4-15` 秒です
+- 非同期 API は統一形式の `generation.task` を返します
+
+<Warning>
+  公開アクセス可能な素材 URL を使用してください。先頭/末尾フレームモードと参照モードは併用できません。参照音声だけの入力もできません。
+</Warning>
+
+## 認証
+
+<ParamField header="Authorization" type="string" required>
+  `Authorization: Bearer YOUR_API_KEY` を送信してください。
+</ParamField>
+
+## リクエストパラメータ
+
+<ParamField body="model" type="string" default="MiniMax-H3" required>`MiniMax-H3` 固定です。</ParamField>
+<ParamField body="prompt" type="string" required>動画の説明。最大 `7000` 文字です。</ParamField>
+<ParamField body="duration" type="integer" default={5}>`4-15` 秒の整数です。</ParamField>
+<ParamField body="resolution" type="string" default="2K">`2K` と `768p` に対応します。既定値は `2K` です。</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  `21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`adaptive`。
+  テキスト動画では `adaptive` は使えません。フレームモードでは入力画像に自動適応し、参照モードは既定で `adaptive` です。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  互換用画像 URL。1 枚は先頭、2 枚は先頭/末尾、3-9 枚は参照画像として扱われます。新規実装では `image_with_roles` を推奨します。
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  `url` と `role` を持つ画像配列。role は `first_frame`（最大 1）、`last_frame`（最大 1）、`reference_image`（最大 9）です。
+  JPG、JPEG、PNG、WebP、HEIC、HEIF、最大 `30 MB`、各辺 `256-5760 px`、縦横比 `0.4-2.5` に対応します。
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  最大 `3` 本の参照動画。各項目は `url` と `role: reference_video` を持ちます。MP4/MOV、最大 `50 MB`、各 `2-15` 秒、合計 `15` 秒までです。
+  <Note>ToAPIs が実際の動画時間を読み取って課金します。クライアント計算の時間は送信しないでください。</Note>
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  最大 `3` 本の参照音声。各項目は `url` と `role: reference_audio` を持ちます。WAV/MP3、最大 `15 MB`、各 `2-15` 秒、合計 `15` 秒までです。
+  <Warning>少なくとも 1 つの参照画像または参照動画が必要です。</Warning>
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={false}>AIGC ウォーターマークを追加するかどうか。</ParamField>
+<ParamField body="client_business_id" type="string">注文 ID などのクライアント側業務 ID。</ParamField>
+<ParamField body="callback_url" type="string">ToAPIs タスク完了 Callback。[Webhook](/docs/ja/api-reference/webhooks/task-webhooks) を参照してください。</ParamField>
+
+## モードと制限
+
+| モード | 入力 | 比率 |
+|------|------|------|
+| テキスト動画 | `prompt` | 具体値、既定 `16:9` |
+| 先頭/末尾フレーム | `prompt` + フレーム画像 | 自動 `adaptive` |
+| マルチモーダル参照 | `prompt` + 参照素材 | 既定 `adaptive` |
+
+参照素材は画像 9、動画 3、音声 3、合計 12 ファイルまでです。フレーム role と参照 role は混在できません。
+
+## 例
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "動画1の動きとカメラリズムを参照し、音声1の声で台詞を話す",
+  "duration": 5,
+  "resolution": "768p",
+  "aspect_ratio": "adaptive",
+  "video_with_roles": [
+    {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+  ],
+  "audio_with_roles": [
+    {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+  ]
+}
+```
+
+## レスポンス
+
+<ResponseField name="id" type="string">ToAPIs タスク ID。</ResponseField>
+<ResponseField name="object" type="string">`generation.task` 固定。</ResponseField>
+<ResponseField name="model" type="string">`MiniMax-H3` 固定。</ResponseField>
+<ResponseField name="status" type="string">`queued`、`in_progress`、`completed`、`failed`。</ResponseField>
+<ResponseField name="progress" type="integer">`0-100` の進捗。</ResponseField>
+<ResponseField name="created_at" type="integer">Unix 作成時刻（秒）。</ResponseField>
+
+<Note>[動画タスク状態取得](../../tasks/video-status)をポーリングしてください。完了時の URL は `result.data[0].url` にあります。</Note>
+
+<RequestExample>
+```bash cURL（テキスト動画）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"model":"MiniMax-H3","prompt":"月面の宇宙飛行士をカメラがゆっくり捉える","duration":5,"resolution":"2K","aspect_ratio":"16:9"}'
+```
+
+```bash cURL（画像・動画・音声の複合参照）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "画像1の人物を維持し、動画1の動きとカメラを参照し、音声1の声で台詞を話す",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "adaptive",
+    "image_with_roles": [{"url": "https://example.com/person.png", "role": "reference_image"}],
+    "video_with_roles": [{"url": "https://example.com/motion.mp4", "role": "reference_video"}],
+    "audio_with_roles": [{"url": "https://example.com/voice.mp3", "role": "reference_audio"}]
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{"id":"vid_01KZ3H3EXAMPLE00000000000","object":"generation.task","model":"MiniMax-H3","status":"queued","progress":0,"created_at":1785729000}
+```
+</ResponseExample>

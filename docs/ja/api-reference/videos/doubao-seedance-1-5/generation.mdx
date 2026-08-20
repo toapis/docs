@@ -1,0 +1,323 @@
+---
+title: "Doubao SeeDance 1.5 Pro 動画生成"
+sidebarTitle: "doubao-seedance-1-5-pro"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos using ByteDance Doubao SeeDance 1.5 Pro model"
+---
+
+- ByteDance Doubao video generation model 1.5 Pro version
+- Supports text-to-video generation
+- Supports first frame / last frame control
+- Does not support reference image mode
+- Supports audio generation (1.5 Pro exclusive feature)
+- Async task management, query results by task ID
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication
+
+  Get your API Key from the [API Key Management Page](https://toapis.com/console/token)
+
+  Add to request header:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="doubao-seedance-1-5-pro" required>
+  Video generation model name
+
+  Available models:
+  - `doubao-seedance-1-5-pro` - 1.5 Pro version, supports audio generation and first/last frame control
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Video content description
+
+  Describe scenes, actions, and style in detail for better generation results
+
+  Example: `"Sunset at the beach, golden sunlight on the sea, waves gently hitting the sand"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  Video duration (seconds)
+
+  Supported range: `4` ~ `12` seconds
+
+  Default: `5`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Video aspect ratio
+
+  Options:
+  - `16:9` - Landscape
+  - `9:16` - Portrait
+  - `1:1` - Square
+  - `4:3` - Traditional ratio
+  - `3:4` - Vertical traditional ratio
+  - `21:9` - Ultra-wide
+
+  Default: `16:9`
+</ParamField>
+
+## Resolution and Aspect Ratio Combinations
+
+| Resolution | Supported Aspect Ratios | Notes |
+|------------|-------------------------|-------|
+| 480p | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9 | All supported |
+| 720p | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9 | All supported (default) |
+| 1080p | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9 | All supported |
+
+<ParamField body="image_urls" type="string[]">
+  Compatibility image URL array for first/last-frame image-to-video generation
+
+  Compatibility rules:
+  - 1 image: treated as `first_frame`
+  - 2 images: treated as `first_frame` and `last_frame`
+  - More than 2 images: only the first two are used
+
+  We recommend using `image_with_roles` to explicitly specify first and last frames
+
+  Example: `["https://example.com/first.png", "https://example.com/last.png"]`
+
+  `image_urls` and `image_with_roles` cannot be used together
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Image array with roles for explicit first/last-frame control
+
+  <Expandable title="Field 説明">
+    <ParamField body="url" type="string" required>
+      Image URL
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Image role
+
+      Options:
+      - `first_frame` - First frame image, used as the starting frame (only one supported)
+      - `last_frame` - Last frame image, used as the ending frame (only one supported)
+    </ParamField>
+  </Expandable>
+
+  Example:
+  ```json
+  [
+    {"url": "https://example.com/first.png", "role": "first_frame"},
+    {"url": "https://example.com/last.png", "role": "last_frame"}
+  ]
+  ```
+
+  <Warning>
+    - `image_urls` and `image_with_roles` cannot be used together
+    - Only one first frame and one last frame are supported
+    - 1.5 Pro does not support the `reference_image` role. Use Seedance 2.0 if you need reference image control
+  </Warning>
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters
+
+  <Expandable title="Field 説明">
+    <ParamField body="resolution" type="string" default="720p">
+      Video resolution
+
+      Options:
+      - `480p` - Standard definition
+      - `720p` - High definition (default)
+      - `1080p` - Full HD
+    </ParamField>
+
+    <ParamField body="seed" type="integer">
+      Seed integer for controlling generation randomness
+
+      Range: `-1` ~ `2^32-1`
+
+      The same seed can produce similar results, but exact output is not guaranteed
+    </ParamField>
+
+    <ParamField body="audio" type="boolean" default={false}>
+      Whether to generate audio
+
+      When set to `true`, the video will include AI-generated accompanying audio
+
+      **1.5 Pro exclusive feature**
+    </ParamField>
+
+    <ParamField body="camerafixed" type="boolean" default={false}>
+      Whether to keep the camera fixed
+
+      When set to `true`, the camera position remains fixed throughout the video
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Differences from 1.0
+
+| Feature | 1.0 fast/quality | 1.5 Pro |
+|---------|------------------|---------|
+| Default resolution | 1080p | **720p** |
+| Supported resolutions | 480p/720p/1080p | **480p/720p/1080p** |
+| Duration range | 2-12s | **4-12s** |
+| Audio generation | Not supported | **Supported** |
+| Image control mode | `reference` single reference image | **`first_frame` / `last_frame` frame mode** |
+
+## レスポンス
+
+<ResponseField name="id" type="string">
+  Unique task identifier for status queries
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  モデル name used
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status
+  - `queued` - Queued for processing
+  - `in_progress` - Processing
+  - `completed` - Successfully completed
+  - `failed` - Failed
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Task progress percentage (0-100)
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp (Unix timestamp)
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Task metadata
+</ResponseField>
+
+<RequestExample>
+```bash cURL (Text-to-Video with Audio)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedance-1-5-pro",
+    "prompt": "Sunset at the beach, golden sunlight on the sea, waves gently hitting the sand",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "metadata": {
+      "resolution": "720p",
+      "audio": true
+    }
+  }'
+```
+
+```bash cURL (First-Frame Image-to-Video)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedance-1-5-pro",
+    "prompt": "A cat chasing a snake through the grass while the camera tracks the motion",
+    "image_with_roles": [
+      {"url": "https://example.com/first.png", "role": "first_frame"}
+    ],
+    "metadata": {
+      "resolution": "720p",
+      "audio": true
+    }
+  }'
+```
+
+```bash cURL (First + Last Frame Image-to-Video)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedance-1-5-pro",
+    "prompt": "A girl spins beneath cherry blossoms and slowly comes to a stop at the end",
+    "image_with_roles": [
+      {"url": "https://example.com/first.png", "role": "first_frame"},
+      {"url": "https://example.com/last.png", "role": "last_frame"}
+    ],
+    "duration": 5,
+    "aspect_ratio": "9:16",
+    "metadata": {
+      "resolution": "720p",
+      "audio": true
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedance-1-5-pro",
+        "prompt": "Sunset at the beach, golden sunlight on the sea, waves gently hitting the sand",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "metadata": {
+            "resolution": "720p",
+            "audio": True
+        }
+    }
+)
+
+task = response.json()
+print(f"Task ID: {task['id']}")
+print(f"Status: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/videos/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedance-1-5-pro',
+    prompt: 'Sunset at the beach, golden sunlight on the sea, waves gently hitting the sand',
+    duration: 5,
+    aspect_ratio: '16:9',
+    metadata: {
+      resolution: '720p',
+      audio: true
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`Task ID: ${task.id}`);
+console.log(`Status: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_vid_xyz789ghi012",
+  "object": "generation.task",
+  "model": "doubao-seedance-1-5-pro",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

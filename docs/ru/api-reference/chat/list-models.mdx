@@ -1,0 +1,92 @@
+---
+title: "Список моделей"
+sidebarTitle: "Список моделей"
+api: "GET https://toapis.com/v1/models"
+description: "Список моделей, доступных текущему API key, совместимый с OpenAI Models API"
+---
+
+- Совместимо с форматом OpenAI Models API
+- Возвращает модели, доступные текущему API key и группе пользователя
+- По умолчанию возвращает текстовые модели; используйте `type=all`, чтобы включить все типы
+- Поддерживает фильтрацию text, image, video и audio моделей
+
+Используйте этот эндпоинт, чтобы получить модели, доступные текущему API key. Результат динамически фильтруется по ограничениям токена, группе пользователя, включенным каналам и настройкам цен.
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все API запросы требуют Bearer Token.
+
+  Получите API key на [странице управления API ключами](https://toapis.com/console/token).
+
+  Добавьте его в заголовок:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Query параметры
+
+<ParamField query="type" type="string" default="text">
+  Фильтр по типу модели.
+
+  Поддерживаемые значения:
+
+  - `text` или `chat`: только text/chat модели
+  - `image`: только image модели
+  - `video`: только video модели
+  - `audio`: только audio модели
+  - `all`: все доступные модели
+
+  Если параметр не указан, по умолчанию возвращаются только текстовые модели.
+</ParamField>
+
+## Ответ
+
+<ResponseField name="success" type="boolean">
+  Успешен ли запрос.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта списка. Всегда `list`.
+</ResponseField>
+
+<ResponseField name="data" type="object[]">
+  Список моделей.
+
+  <Expandable title="data[n]">
+    <ResponseField name="id" type="string">
+      ID модели. Используйте его как параметр `model` в других API запросах.
+    </ResponseField>
+
+    <ResponseField name="object" type="string">
+      Тип объекта. Всегда `model`.
+    </ResponseField>
+
+    <ResponseField name="created" type="integer">
+      Timestamp создания модели.
+    </ResponseField>
+
+    <ResponseField name="owned_by" type="string">
+      Владелец модели, провайдер или название канала.
+    </ResponseField>
+
+    <ResponseField name="supported_endpoint_types" type="string[]">
+      Типы эндпоинтов, поддерживаемые моделью.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request GET \
+  --url 'https://toapis.com/v1/models?type=all' \
+  --header 'Authorization: Bearer YOUR_API_KEY'
+```
+</RequestExample>
+
+## Примечания
+
+- Если API key имеет ограничения по моделям, возвращаются только разрешенные модели.
+- Если `type` не указан, async task модели, например video и audio, исключаются из результата по умолчанию.
+- Чтобы получить image, video, audio и text модели вместе, вызовите `GET /v1/models?type=all`.

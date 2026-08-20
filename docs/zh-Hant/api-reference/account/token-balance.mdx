@@ -1,0 +1,396 @@
+---
+title: "查詢令牌餘額"
+sidebarTitle: "查詢令牌餘額"
+api: "GET https://toapis.com/v1/balance"
+description: "查詢當前 API Key 的剩餘額度和已使用額度"
+---
+
+- 查詢當前 API Key 的剩餘額度和已使用額度
+- 監控單個令牌的使用情況
+- 支持 CORS 跨域請求
+- 實時餘額監控
+
+獲取當前 API Key（令牌）的剩餘餘額和已使用餘額。此接口用於監控單個令牌的使用情況，同時會返回積分字段，固定按 `1 USD = 200 積分` 換算。
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：
+
+  訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 接口端點
+
+```
+GET /v1/balance
+GET /balance
+```
+
+兩個端點功能相同，可以任選其一使用。
+
+<RequestExample>
+```bash cURL
+curl --request GET \
+  --url 'https://toapis.com/v1/balance' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```python Python
+import requests
+
+API_BASE = 'https://toapis.com'
+API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx'
+
+headers = {
+    'Authorization': f'Bearer {API_KEY}'
+}
+
+def get_token_balance():
+    response = requests.get(f'{API_BASE}/v1/balance', headers=headers)
+    data = response.json()
+
+    if data.get('success'):
+        if data.get('unlimited_quota'):
+            print("令牌額度: 無限")
+        else:
+            print(f"令牌剩餘餘額: {data['remain_balance']}")
+            print(f"令牌剩餘積分: {data['remain_credits']}")
+        print(f"令牌已使用: {data['used_balance']}")
+        print(f"令牌已使用積分: {data['used_credits']}")
+    else:
+        print(f"查詢失敗: {data.get('message')}")
+
+    return data
+
+get_token_balance()
+```
+
+```javascript JavaScript
+const API_BASE = 'https://toapis.com';
+const API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx';
+
+async function getTokenBalance() {
+  const response = await fetch(`${API_BASE}/v1/balance`, {
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`
+    }
+  });
+
+  const data = await response.json();
+
+  if (data.success) {
+    if (data.unlimited_quota) {
+      console.log('令牌額度: 無限');
+    } else {
+      console.log(`令牌剩餘餘額: ${data.remain_balance}`);
+      console.log(`令牌剩餘積分: ${data.remain_credits}`);
+    }
+    console.log(`令牌已使用: ${data.used_balance}`);
+    console.log(`令牌已使用積分: ${data.used_credits}`);
+  } else {
+    console.error('查詢失敗:', data.message);
+  }
+
+  return data;
+}
+
+getTokenBalance();
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io/ioutil"
+    "net/http"
+)
+
+type BalanceResponse struct {
+    Success        bool    `json:"success"`
+    Message        string  `json:"message,omitempty"`
+    RemainBalance  float64 `json:"remain_balance"`
+    UsedBalance    float64 `json:"used_balance"`
+    RemainCredits  float64 `json:"remain_credits"`
+    UsedCredits    float64 `json:"used_credits"`
+    CreditsPerUSD  float64 `json:"credits_per_usd"`
+    UnlimitedQuota bool    `json:"unlimited_quota"`
+}
+
+func main() {
+    url := "https://toapis.com/v1/balance"
+
+    req, _ := http.NewRequest("GET", url, nil)
+    req.Header.Set("Authorization", "Bearer <token>")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    body, _ := ioutil.ReadAll(resp.Body)
+
+    var result BalanceResponse
+    json.Unmarshal(body, &result)
+
+    if result.Success {
+        if result.UnlimitedQuota {
+            fmt.Println("額度: 無限")
+        } else {
+            fmt.Printf("剩餘餘額: %.2f\n", result.RemainBalance)
+            fmt.Printf("剩餘積分: %.2f\n", result.RemainCredits)
+        }
+        fmt.Printf("已使用: %.2f\n", result.UsedBalance)
+        fmt.Printf("已使用積分: %.2f\n", result.UsedCredits)
+    }
+}
+```
+
+```java Java
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String url = "https://toapis.com/v1/balance";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", "Bearer <token>")
+            .GET()
+            .build();
+
+        HttpResponse<String> response = client.send(request,
+            HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.body());
+    }
+}
+```
+
+```php PHP
+<?php
+
+$api_key = 'sk-xxxxxxxxxxxxxxxxxxxxxx';
+
+$ch = curl_init('https://toapis.com/v1/balance');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer $api_key"
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+$data = json_decode($response, true);
+
+if ($data['success']) {
+    if ($data['unlimited_quota']) {
+        echo "額度: 無限\n";
+    } else {
+        echo "剩餘餘額: " . $data['remain_balance'] . "\n";
+    }
+    echo "已使用: " . $data['used_balance'] . "\n";
+} else {
+    echo "查詢失敗: " . $data['message'] . "\n";
+}
+?>
+```
+
+```ruby Ruby
+require 'net/http'
+require 'json'
+require 'uri'
+
+api_key = 'sk-xxxxxxxxxxxxxxxxxxxxxx'
+
+url = URI("https://toapis.com/v1/balance")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Get.new(url)
+request["Authorization"] = "Bearer #{api_key}"
+
+response = http.request(request)
+data = JSON.parse(response.body)
+
+if data['success']
+  if data['unlimited_quota']
+    puts "額度: 無限"
+  else
+    puts "剩餘餘額: #{data['remain_balance']}"
+  end
+  puts "已使用: #{data['used_balance']}"
+else
+  puts "查詢失敗: #{data['message']}"
+end
+```
+
+```swift Swift
+import Foundation
+
+let apiKey = "sk-xxxxxxxxxxxxxxxxxxxxxx"
+let url = URL(string: "https://toapis.com/v1/balance")!
+
+var request = URLRequest(url: url)
+request.httpMethod = "GET"
+request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+let task = URLSession.shared.dataTask(with: request) { data, response, error in
+    if let error = error {
+        print("Error: \(error)")
+        return
+    }
+
+    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+        print(responseString)
+    }
+}
+
+task.resume()
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 - 查詢成功
+{
+  "success": true,
+  "remain_balance": 10.5,
+  "used_balance": 2.3,
+  "remain_credits": 2100,
+  "used_credits": 460,
+  "credits_per_usd": 200,
+  "unlimited_quota": false
+}
+```
+
+```json 200 - 無限額度令牌
+{
+  "success": true,
+  "remain_balance": -1,
+  "used_balance": 2.3,
+  "remain_credits": 2100,
+  "used_credits": 460,
+  "credits_per_usd": 200,
+  "unlimited_quota": true
+}
+```
+
+```json 200 - 令牌不存在
+{
+  "success": false,
+  "message": "獲取令牌信息失敗: record not found"
+}
+```
+
+```json 401
+{
+  "error": {
+    "code": 401,
+    "message": "身份驗證失敗，請檢查您的API密鑰",
+    "type": "authentication_error"
+  }
+}
+```
+
+```json 429
+{
+  "error": {
+    "code": 429,
+    "message": "請求過於頻繁，請稍後再試",
+    "type": "rate_limit_error"
+  }
+}
+```
+</ResponseExample>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  請求是否成功
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  錯誤信息（僅失敗時返回）
+</ResponseField>
+
+<ResponseField name="remain_balance" type="float">
+  令牌剩餘餘額（成功時返回）。當 `unlimited_quota` 爲 `true` 時，該值爲 `-1`
+</ResponseField>
+
+<ResponseField name="used_balance" type="float">
+  令牌已使用餘額（成功時返回）
+</ResponseField>
+
+<ResponseField name="remain_credits" type="float">
+  令牌剩餘積分（成功時返回），固定按 `1 USD = 200 積分` 換算
+</ResponseField>
+
+<ResponseField name="used_credits" type="float">
+  令牌已使用積分（成功時返回）
+</ResponseField>
+
+<ResponseField name="credits_per_usd" type="float">
+  積分換算比例，當前返回 `200`
+</ResponseField>
+
+<ResponseField name="unlimited_quota" type="boolean">
+  是否爲無限額度令牌。`true` 表示無限額度，`false` 表示有限額度
+</ResponseField>
+
+## 使用場景
+
+* 監控單個 API Key 的消耗情況
+* 在應用中顯示當前令牌的餘額
+* 設置餘額告警，當餘額低於閾值時通知
+
+<Note>
+  **餘額單位說明**
+
+  餘額數值的單位取決於系統配置：
+
+  * **USD** - 美元
+  * **CNY** - 人民幣
+  * **Tokens** - Token 數量
+
+  如果需要穩定讀取積分，請優先使用 `remain_credits` 和 `used_credits`。這兩個字段固定按 `1 USD = 200 積分` 換算，不受餘額展示配置影響。
+</Note>
+
+<Tip>
+  **無限額度令牌**
+
+  當令牌被設置爲無限額度時：
+
+  * `unlimited_quota` 字段返回 `true`
+  * `remain_balance` 字段返回 `-1`
+  * 該令牌不受額度限制，可無限使用
+</Tip>
+
+## 常見錯誤
+
+| 錯誤信息 | 原因 | 解決方案 |
+| --- | --- | --- |
+| 無 Authorization 頭 | 未提供 Authorization 請求頭 | 添加 `Authorization: Bearer sk-xxxxx` 請求頭 |
+| 獲取令牌信息失敗 | 令牌不存在或已刪除 | 檢查令牌 key 是否正確 |
+
+<Warning>
+  **安全提示**
+
+  API Key 相當於密碼，請妥善保管，不要泄露給他人。生產環境請務必使用 HTTPS。
+</Warning>

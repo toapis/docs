@@ -1,0 +1,118 @@
+---
+title: "支持的文字模型"
+sidebarTitle: "模型一覽"
+description: "文字對話模型一覽，支持 Chat Completions 與 Responses 兩種 API 格式"
+---
+
+平臺提供兩種 API 調用方式，通過 `model` 參數切換模型：
+
+| API 格式 | 端點 | 說明 |
+|----------|------|------|
+| **Chat Completions**（默認） | `POST /v1/chat/completions` | 經典對話接口，兼容所有 OpenAI SDK，[查看文檔](./chat) |
+| **Responses**（新） | `POST /v1/responses` | OpenAI 新一代 Agentic API，支持函數調用、內置工具、服務端多輪上下文，[查看文檔](./responses) |
+
+<Tip>
+標註 <code>Responses Only</code> 的模型僅支持 Responses API，不支持 Chat Completions。其餘模型默認通過 Chat Completions 調用。
+</Tip>
+
+---
+
+## Anthropic / Claude
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `claude-haiku-4-5` | 速度最快、成本最低的 Claude 模型，適合高併發輕量任務 | ✓ | |
+| `claude-sonnet-4-6` | 性能與成本最佳平衡，適合大多數業務場景 | ✓ | |
+| `claude-opus-4-6` | Claude 旗艦模型，適合複雜推理與高質量創作 | ✓ | |
+
+## OpenAI / GPT-5
+
+### GPT-5 Official（官方直連）
+
+通過 Azure OpenAI 官方 API 直連，穩定性與合規性最高。
+
+| 模型 ID | 描述 | 視覺 | 深度思考 | API 格式 |
+|---------|------|:----:|:--------:|:--------:|
+| `gpt-5-pro-official` | GPT-5 Pro 官方直連，OpenAI 最強旗艦推理模型 | ✓ | ✓ | Responses Only |
+| `gpt-5.2-official` | GPT-5.2 官方直連，多模態增強版 | ✓ | ✓ | 全部 |
+| `gpt-5.3-codex-official` | GPT-5.3 Codex 官方直連，最新代碼優化版，支持函數調用與內置工具 | ✓ | ✓ | Responses Only |
+
+### GPT-5 標準
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `gpt-5` | OpenAI 旗艦模型，強大的通用推理與多模態能力 | ✓ | |
+| `gpt-5-codex` | 專爲代碼優化的 GPT-5，擅長代碼生成與調試 | | |
+| `gpt-5-codex-mini` | 輕量代碼模型，極速響應低成本 | | |
+| `gpt-5.1` | GPT-5 增強版，改進的指令遵循與推理能力 | ✓ | |
+| `gpt-5.1-codex` | GPT-5.1 代碼專項版本 | | |
+| `gpt-5.1-codex-max` | GPT-5.1 旗艦代碼版，最強代碼能力 | | |
+| `gpt-5.1-codex-mini` | GPT-5.1 輕量代碼版，快速低成本 | | |
+| `gpt-5.2` | GPT-5 第二代，多模態增強 | ✓ | |
+| `gpt-5.2-codex` | GPT-5.2 代碼專項版本 | | |
+| `gpt-5.3-codex` | GPT-5 最新代碼版本，持續優化的代碼能力 | | |
+| `gpt-5.3-codex-spark` | GPT-5.3 Codex Spark 變體，專注高速代碼生成 | | |
+| `gpt-5.4` | GPT-5 第四代，更強的通用推理與多模態能力 | ✓ | |
+| `gpt-5.5` | GPT-5.5，更強的通用推理、代碼與多模態能力 | ✓ | |
+
+## Google / Gemini
+
+### Gemini 3 系列
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `gemini-3.1-pro-preview-official` | Gemini 3.1 Pro，最新一代旗艦推理模型 | ✓ | ✓ |
+| `gemini-3.1-flash-lite-preview-official` | Gemini 3.1 Flash Lite，最具成本效益的輕量模型，極速響應 | ✓ | |
+| `gemini-3-pro-official` | Gemini 3 Pro 旗艦，最強推理與多模態能力 | ✓ | ✓ |
+| `gemini-3-pro-preview-official` | Gemini 3 Pro Preview 版本（同 gemini-3-pro-official） | ✓ | ✓ |
+| `gemini-3-flash-official` | Gemini 3 Flash，快速高效，性價比之選 | ✓ | ✓ |
+| `gemini-3-flash-preview-official` | Gemini 3 Flash Preview 版本（同 gemini-3-flash-official） | ✓ | ✓ |
+| `gemini-3.1-fast` | Gemini 快速版，高性價比多模態模型 | ✓ | |
+| `gemini-3.1-thinking` | Gemini 思考版，內置推理鏈，適合複雜問題求解 | ✓ | ✓ |
+
+### Gemini 2.5 系列
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `gemini-2.5-pro-official` | Gemini 2.5 Pro，強大推理與長上下文能力 | ✓ | ✓ |
+| `gemini-2.5-flash-official` | Gemini 2.5 Flash，高速推理，支持思考模式 | ✓ | ✓ |
+| `gemini-2.5-flash-lite-official` | Gemini 2.5 Flash Lite，極低成本超快響應 | ✓ | |
+
+### Gemini 2.0 系列
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `gemini-2.0-flash-official` | Gemini 2.0 Flash，經典快速模型 | ✓ | |
+| `gemini-2.0-flash-lite-official` | Gemini 2.0 Flash Lite，最低成本輕量模型 | ✓ | |
+
+## DeepSeek
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `deepseek-v3.2` | 深度求索旗艦模型，支持擴展思考，擅長代碼與複雜推理 | | ✓ |
+
+## 阿里巴巴 / 通義千問
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `qwen3-max` | 千問旗艦模型，支持深度思考，擅長複雜推理與代碼生成 | | ✓ |
+| `qwen3.5-plus` | 千問增強版，均衡的性能與成本 | | |
+| `qwen3.5-flash` | 千問超快版，極低延遲，高吞吐量場景首選 | | |
+
+## 智譜 / GLM
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `glm-5` | 智譜旗艦模型，中文理解與生成能力出色 | | |
+
+## Moonshot / Kimi
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `kimi-k2.5` | Moonshot 旗艦模型，超長上下文，中文能力突出 | | |
+
+## MiniMax
+
+| 模型 ID | 描述 | 視覺 | 深度思考 |
+|---------|------|:----:|:--------:|
+| `MiniMax-M2.5` | MiniMax 旗艦模型，性價比卓越 | | |

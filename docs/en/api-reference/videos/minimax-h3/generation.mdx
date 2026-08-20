@@ -1,0 +1,385 @@
+---
+title: "MiniMax Hailuo H3 Video Generation"
+sidebarTitle: "MiniMax-H3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate 2K or 768p videos with MiniMax Hailuo H3 using text, first/last frames, or multimodal references"
+---
+
+- The model name is `MiniMax-H3`
+- Supports text-to-video, first/last-frame generation, and combined image, video, and audio references
+- Output resolution supports `2K` and `768p`, with `2K` as the default; duration supports `4-15` seconds
+- Async API that returns a unified `generation.task`
+
+<Warning>
+  Prefer publicly accessible media URLs. First/last-frame mode and multimodal reference mode are mutually exclusive. Reference audio cannot be used alone and requires at least one reference image or video.
+</Warning>
+
+## Authentication
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```text
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Request Parameters
+
+<ParamField body="model" type="string" default="MiniMax-H3" required>
+  Video generation model name. The only supported value is `MiniMax-H3`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Video description, up to `7000` characters. Describe the subject, action, scene, camera movement, style, and sound requirements.
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  Output duration in seconds. Accepts integer values from `4` through `15`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="2K">
+  Output resolution. Accepted values are `2K` and `768p`; the default is `2K`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Output aspect ratio.
+
+  Options: `21:9`, `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, or `adaptive`.
+
+  - Text-to-video: defaults to `16:9`; `adaptive` is not allowed
+  - First/last-frame mode: always adapts to the input image and ignores a specific ratio
+  - Multimodal reference mode: defaults to `adaptive`, or accepts a specific ratio
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Image URL array for compatibility. New integrations should use `image_with_roles` to declare each image's purpose explicitly.
+
+  - 1 image: treated as `first_frame`
+  - 2 images: treated as `first_frame` and `last_frame` in order
+  - 3-9 images: treated as `reference_image`
+
+  <Warning>
+    Do not send `image_urls` and `image_with_roles` together because image roles may become ambiguous.
+  </Warning>
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Images with explicit roles.
+
+  <Expandable title="Show image fields">
+    <ParamField body="url" type="string" required>
+      Image URL. Supports JPG, JPEG, PNG, WebP, HEIC, and HEIF. Each file must be no larger than `30 MB`, both dimensions must be `256-5760 px`, and the aspect ratio must be `0.4-2.5`.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Image role:
+      - `first_frame` - first frame, at most 1 image
+      - `last_frame` - last frame, at most 1 image
+      - `reference_image` - reference image, at most 9 images
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  Reference videos for multimodal reference mode, up to `3` videos.
+
+  <Expandable title="Show video fields">
+    <ParamField body="url" type="string" required>
+      Public video URL. Supports MP4 and MOV with H.264/AVC or H.265/HEVC video. Each file must be no larger than `50 MB` and `2-15` seconds long; all reference videos combined must not exceed `15` seconds.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Must be `reference_video`.
+    </ParamField>
+  </Expandable>
+
+  <Note>
+    ToAPIs reads the actual reference-video duration for billing. Do not submit a client-calculated duration field.
+  </Note>
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  Reference audio for multimodal reference mode, up to `3` audio files.
+
+  <Expandable title="Show audio fields">
+    <ParamField body="url" type="string" required>
+      Public audio URL. Supports WAV and MP3. Each file must be no larger than `15 MB` and `2-15` seconds long; all reference audio combined must not exceed `15` seconds.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Must be `reference_audio`.
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    Reference audio cannot be used alone. Include at least one `reference_image` or `reference_video`.
+  </Warning>
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={false}>
+  Whether to add an AIGC watermark to the generated video.
+</ParamField>
+
+<ParamField body="client_business_id" type="string">
+  Your business identifier, such as an order or transaction ID. You can query the task using this value through the same status endpoint.
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  ToAPIs task-completion callback URL. Configure the Token URL and signing secret first; see [Task Webhooks](/docs/en/api-reference/webhooks/task-webhooks).
+</ParamField>
+
+## Input Modes
+
+| Mode | Input | `aspect_ratio` |
+|------|-------|----------------|
+| Text-to-video | `prompt` | Specific ratio, defaults to `16:9` |
+| First-frame video | `prompt` + one `first_frame` | Automatically uses `adaptive` |
+| First/last-frame video | `prompt` + `first_frame` + `last_frame` | Automatically uses `adaptive` |
+| Multimodal reference | `prompt` + reference images/videos/audio | Defaults to `adaptive`; a specific ratio is allowed |
+
+Multimodal reference limits:
+
+- Up to `9` reference images
+- Up to `3` reference videos
+- Up to `3` reference audio files
+- Up to `12` media files total
+- First/last-frame roles cannot be mixed with reference roles
+
+## Request Examples
+
+### Text-to-video
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "An epic space-opera trailer: a captain watches the last fleet jump away through a vast observation window, cinematic lighting",
+  "duration": 5,
+  "resolution": "2K",
+  "aspect_ratio": "16:9"
+}
+```
+
+### First and last frames
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "A girl naturally grows from childhood into a young adult, with a steady camera move and consistent identity",
+  "duration": 5,
+  "resolution": "768p",
+  "image_with_roles": [
+    {"url": "https://example.com/start.jpg", "role": "first_frame"},
+    {"url": "https://example.com/end.jpg", "role": "last_frame"}
+  ]
+}
+```
+
+### Multiple reference images
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "Keep the person from image 1 and the outfit from image 2 as the character walks through a rainy night street",
+  "duration": 6,
+  "resolution": "2K",
+  "aspect_ratio": "9:16",
+  "image_with_roles": [
+    {"url": "https://example.com/person.png", "role": "reference_image"},
+    {"url": "https://example.com/outfit.png", "role": "reference_image"}
+  ]
+}
+```
+
+### Combined video and audio references
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "Follow the action and camera rhythm of video 1, then deliver the dialogue using the voice from audio 1",
+  "duration": 5,
+  "resolution": "2K",
+  "aspect_ratio": "adaptive",
+  "video_with_roles": [
+    {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+  ],
+  "audio_with_roles": [
+    {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+  ]
+}
+```
+
+## Response
+
+<ResponseField name="id" type="string">
+  ToAPIs task ID used to query task status.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, always `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Model used for this request, always `MiniMax-H3`.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Task progress percentage from `0` to `100`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation time as a Unix timestamp in seconds.
+</ResponseField>
+
+<Note>
+  After submission, poll [Get Video Task Status](../../tasks/video-status). When completed, the video URL is available at `result.data[0].url`.
+</Note>
+
+<RequestExample>
+```bash cURL (Text-to-video)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "An astronaut stands at the edge of the moon looking toward Earth as the camera slowly pushes in",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL (First and last frames)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "A girl naturally grows from childhood into a young adult while her identity remains consistent",
+    "duration": 5,
+    "resolution": "768p",
+    "image_with_roles": [
+      {"url": "https://example.com/start.jpg", "role": "first_frame"},
+      {"url": "https://example.com/end.jpg", "role": "last_frame"}
+    ]
+  }'
+```
+
+```bash cURL (Multiple reference images)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "Keep the person from image 1 and the outfit from image 2 as the character walks through a rainy night street",
+    "duration": 6,
+    "resolution": "2K",
+    "aspect_ratio": "9:16",
+    "image_with_roles": [
+      {"url": "https://example.com/person.png", "role": "reference_image"},
+      {"url": "https://example.com/outfit.png", "role": "reference_image"}
+    ]
+  }'
+```
+
+```bash cURL (Image, video, and audio references)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "Keep the person from image 1, follow the motion and camera rhythm of video 1, and use the voice from audio 1",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "adaptive",
+    "image_with_roles": [
+      {"url": "https://example.com/person.png", "role": "reference_image"}
+    ],
+    "video_with_roles": [
+      {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+    ],
+    "audio_with_roles": [
+      {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+    ]
+  }'
+```
+
+```python Python (Multimodal references)
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "MiniMax-H3",
+        "prompt": "Keep the person from image 1, follow the motion and camera rhythm of video 1, and use the voice from audio 1",
+        "duration": 5,
+        "resolution": "2K",
+        "aspect_ratio": "adaptive",
+        "image_with_roles": [
+            {"url": "https://example.com/person.png", "role": "reference_image"}
+        ],
+        "video_with_roles": [
+            {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+        ],
+        "audio_with_roles": [
+            {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+        ],
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript (Multimodal references)
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer your-ToAPIs-key",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "MiniMax-H3",
+    prompt: "Keep the person from image 1, follow the motion and camera rhythm of video 1, and use the voice from audio 1",
+    duration: 5,
+    resolution: "2K",
+    aspect_ratio: "adaptive",
+    image_with_roles: [
+      {url: "https://example.com/person.png", role: "reference_image"}
+    ],
+    video_with_roles: [
+      {url: "https://example.com/motion.mp4", role: "reference_video"}
+    ],
+    audio_with_roles: [
+      {url: "https://example.com/voice.mp3", role: "reference_audio"}
+    ]
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01KZ3H3EXAMPLE00000000000",
+  "object": "generation.task",
+  "model": "MiniMax-H3",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1785729000
+}
+```
+</ResponseExample>

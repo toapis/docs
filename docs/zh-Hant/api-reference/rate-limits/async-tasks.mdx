@@ -1,0 +1,32 @@
+---
+title: "非同步任務速率限制"
+description: "ToAPIs 非同步生成任務的提交與查詢限流"
+---
+
+ToAPIs 為非同步任務提交與狀態查詢使用兩個獨立 token bucket，不消耗同步模型請求額度。
+
+| 分組 | 提交 RPM / RPS / 突發 | 查詢 RPM / RPS / 突發 |
+| --- | --- | --- |
+| `default` | 300 / 5 / 50 | 3,000 / 50 / 500 |
+| `vip` | 1,000 / 16.7 / 167 | 10,000 / 166.7 / 1,667 |
+| `svip` | 2,000 / 33.3 / 334 | 30,000 / 500 / 5,000 |
+
+按使用者 ID 統計，同一使用者多個 Token 共用額度；提交與查詢隔離。業務失敗計數，`429` 不計數；批次查詢一次計一個請求，最多 100 個任務。
+
+```text
+Retry-After
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+X-RateLimit-Category: async_submit | async_query
+```
+
+```json 429
+{"error":{"code":"rate_limit_exceeded","message":"Async task request rate exceeded"}}
+```
+
+```json 503
+{"error":{"code":"rate_limit_unavailable","message":"The async task submit limiter is temporarily unavailable"}}
+```
+
+提交限流故障返回 `503 rate_limit_unavailable`，查詢降級放行。建議以 [Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks) 為主，輪詢至少間隔 5～10 秒並加入隨機抖動；`429/503` 優先讀取 `Retry-After`，否則使用指數退避。

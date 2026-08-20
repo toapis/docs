@@ -1,0 +1,182 @@
+---
+title: "GPT-Image-2 Официальный канал редактирование изображений"
+sidebarTitle: "Редактирование (Edits)"
+api: "POST https://toapis.com/v1/images/generations"
+description: "Редактирование изображений, смешивание референсов и инпейнтинг с gpt-image-2 через тот же эндпоинт, что и генерация"
+---
+
+- Используется тот же эндпоинт `/v1/images/generations`, что и для генерации текст→изображение
+- Режим редактирования активируется автоматически при наличии поля `image_urls` в запросе
+- Поддерживает смешивание нескольких референсов (до 16 изображений) и маску инпейнтинга
+- Референсные изображения должны быть доступны публично (PNG / JPG, не более 50MB каждое)
+
+<Note>
+Редактирование полностью совместимо с API генерации: просто добавьте `image_urls` (и при необходимости `mask_url`) в обычный запрос генерации — переключать эндпоинт не нужно.
+</Note>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют аутентификации Bearer Token
+
+  Получить API Key можно на [странице управления API Key](https://toapis.com/console/token)
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="gpt-image-2" required>
+  Используйте `gpt-image-2`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Описание желаемого результата редактирования
+
+  Пример: `"Замените фон на звёздное небо, оставив объект без изменений"`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]" required>
+  Массив URL референсных изображений (ключевое поле, включающее режим редактирования)
+
+  - Максимум **16 изображений**
+  - Должны быть публично доступными стабильными URL (PNG / JPG, не более 50MB каждое)
+  - Используйте [API загрузки изображений](../../uploads/images) для получения URL
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  URL изображения маски для инпейнтинга
+
+  - Обязательный формат PNG с альфа-каналом
+  - Прозрачные области (alpha = 0) будут перерисованы; непрозрачные — сохранены
+  - Размеры должны совпадать с первым референсным изображением
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  Соотношение сторон выходного изображения
+
+  Поддерживается 13 вариантов или `auto`:
+
+  `1:1` · `3:2` · `2:3` · `4:3` · `3:4` · `5:4` · `4:5` · `16:9` · `9:16` · `2:1` · `1:2` · `21:9` · `9:21`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Уровень разрешения: `1k` / `2k` / `4k`
+
+  1K и 2K поддерживают все 13 соотношений. 4K поддерживает только 6 соотношений: `16:9` / `9:16` / `2:1` / `1:2` / `21:9` / `9:21`
+</ParamField>
+
+<ParamField body="quality" type="string" default="high">
+  Качество изображения: `low` / `medium` / `high`
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  Количество генерируемых изображений, диапазон `1 ~ 10`
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  Выходной формат: `png` / `jpeg`
+
+  <Note>Azure OpenAI не поддерживает формат `webp`.</Note>
+</ParamField>
+
+<ParamField body="output_compression" type="integer" default={100}>
+  Степень сжатия JPEG, диапазон `0–100` (применяется только при `output_format: "jpeg"`)
+</ParamField>
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  Уникальный идентификатор задачи для запроса статуса
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Всегда равно `generation.task`
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued` / `in_progress` / `completed` / `failed`
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Прогресс выполнения задачи в процентах (0-100)
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи (Unix timestamp)
+</ResponseField>
+
+<RequestExample>
+```bash Изображение→Изображение (смешивание референсов)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Смешайте два референса в киберпанк-постер",
+    "image_urls": [
+      "https://example.com/input-a.png",
+      "https://example.com/input-b.png"
+    ],
+    "size": "1:1",
+    "quality": "high",
+    "n": 1
+  }'
+```
+
+```bash Инпейнтинг (маска)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Замените фон на пустынный закат, оставив человека",
+    "image_urls": ["https://example.com/photo.png"],
+    "mask_url": "https://example.com/mask.png",
+    "size": "1:1",
+    "quality": "medium"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'gpt-image-2',
+    prompt: 'Смешайте два референса в киберпанк-постер',
+    image_urls: [
+      'https://example.com/input-a.png',
+      'https://example.com/input-b.png',
+    ],
+    size: '1:1',
+    quality: 'high',
+    n: 1,
+  }),
+});
+
+const task = await response.json();
+console.log(task.id, task.status);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_img_01KPTXXXXXXXXXXXXXXX",
+  "object": "generation.task",
+  "model": "gpt-image-2",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

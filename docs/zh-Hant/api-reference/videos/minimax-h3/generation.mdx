@@ -1,0 +1,194 @@
+---
+title: "MiniMax Hailuo H3 視頻生成"
+sidebarTitle: "MiniMax-H3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 MiniMax Hailuo H3 生成 2K 或 768p 視頻，支持文生視頻、首尾幀及多模態參考生成"
+---
+
+- 模型名稱固定爲 `MiniMax-H3`
+- 支持文生視頻、首幀/尾幀圖生視頻，以及圖片、視頻、音頻聯合參考生成
+- 輸出分辨率支持 `2K` 和 `768p`，默認 `2K`；時長支持 `4-15` 秒
+- 異步任務接口，提交後返回統一的 `generation.task`
+
+<Warning>
+  請優先傳入公網可訪問的素材 URL。首尾幀模式與多模態參考模式互斥；參考音頻不能單獨使用，必須同時提供至少一張參考圖或一段參考視頻。
+</Warning>
+
+## 認證
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 認證：`Authorization: Bearer YOUR_API_KEY`。
+</ParamField>
+
+## 請求參數
+
+<ParamField body="model" type="string" default="MiniMax-H3" required>
+  視頻生成模型名稱，固定爲 `MiniMax-H3`。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻內容描述，最多 `7000` 個字符。
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  輸出視頻時長，支持 `4-15` 秒的整數值。
+</ParamField>
+
+<ParamField body="resolution" type="string" default="2K">
+  輸出分辨率。可選值：`2K`、`768p`；默認值爲 `2K`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  可選值：`21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`adaptive`。
+
+  - 文生視頻默認 `16:9`，不能使用 `adaptive`
+  - 首幀/尾幀模式固定按輸入圖片自適應
+  - 多模態參考模式默認 `adaptive`，也可指定具體比例
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  兼容圖片 URL 數組。1 張按首幀處理，2 張依次按首幀和尾幀處理，3-9 張按參考圖處理。新接入請優先使用 `image_with_roles`。
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  帶角色的圖片數組。
+
+  <Expandable title="顯示圖片字段">
+    <ParamField body="url" type="string" required>
+      圖片 URL。支持 JPG、JPEG、PNG、WebP、HEIC、HEIF；單文件不超過 `30 MB`，寬高爲 `256-5760 px`，寬高比爲 `0.4-2.5`。
+    </ParamField>
+    <ParamField body="role" type="string" required>
+      `first_frame`（最多 1 張）、`last_frame`（最多 1 張）或 `reference_image`（最多 9 張）。
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  參考視頻數組，最多 `3` 段。每項包含公網 `url` 和固定角色 `reference_video`。支持 MP4、MOV；單文件不超過 `50 MB`，單段 `2-15` 秒，總時長不超過 `15` 秒。
+
+  <Note>ToAPIs 會讀取參考視頻的實際時長用於計費，請勿提交客戶端計算的時長字段。</Note>
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  參考音頻數組，最多 `3` 段。每項包含公網 `url` 和固定角色 `reference_audio`。支持 WAV、MP3；單文件不超過 `15 MB`，單段 `2-15` 秒，總時長不超過 `15` 秒。
+
+  <Warning>參考音頻不能單獨使用，必須同時傳入至少一項 `reference_image` 或 `reference_video`。</Warning>
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={false}>
+  是否添加 AIGC 標識水印。
+</ParamField>
+
+<ParamField body="client_business_id" type="string">
+  客戶側業務 ID，可用於後續查詢任務。
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  ToAPIs 任務完成回調地址；詳見 [Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks)。
+</ParamField>
+
+## 輸入模式與限制
+
+| 模式 | 輸入 | 寬高比 |
+|------|------|--------|
+| 文生視頻 | `prompt` | 具體比例，默認 `16:9` |
+| 首幀/首尾幀 | `prompt` + `first_frame` / `last_frame` | 自動 `adaptive` |
+| 多模態參考 | `prompt` + 參考圖片/視頻/音頻 | 默認 `adaptive` |
+
+- 參考圖最多 `9` 張，參考視頻最多 `3` 段，參考音頻最多 `3` 段
+- 圖片、視頻、音頻合計最多 `12` 個文件
+- 首尾幀角色不能與任意參考角色混用
+
+## 示例
+
+### 首尾幀圖生視頻
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "女孩從童年自然成長爲青年，保持人物身份一致",
+  "duration": 5,
+  "resolution": "768p",
+  "image_with_roles": [
+    {"url": "https://example.com/start.jpg", "role": "first_frame"},
+    {"url": "https://example.com/end.jpg", "role": "last_frame"}
+  ]
+}
+```
+
+### 視頻與音頻聯合參考
+
+```json
+{
+  "model": "MiniMax-H3",
+  "prompt": "參考視頻1的動作與鏡頭節奏，並使用音頻1的音色完成對白",
+  "duration": 5,
+  "resolution": "2K",
+  "aspect_ratio": "adaptive",
+  "video_with_roles": [
+    {"url": "https://example.com/motion.mp4", "role": "reference_video"}
+  ],
+  "audio_with_roles": [
+    {"url": "https://example.com/voice.mp3", "role": "reference_audio"}
+  ]
+}
+```
+
+## 響應
+
+<ResponseField name="id" type="string">ToAPIs 任務 ID。</ResponseField>
+<ResponseField name="object" type="string">固定爲 `generation.task`。</ResponseField>
+<ResponseField name="model" type="string">固定爲 `MiniMax-H3`。</ResponseField>
+<ResponseField name="status" type="string">`queued`、`in_progress`、`completed` 或 `failed`。</ResponseField>
+<ResponseField name="progress" type="integer">任務進度，範圍 `0-100`。</ResponseField>
+<ResponseField name="created_at" type="integer">Unix 創建時間戳（秒）。</ResponseField>
+
+<Note>
+  提交後使用 [獲取視頻任務狀態](../../tasks/video-status) 輪詢；完成時視頻 URL 位於 `result.data[0].url`。
+</Note>
+
+<RequestExample>
+```bash cURL（文生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "宇航員站在月球邊緣眺望藍色地球，鏡頭緩慢推進",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL（圖片、視頻、音頻聯合參考）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-H3",
+    "prompt": "保持圖片1中的人物，參考視頻1的動作與運鏡，並使用音頻1的音色完成對白",
+    "duration": 5,
+    "resolution": "2K",
+    "aspect_ratio": "adaptive",
+    "image_with_roles": [{"url": "https://example.com/person.png", "role": "reference_image"}],
+    "video_with_roles": [{"url": "https://example.com/motion.mp4", "role": "reference_video"}],
+    "audio_with_roles": [{"url": "https://example.com/voice.mp3", "role": "reference_audio"}]
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01KZ3H3EXAMPLE00000000000",
+  "object": "generation.task",
+  "model": "MiniMax-H3",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1785729000
+}
+```
+</ResponseExample>

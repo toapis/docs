@@ -1,0 +1,515 @@
+---
+title: "seedance-2 視頻生成"
+sidebarTitle: "seedance-2"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 seedance-2、seedance-2-fast 與 seedance-2-mini 模型生成視頻"
+---
+
+- 支持 `seedance-2`、`seedance-2-fast` 與 `seedance-2-mini`
+- 支持文生視頻、首幀/首尾幀圖生視頻與多模態參考生視頻；`seedance-2-mini` 的首尾幀與音頻開關能力也已開放
+- 支持參考圖、參考視頻、參考音頻聯合控制；`seedance-2-mini` 最多支持 `9` 張圖、`3` 條視頻、`3` 條音頻
+- 異步任務管理，提交後返回 `generation.task`，完成結果通過任務查詢接口獲取
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="seedance-2" required>
+  視頻生成模型名稱
+
+  可用模型：
+  - `seedance-2` - 標準版，適合更高質量輸出與更完整的 Seedance 2 能力
+  - `seedance-2-fast` - 快速版，適合預覽、迭代和更低延遲場景
+  - `seedance-2-mini` - 輕量版，適合低成本草稿和多模態參考工作流，當前固定單次生成 `1` 個結果
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  視頻內容描述
+
+  支持中英文輸入。建議明確描述場景、鏡頭運動、主體動作、風格和聲音氛圍。
+
+  建議：
+  - 中文儘量控制在 `500` 字以內
+  - 英文儘量控制在 `1000` 詞以內
+  - 需要引用參考素材時，使用“圖片1 / 視頻1 / 音頻1”的方式指代
+</ParamField>
+
+<ParamField body="client_business_id" type="string">
+  客戶側業務 ID，例如訂單號、流水號或您系統內的任務 ID。提交後會隨任務保存，後續可用該 ID 查詢狀態：
+  `GET /v1/videos/generations/{client_business_id}`。
+
+  也兼容放在 `metadata.client_business_id` 中，但推薦使用頂層字段。
+</ParamField>
+
+<ParamField body="duration" type="integer" default={0}>
+  視頻時長（秒）
+
+  取值規則：
+  - `seedance-2`：`4-15`
+  - `seedance-2-fast`：`4-15`
+  - `seedance-2-mini`：`4-15`
+  - `0`：自動時長（僅 `seedance-2` / `seedance-2-fast`）
+  - `-1`：自動時長（僅 `seedance-2` / `seedance-2-fast`）
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  視頻寬高比
+
+  可選項：
+  - `21:9`
+  - `16:9`
+  - `4:3`
+  - `1:1`
+  - `3:4`
+  - `9:16`
+  - `adaptive`
+
+  建議優先使用 `aspect_ratio` 作爲對外字段。`adaptive` 表示由上游根據輸入素材自動選擇合適比例。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  兼容模式下的圖片 URL 數組
+
+  推薦優先使用 `image_with_roles`，這樣可以顯式聲明 `first_frame`、`last_frame` 或 `reference_image`。
+
+  兼容規則：
+  - 傳 1 張圖時，通常按首幀圖處理
+  - 傳多張圖時，角色推斷會帶來歧義，不建議用於新接入
+
+  <Warning>
+    - `image_urls` 不應與 `image_with_roles` 同時使用。
+    - 新接入建議使用 `image_with_roles` 顯式聲明圖片用途，避免兼容推斷帶來的歧義。
+  </Warning>
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  帶角色的圖片數組
+
+  支持場景：
+  - `seedance-2` / `seedance-2-fast` / `seedance-2-mini`
+    - 首幀圖生視頻：`first_frame` 1 張
+    - 首尾幀圖生視頻：`first_frame` 1 張 + `last_frame` 1 張
+    - 多模態參考生視頻：`reference_image` 1-9 張
+
+  <Expandable title="字段說明">
+    <ParamField body="url" type="string" required>
+      圖片 URL、Base64 數據或已上傳素材 URI
+
+      支持：
+      - `https://...`
+      - `data:image/<format>;base64,...`
+      - `asset://<ASSET_ID>`
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      圖片角色
+
+      可選項：
+      - `first_frame` - 首幀圖
+      - `last_frame` - 尾幀圖
+      - `reference_image` - 參考圖
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    - `first_frame` 最多 1 張
+    - `last_frame` 最多 1 張
+    - `reference_image` 最多 `9` 張
+    - 首幀/首尾幀模式不能與參考模式混用
+    - `seedance-2-mini` 同樣支持 `first_frame`、`last_frame` 與 `reference_image`
+  </Warning>
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  帶角色的視頻數組
+
+  當前僅支持多模態參考模式使用 `reference_video`。
+
+  <Expandable title="字段說明">
+    <ParamField body="url" type="string" required>
+      視頻 URL 或已上傳素材 URI
+
+      支持：
+      - `https://...`
+      - `asset://<ASSET_ID>`
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      固定爲：
+      - `reference_video`
+    </ParamField>
+  </Expandable>
+
+  限制：
+  - `seedance-2-mini` 最多 `3` 條參考視頻
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  帶角色的音頻數組
+
+  當前僅支持多模態參考模式使用 `reference_audio`。
+
+  <Expandable title="字段說明">
+    <ParamField body="url" type="string" required>
+      音頻 URL、Base64 數據或已上傳素材 URI
+
+      支持：
+      - `https://...`
+      - `data:audio/<format>;base64,...`
+      - `asset://<ASSET_ID>`
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      固定爲：
+      - `reference_audio`
+    </ParamField>
+  </Expandable>
+
+  限制：
+  - `seedance-2-mini` 最多 `3` 段參考音頻
+
+  <Warning>
+    `audio_with_roles` 不能單獨使用，至少還需要一個圖片或視頻參考輸入。
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  視頻分辨率
+
+  可選項：
+  - `seedance-2`：`480p`、`720p`、`1080p`、`4k`
+  - `seedance-2-fast`：`480p`、`720p`
+  - `seedance-2-mini`：`480p`、`720p`
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default={true}>
+  是否生成同步音頻
+
+  - `true`：生成帶音頻的視頻
+  - `false`：生成無聲視頻
+
+  `seedance-2-mini` 同樣支持該字段。
+</ParamField>
+
+<ParamField body="return_last_frame" type="boolean" default={false}>
+  是否返回生成視頻的尾幀圖像。
+
+  設為 `true` 後，任務完成時可從狀態查詢響應的 `result.data[0].last_frame_url` 獲取尾幀圖像 URL。
+</ParamField>
+
+<ParamField body="tools" type="array">
+  配置模型可調用的工具。目前 Seedance 2 系列僅支持聯網搜索：
+
+  ```json
+  [{ "type": "web_search" }]
+  ```
+
+  啓用後，模型會根據提示詞自主判斷是否搜索互聯網內容。實際搜索次數通過狀態查詢響應的 `usage.tool_usage.web_search` 獲取，值爲 `0` 表示未執行搜索。
+
+  <Warning>
+    `tools` 僅支持純文本生成視頻請求，不能與圖片、視頻或音頻輸入同時使用。
+  </Warning>
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  隨機種子，用於控制生成隨機性
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  ToAPIs 標準任務完成回調。需先設定 Token URL 與密鑰，只允許同源覆蓋。詳見 [Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks)。
+</ParamField>
+
+<ParamField body="trace_id" type="string">
+  調用方自定義透傳 ID
+
+  調用方追蹤欄位，與 Webhook 是否啟用無關。
+</ParamField>
+
+## 使用已入庫素材
+
+如果你已經通過私域素材接口完成了素材入庫，並拿到了可用的 `asset_id`，那麼在視頻生成接口中，你不需要再傳原始素材 URL，而是直接使用：
+
+- `asset://<ASSET_ID>`
+
+適用範圍：
+
+- 虛擬人像素材
+- 真人人像素材
+- 已經處理完成並處於 `active` 狀態的圖片、視頻、音頻素材
+
+使用前你需要先完成以下流程：
+
+1. 先在素材接口中創建素材組或完成真人認證
+2. 上傳素材並拿到 `asset_id`
+3. 輪詢素材狀態，確認已經變爲 `active`
+4. 在視頻生成請求中把素材地址寫成 `asset://<ASSET_ID>`
+
+你可以參考這兩組素材文檔完成入庫：
+
+- [虛擬人像素材](./private-avatar)
+- [真人人像素材](./real-avatar)
+
+### 在生成請求中的寫法
+
+圖片素材可用於：
+
+- `first_frame`
+- `last_frame`
+- `reference_image`
+
+視頻素材可用於：
+
+- `reference_video`
+
+音頻素材可用於：
+
+- `reference_audio`
+
+最小示例：
+
+```json
+{
+  "model": "seedance-2-mini",
+  "prompt": "讓圖片1中的人物站在落地窗前緩慢轉身，鏡頭輕微推進，保持人物服裝和麪部特徵一致",
+  "image_with_roles": [
+    {
+      "url": "asset://asset_img_01KXXXXXXX",
+      "role": "reference_image"
+    }
+  ]
+}
+```
+
+包含視頻和音頻參考的示例：
+
+```json
+{
+  "model": "seedance-2-mini",
+  "prompt": "保持圖片1中的人物形象，參考視頻1的鏡頭運動和音頻1的節奏氛圍，生成一段室內口播視頻",
+  "image_with_roles": [
+    {
+      "url": "asset://asset_img_01KXXXXXXX",
+      "role": "reference_image"
+    }
+  ],
+  "video_with_roles": [
+    {
+      "url": "asset://asset_vid_01KXXXXXXX",
+      "role": "reference_video"
+    }
+  ],
+  "audio_with_roles": [
+    {
+      "url": "asset://asset_aud_01KXXXXXXX",
+      "role": "reference_audio"
+    }
+  ]
+}
+```
+
+<Warning>
+  只有狀態爲 `active` 的素材才能用於視頻生成。
+
+  如果你傳入了 `asset://<ASSET_ID>` 但素材仍在 `processing` 或已經 `failed`，生成請求會失敗或無法達到預期效果。
+</Warning>
+
+## 輸入組合規則
+
+支持的典型輸入組合：
+- 純文本：文生視頻
+- 文本 + 1 張首幀圖：首幀圖生視頻
+- 文本 + 首幀圖 + 尾幀圖：首尾幀圖生視頻
+- 文本 + 參考圖：多模態參考生視頻
+- 文本 + 參考視頻：視頻參考生視頻
+- 文本 + 參考圖 + 參考音頻：多模態參考生視頻
+- 文本 + 參考圖 + 參考視頻 + 參考音頻：多模態參考生視頻
+
+<Warning>
+  三種模式互斥：
+  - 首幀圖生視頻
+  - 首尾幀圖生視頻
+  - 多模態參考生視頻
+
+  `seedance-2-mini` 也支持首幀 / 首尾幀模式；需要首尾幀控制時請使用 `image_with_roles` 顯式傳入 `first_frame` / `last_frame`。
+</Warning>
+
+## 能力與約束
+
+| 項目 | seedance-2 | seedance-2-fast | seedance-2-mini |
+|------|------------|-----------------|-----------------|
+| 主要定位 | 更高質量與更長時長 | 更快生成與更低延遲 | 低成本草稿與多模態參考 |
+| 時長 | `4-15` 秒，支持自動時長 | `4-15` 秒，支持自動時長 | `4-15` 秒 |
+| 分辨率 | `480p` / `720p` / `1080p` / `4k` | `480p` / `720p` | `480p` / `720p` |
+| 圖片角色 | `first_frame` / `last_frame` / `reference_image` | `first_frame` / `last_frame` / `reference_image` | `first_frame` / `last_frame` / `reference_image` |
+| 視頻角色 | `reference_video` | `reference_video` | `reference_video` |
+| 音頻角色 | `reference_audio` | `reference_audio` | `reference_audio` |
+| 首尾幀模式 | 支持 | 支持 | 支持 |
+| 參考圖上限 | `9` | `9` | `9` |
+| 參考視頻上限 | 以實際通道能力爲準 | 以實際通道能力爲準 | `3` |
+| 參考音頻上限 | 以實際通道能力爲準 | 以實際通道能力爲準 | `3` |
+| 同步音頻 | `generate_audio` | `generate_audio` | `generate_audio` |
+| ToAPIs 回調 | `callback_url`（`trace_id` 可選追蹤） | `callback_url`（`trace_id` 可選追蹤） | `callback_url`（`trace_id` 可選追蹤） |
+
+<Note>
+  `seedance-2-mini` 當前固定單次生成 `1` 個結果，不暴露 `count` / `n`。首尾幀控制請通過 `image_with_roles` 的 `first_frame` / `last_frame` 表達。
+</Note>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務 ID，用於查詢任務狀態。
+</ResponseField>
+
+<ResponseField name="client_business_id" type="string">
+  客戶側業務 ID。僅當請求中傳入 `client_business_id` 時返回。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  本次請求使用的模型名稱。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態：`queued`、`in_progress`、`completed` 或 `failed`。
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（`0-100`）。
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳。
+</ResponseField>
+
+<Info>
+  提交接口返回的是基礎任務對象；當任務完成後，請使用 [獲取視頻任務狀態](../../tasks/video-status) 獲取 `completed_at`、`expires_at` 以及 `result.type = "video"` / `result.data[].url` / `result.data[].format`。啓用 `return_last_frame` 時，尾幀 URL 位於 `result.data[0].last_frame_url`；啓用 `web_search` 時，搜索次數位於 `usage.tool_usage.web_search`。
+</Info>
+
+<RequestExample>
+```bash cURL（seedance-2-mini 多模態參考）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "seedance-2-mini",
+    "client_business_id": "order_20260616_001",
+    "prompt": "保持圖片1中的人物形象，參考視頻1的運鏡和音頻1的節奏，生成一段室內產品口播短視頻。",
+    "duration": 10,
+    "aspect_ratio": "16:9",
+    "image_with_roles": [
+      {"url": "https://example.com/ref-image-1.jpg", "role": "reference_image"}
+    ],
+    "video_with_roles": [
+      {"url": "https://example.com/ref-video-1.mp4", "role": "reference_video"}
+    ],
+    "audio_with_roles": [
+      {"url": "https://example.com/ref-audio-1.mp3", "role": "reference_audio"}
+    ],
+    "resolution": "480p"
+  }'
+```
+
+```bash cURL（首尾幀圖生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "seedance-2",
+    "prompt": "鏡頭從窗邊花束慢慢推到餐桌中央，畫面色調溫暖柔和。",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "image_with_roles": [
+      {"url": "https://example.com/first-frame.png", "role": "first_frame"},
+      {"url": "https://example.com/last-frame.png", "role": "last_frame"}
+    ],
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+```bash cURL（文生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "seedance-2",
+    "prompt": "微距鏡頭拍攝一隻玻璃蛙停在葉片上，鏡頭緩慢切到透明腹部與跳動心臟，紀錄片風格。",
+    "duration": 11,
+    "aspect_ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": true
+  }'
+```
+
+```bash cURL（Fast 版本快速預覽）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "seedance-2-fast",
+    "prompt": "一隻柴犬在雨後的霓虹街頭奔跑，地面倒映彩色燈光。",
+    "duration": 5,
+    "aspect_ratio": "16:9",
+    "resolution": "720p"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "seedance-2-mini",
+        "prompt": "保持人物形象一致，參考圖片和視頻的節奏，生成一段簡短室內廣告視頻",
+        "duration": 8,
+        "aspect_ratio": "16:9",
+        "resolution": "720p",
+        "image_with_roles": [
+            {"url": "https://example.com/ref.png", "role": "reference_image"}
+        ],
+        "video_with_roles": [
+            {"url": "https://example.com/ref.mp4", "role": "reference_video"}
+        ],
+    },
+)
+
+print(response.json())
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_vid_xxx",
+  "client_business_id": "order_20260616_001",
+  "object": "generation.task",
+  "model": "seedance-2-mini",
+  "status": "in_progress",
+  "progress": 10,
+  "created_at": 1781577600
+}
+```
+</ResponseExample>

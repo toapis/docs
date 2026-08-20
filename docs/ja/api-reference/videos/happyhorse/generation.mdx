@@ -1,0 +1,206 @@
+---
+title: "HappyHorse 1.1 動画生成"
+sidebarTitle: "happyhorse-1.1"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate, reference, or edit videos with HappyHorse 1.1"
+---
+
+- Public model name: `happyhorse-1.1`
+- Use `action` to choose text-to-video, first-frame image-to-video, reference-to-video, or video editing
+- If `action` is omitted, requests with a first-frame image are treated as image-to-video; otherwise they are text-to-video
+- Async task management through the standard video task status endpoint
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All requests require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="happyhorse-1.1" required>
+  Video generation model name. Fixed value: `happyhorse-1.1`.
+</ParamField>
+
+<ParamField body="action" type="string" default="text-to-video">
+  Generation mode.
+
+  Options:
+  - `text-to-video`
+  - `image-to-video`
+  - `reference-to-video`
+  - `video-edit`
+
+  If omitted, the server detects the mode from whether a first-frame image is present.
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Text prompt for the video.
+
+  必須 for text-to-video, reference-to-video, and video editing. 任意 for image-to-video, but recommended for motion and style control.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  First-frame image URL for image-to-video. Only the first image is used.
+
+  Compatible fields are also accepted: `input_reference`, `images`, `image`, or `image_with_roles[{ role: "first_frame" }]`.
+
+  Image requirements:
+  - Format: `JPEG`, `JPG`, `PNG`, `BMP`, `WEBP`
+  - File size: up to `10MB`
+  - Dimensions: at least `300px`
+  - Aspect ratio: `1:2.5` to `2.5:1`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  Reference image URLs.
+
+  必須 for `reference-to-video`, with `1` to `9` images. 任意 for `video-edit`, with up to `5` images.
+</ParamField>
+
+<ParamField body="url" type="string">
+  Input video URL for video editing. 必須 when `action=video-edit`.
+</ParamField>
+
+<ParamField body="audio_setting" type="string" default="auto">
+  Audio control for video editing. Only applies when `action=video-edit`.
+
+  Options:
+  - `auto`
+  - `origin`
+</ParamField>
+
+<ParamField body="duration" type="integer" default={5}>
+  Video duration in seconds. Valid range: `3` to `15`.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1080P">
+  Video resolution.
+
+  Options:
+  - `720P`
+  - `1080P`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Aspect ratio for text-to-video. Image-to-video uses the first-frame image dimensions.
+
+  Options:
+  - `16:9`
+  - `9:16`
+  - `1:1`
+  - `4:3`
+  - `3:4`
+
+  The compatible `size` field is also accepted.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed for reproducible generation.
+</ParamField>
+
+<ParamField body="watermark" type="boolean" default={true}>
+  Whether to add a watermark.
+</ParamField>
+
+## Text-to-Video Example
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "text-to-video",
+    "prompt": "At night under an urban railway bridge, a graffiti teenager comes alive from a concrete wall and performs a high-energy English rap.",
+    "duration": 10,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9",
+    "seed": 42,
+    "watermark": true
+  }'
+```
+
+## Image-to-Video Example
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "image-to-video",
+    "prompt": "Animate the character naturally while preserving the original visual style.",
+    "image_urls": ["https://example.com/first-frame.png"],
+    "duration": 5,
+    "resolution": "1080P"
+  }'
+```
+
+## Reference-to-Video Example
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "reference-to-video",
+    "prompt": "The character from image 1 runs through the scene in image 2, then picks up the prop from image 3. Keep a 3D cartoon style.",
+    "reference_images": [
+      "https://example.com/image-01.jpg",
+      "https://example.com/image-02.png",
+      "https://example.com/image-03.jpeg"
+    ],
+    "duration": 5,
+    "resolution": "1080P",
+    "aspect_ratio": "16:9",
+    "watermark": false
+  }'
+```
+
+## Video Edit Example
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "happyhorse-1.1",
+    "action": "video-edit",
+    "prompt": "Make the video more cinematic while preserving the subject motion.",
+    "url": "https://example.com/input.mp4",
+    "reference_images": ["https://example.com/reference.png"],
+    "resolution": "1080P",
+    "audio_setting": "origin",
+    "seed": 42
+  }'
+```
+
+## Query Task
+
+The submit endpoint returns a task ID. Use the standard video task status endpoint to retrieve the result:
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Channel Configuration
+
+HappyHorse uses a DashScope API key. The default upstream base URL is `https://dashscope.aliyuncs.com`.
+
+For the international endpoint, override the channel Base URL in the admin dashboard:
+
+```text
+https://dashscope-intl.aliyuncs.com
+```

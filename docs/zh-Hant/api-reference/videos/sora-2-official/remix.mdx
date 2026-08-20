@@ -1,0 +1,166 @@
+---
+title: "Azure Sora 2 Remix"
+sidebarTitle: "Remix"
+api: "POST https://toapis.com/v1/videos/{video_id}/remix"
+description: "使用 Azure Sora 2 模型對現有視頻進行重混"
+---
+
+Remix 功能允許您修改現有視頻的特定方面，同時保留其核心元素。通過引用之前成功完成的視頻 ID，並提供更新的提示詞，系統會維持原始視頻的框架、場景轉換和視覺佈局，同時實現您請求的更改。
+
+<Tip>
+爲獲得最佳效果，請將修改限制在一個明確的調整上。精確、聚焦的編輯能更好地保持與源素材的一致性，並最大限度地減少生成視覺缺陷的可能性。
+</Tip>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="video_id" type="string" required>
+  之前已完成的視頻 ID，用於進行 remix
+
+  示例：`"video_01K8SGYNNNVBQTXNR4MM964S7K"`
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  視頻生成模型名稱
+
+  Azure Sora 2 remix 必須使用 `sora-2-official`
+
+  示例：`"sora-2-official"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  重混視頻的更新文本描述
+
+  描述您想對原始視頻進行的具體更改。保持精確並專注於一個明確的修改。
+
+  示例：`"將色彩調整爲青色、沙色和鐵鏽色，配合溫暖的背光"`
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  重混視頻的唯一任務標識符
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `video`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="remixed_from_video_id" type="string">
+  被重混的原始視頻 ID
+</ResponseField>
+
+<ResponseField name="seconds" type="string">
+  視頻時長（秒）
+</ResponseField>
+
+<ResponseField name="size" type="string">
+  視頻分辨率（如 "1280x720"）
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/video_01K8SGYNNNVBQTXNR4MM964S7K/remix \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-official",
+    "prompt": "將色彩調整爲青色、沙色和鐵鏽色，配合溫暖的背光"
+  }'
+```
+
+```python Python
+import requests
+
+video_id = "video_01K8SGYNNNVBQTXNR4MM964S7K"
+
+response = requests.post(
+    f"https://toapis.com/v1/videos/{video_id}/remix",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "sora-2-official",
+        "prompt": "將色彩調整爲青色、沙色和鐵鏽色，配合溫暖的背光"
+    }
+)
+
+task = response.json()
+print(f"Remix 任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+print(f"重混自: {task.get('remixed_from_video_id')}")
+```
+
+```javascript JavaScript
+const videoId = "video_01K8SGYNNNVBQTXNR4MM964S7K";
+
+const response = await fetch(`https://toapis.com/v1/videos/${videoId}/remix`, {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'sora-2-official',
+    prompt: '將色彩調整爲青色、沙色和鐵鏽色，配合溫暖的背光'
+  })
+});
+
+const task = await response.json();
+console.log(`Remix 任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+console.log(`重混自: ${task.remixed_from_video_id}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_68ff7cef76cc8190b7eab9395e936d9e",
+  "object": "video",
+  "model": "sora-2-official",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1761574127,
+  "remixed_from_video_id": "video_01K8SGYNNNVBQTXNR4MM964S7K",
+  "seconds": "8",
+  "size": "1280x720"
+}
+```
+</ResponseExample>

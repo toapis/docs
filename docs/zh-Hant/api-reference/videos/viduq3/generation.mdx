@@ -1,0 +1,327 @@
+---
+title: "Vidu Q3 視頻生成"
+sidebarTitle: "Vidu Q3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 Vidu Q3 系列模型生成視頻，支持文生視頻、圖生視頻、首尾幀、參考生成和 Subjects 生成"
+---
+
+- 異步任務接口，提交後返回任務 ID
+- 支持模型：`viduq3-pro`、`viduq3-turbo`、`viduq3`
+- `viduq3-pro`：高質量模型，支持音視頻同步和分鏡視頻生成
+- `viduq3-turbo`：快速模型，支持智能場景切換，生成速度最快，性價比最高
+- `viduq3`：多機位一致性最優，支持智能鏡頭切換和多參考圖生成
+
+<Warning>
+請傳入公網可訪問的圖片 URL。不要在 `image_urls` 中直接傳 base64 圖片數據；本地圖片請先使用 [上傳圖片接口](../../uploads/images) 獲取 URL。
+</Warning>
+
+## 認證
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 認證。
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 請求參數
+
+<ParamField body="model" type="string" required>
+  Vidu Q3 模型名稱。
+
+  可選值：
+  - `viduq3-pro` - 高質量模型，支持音視頻同步和分鏡視頻生成
+  - `viduq3-turbo` - 快速模型，支持智能場景切換，生成速度最快
+  - `viduq3` - 多機位一致性最優，適用於多參考圖/Subjects 生成
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻提示詞，最大 **5000 字符**。
+
+  描述主體、動作、場景、鏡頭和風格。使用 subjects 時可通過 `@name` 引用主體。
+
+  示例：`"一隻貓咪在彈鋼琴，鏡頭緩緩推近，電影質感"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  視頻時長，單位秒。
+
+  - `viduq3-pro` / `viduq3-turbo`：`1` 到 `16`
+  - `viduq3`：`3` 到 `16`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  視頻分辨率。
+
+  可選值：
+  - `540p`
+  - `720p`
+  - `1080p`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  視頻寬高比。
+
+  常用值：`16:9`、`9:16`、`1:1`
+
+  Q3 系列模型支持任意寬高比。傳入 `image_urls` 時，寬高比通常由參考圖片決定。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖片 URL 數組。
+
+  - `viduq3-pro` / `viduq3-turbo`
+    - 不傳：文生視頻
+    - 傳 1 張：圖生視頻，圖片作爲首幀
+    - 傳 2 張：首尾幀，第一張爲首幀，第二張爲尾幀
+  - `viduq3`
+    - 必填，最多 7 張參考圖片
+
+  示例：`["https://example.com/reference.jpg"]`
+</ParamField>
+
+<ParamField body="audio" type="boolean">
+  是否啓用音視頻輸出。
+
+  - 所有 Q3 模型默認 `true`
+
+  設爲 `true` 時，系統根據提示詞生成語音和背景音效。
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  隨機種子，用於在相同參數下復現相近結果。
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  擴展參數，用於傳遞官方 API 支持但未作爲頂層字段暴露的參數。
+
+  <Expandable title="顯示 metadata 字段">
+    <ParamField body="subjects" type="array">
+      主體列表（Subjects 模式，僅 `viduq3` 支持）。每個主體包含 `name` 和 `images` 字段。
+
+      - 最多 7 個主體
+      - 每個主體最多 3 張圖片
+      - 使用時在 prompt 中通過 `@name` 引用主體
+
+      示例：
+      ```json
+      [
+        {"name": "cat", "images": ["https://example.com/cat.jpg"]},
+        {"name": "dog", "images": ["https://example.com/dog.jpg"]}
+      ]
+      ```
+    </ParamField>
+
+    <ParamField body="auto_subjects" type="boolean">
+      是否啓用智能實體庫能力，默認 `false`。
+    </ParamField>
+
+    <ParamField body="voice_id" type="string">
+      語音 ID，用於指定視頻中的語音角色。系統會自動推薦合適的語音。
+    </ParamField>
+
+    <ParamField body="audio_type" type="string">
+      音頻類型，`audio` 爲 `true` 時有效。
+
+      可選值：
+      - `all` - 音效+人聲（默認）
+      - `speech_only` - 僅人聲
+      - `sound-effect_only` - 僅音效
+    </ParamField>
+
+    <ParamField body="off_peak" type="boolean">
+      閒時模式，默認 `false`。
+
+      - `true`：閒時生成，消耗更少積分
+      - 閒時任務將在 48 小時內生成，未完成自動取消並退還積分
+      - Q3 模型在 `audio=true` 時支持閒時任務
+    </ParamField>
+
+    <ParamField body="payload" type="string">
+      透傳參數，不做處理僅傳遞數據，最大 1048576 字符。
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      ToAPIs 最終任務 Webhook。需先設定 Token URL 與密鑰；詳見 [Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks)。
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## 模型選擇
+
+| 模型 | 適用場景 | 圖片輸入 | 分辨率 | 時長 |
+|------|----------|----------|--------|------|
+| `viduq3-pro` | 高質量文生/圖生/首尾幀 | 可選，最多 2 張 | `540p` / `720p` / `1080p` | 1-16s |
+| `viduq3-turbo` | 快速文生/圖生/首尾幀 | 可選，最多 2 張 | `540p` / `720p` / `1080p` | 1-16s |
+| `viduq3` | 多參考圖/Subjects 生成 | 必填，最多 7 張 | `540p` / `720p` / `1080p` | 3-16s |
+
+## 計費區分
+
+Vidu Q3 按模型、分辨率和生成類型計費：
+
+- `viduq3-pro`：高質量檔，價格約爲 turbo 的 2 倍
+- `viduq3-turbo`：快速檔，性價比最高
+- `viduq3`：多參考圖生成，按參考生成計費
+
+## 響應
+
+<ResponseField name="id" type="string">
+  任務 ID，用於查詢任務狀態。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，通常爲 `generation.task`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  本次請求使用的模型名稱。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態：`queued`、`in_progress`、`completed` 或 `failed`。
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳。
+</ResponseField>
+
+## 示例
+
+### 文生視頻
+
+```json
+{
+  "model": "viduq3-pro",
+  "prompt": "一隻貓咪在彈鋼琴，鏡頭緩緩推近，電影質感",
+  "duration": 8,
+  "resolution": "1080p",
+  "aspect_ratio": "16:9",
+  "audio": true
+}
+```
+
+### 圖生視頻
+
+```json
+{
+  "model": "viduq3-turbo",
+  "prompt": "讓圖片中的人物緩緩轉身並微笑",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 5,
+  "resolution": "720p"
+}
+```
+
+### 首尾幀
+
+```json
+{
+  "model": "viduq3-pro",
+  "prompt": "人物從站立自然坐下，動作流暢",
+  "image_urls": [
+    "https://example.com/first-frame.jpg",
+    "https://example.com/last-frame.jpg"
+  ],
+  "duration": 8,
+  "resolution": "720p"
+}
+```
+
+### 多參考圖生成視頻
+
+```json
+{
+  "model": "viduq3",
+  "prompt": "保持參考圖中的角色一致，在未來城市街道中行走",
+  "image_urls": [
+    "https://example.com/character-front.jpg",
+    "https://example.com/character-side.jpg"
+  ],
+  "duration": 6,
+  "resolution": "1080p"
+}
+```
+
+### Subjects 模式
+
+```json
+{
+  "model": "viduq3",
+  "prompt": "@cat 和 @dog 在公園裏奔跑，陽光明媚",
+  "image_urls": ["https://example.com/park-bg.jpg"],
+  "duration": 8,
+  "resolution": "720p",
+  "audio": true,
+  "metadata": {
+    "subjects": [
+      {"name": "cat", "images": ["https://example.com/cat.jpg"]},
+      {"name": "dog", "images": ["https://example.com/dog.jpg"]}
+    ],
+    "audio_type": "all"
+  }
+}
+```
+
+<Note>
+  視頻生成爲異步任務。提交後使用 [獲取視頻任務狀態](../../tasks/video-status) 查詢進度和結果。
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "viduq3-pro",
+    "prompt": "一隻貓咪在彈鋼琴，鏡頭緩緩推近，電影質感",
+    "duration": 8,
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "audio": true
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "viduq3-pro",
+        "prompt": "一隻貓咪在彈鋼琴，鏡頭緩緩推近，電影質感",
+        "duration": 8,
+        "resolution": "1080p",
+        "aspect_ratio": "16:9",
+        "audio": True,
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer <token>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "viduq3-pro",
+    prompt: "一隻貓咪在彈鋼琴，鏡頭緩緩推近，電影質感",
+    duration: 8,
+    resolution: "1080p",
+    aspect_ratio: "16:9",
+    audio: true
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>

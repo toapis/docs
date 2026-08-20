@@ -1,0 +1,282 @@
+---
+title: "Qwen3.5 Flash 对话"
+sidebarTitle: "qwen3.5-flash"
+api: "POST https://toapis.com/v1/chat/completions"
+description: "阿里千问极速轻量模型，极低成本，适合高并发、实时交互场景"
+---
+
+- 兼容 OpenAI Chat Completions API 格式
+- 通过 `model` 参数指定 `qwen3.5-flash` 模型
+- 支持流式输出（SSE）
+- 支持多轮对话、系统提示词
+- 超低延迟，适合实时客服、内容过滤、简单问答等场景
+- 支持视觉输入（图片理解），可传入图片 URL 或 Base64 数据
+
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 进行认证
+
+  获取 API Key：访问 [API Key 管理页面](https://toapis.com/console/token) 获取您的 API Key
+
+  使用时在请求头中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="qwen3.5-flash" required>
+  模型名称
+
+  示例：`"qwen3.5-flash"`
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  对话消息列表，按时间顺序排列
+
+  <Expandable title="messages[n]">
+    <ParamField body="role" type="string" required>
+      消息角色，可选值 `system`、`user`、`assistant`
+    </ParamField>
+    <ParamField body="content" type="string | array" required>
+      消息内容，字符串或内容块数组。支持视觉输入时，传入数组格式，包含 `text` 和 `image_url` 类型的内容块
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  是否启用流式输出（Server-Sent Events）
+
+  - `true`：逐 token 流式返回
+  - `false`：等待完整响应后一次性返回
+</ParamField>
+
+<ParamField body="max_tokens" type="integer">
+  生成内容的最大 token 数量
+
+  不设置时使用模型默认上限
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  采样温度，控制输出随机性
+
+  - 范围：`0` ~ `2`
+  - 值越低输出越稳定，值越高输出越随机
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  核采样概率阈值
+
+  范围：`0` ~ `1`，建议不要同时修改 `temperature` 和 `top_p`
+</ParamField>
+
+<ParamField body="stop" type="string | string[]">
+  停止序列，遇到指定字符串时停止生成
+
+  最多 4 个停止序列
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  本次请求的唯一标识符
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  对象类型，固定为 `chat.completion`
+</ResponseField>
+
+<ResponseField name="created" type="integer">
+  请求创建时间（Unix 时间戳）
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  实际使用的模型名称
+</ResponseField>
+
+<ResponseField name="choices" type="object[]">
+  生成结果列表
+
+  - `choices[].message.role`：消息角色，固定为 `assistant`
+  - `choices[].message.content`：生成的文本内容
+  - `choices[].finish_reason`：结束原因，`stop` / `length` / `content_filter`
+  - `choices[].index`：结果索引
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  本次请求的 token 消耗统计
+
+  - `usage.prompt_tokens`：输入 token 数
+  - `usage.completion_tokens`：输出 token 数
+  - `usage.total_tokens`：总 token 数
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "qwen3.5-flash",
+    "messages": [
+      {
+        "role": "user",
+        "content": "用一句话解释什么是机器学习"
+      }
+    ]
+  }'
+```
+
+```bash cURL（视觉输入）
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "qwen3.5-flash",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "image_url",
+            "image_url": { "url": "https://www.gstatic.com/webp/gallery/1.jpg" }
+          },
+          {
+            "type": "text",
+            "text": "描述这张图片"
+          }
+        ]
+      }
+    ]
+  }'
+```
+
+```bash cURL（流式输出）
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "qwen3.5-flash",
+    "messages": [
+      {
+        "role": "system",
+        "content": "你是一个简洁的助手，回答尽量简短"
+      },
+      {
+        "role": "user",
+        "content": "今天北京天气怎么样？"
+      }
+    ],
+    "stream": true
+  }'
+```
+
+```python Python (openai SDK)
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.chat.completions.create(
+    model="qwen3.5-flash",
+    messages=[
+        {"role": "user", "content": "用一句话解释什么是机器学习"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+```python Python（流式输出）
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+stream = client.chat.completions.create(
+    model="qwen3.5-flash",
+    messages=[
+        {"role": "system", "content": "你是一个简洁的助手，回答尽量简短"},
+        {"role": "user", "content": "今天北京天气怎么样？"}
+    ],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+```javascript JavaScript (openai SDK)
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "your-ToAPIs-key",
+  baseURL: "https://toapis.com/v1",
+});
+
+const response = await client.chat.completions.create({
+  model: "qwen3.5-flash",
+  messages: [{ role: "user", content: "用一句话解释什么是机器学习" }],
+});
+
+console.log(response.choices[0].message.content);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "chatcmpl-abc789",
+  "object": "chat.completion",
+  "created": 1703884800,
+  "model": "qwen3.5-flash",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "机器学习是一种让计算机通过从数据中自动学习规律和模式，从而在无需明确编程的情况下完成特定任务的人工智能技术。"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 13,
+    "completion_tokens": 44,
+    "total_tokens": 57
+  }
+}
+```
+
+```json 400
+{
+  "error": {
+    "code": "invalid_request_error",
+    "message": "The 'messages' field is required.",
+    "param": "messages",
+    "type": "invalid_request_error"
+  }
+}
+```
+
+```json 401
+{
+  "error": {
+    "code": "unauthorized",
+    "message": "Invalid API key",
+    "type": "authentication_error"
+  }
+}
+```
+</ResponseExample>

@@ -1,0 +1,121 @@
+---
+title: "ToAPIsを使用する: OpenClaw"
+sidebarTitle: "OpenClaw"
+description: ""
+---
+
+## Prerequisites
+
+Before getting started, make sure you have:
+
+1. **OpenClaw installed**
+
+   Download and install OpenClaw. Once installed, you should be able to run `openclaw` from your terminal.
+
+2. **A ToAPIs API key**
+
+   Sign in to the [ToAPIs Console](https://toapis.com/console/token) to obtain your API key (starts with `sk-`).
+
+**Note:** If you don't have a ToAPIs account yet, register at [ToAPIs](https://toapis.com) first.
+
+## Configuration Steps
+
+Run the following command in your terminal to start the setup wizard:
+
+```bash
+openclaw onboard
+```
+
+Follow the prompts and fill in the information below:
+
+### Step 1: Select モデル/Auth Provider
+
+```
+Model/auth provider:
+```
+
+Use the **arrow keys** to select **Custom Provider**, then press Enter to confirm.
+
+### Step 2: Enter API Base URL
+
+```
+API Base URL:
+```
+
+Enter the following URL:
+
+```
+https://toapis.com/v1
+```
+
+### Step 3: Enter API Key
+
+```
+API Key:
+```
+
+Paste your ToAPIs API key obtained from the [ToAPIs Console](https://toapis.com/console/token) (`sk-xxxxxxxxxxxx`).
+
+### Step 4: Select エンドポイント Compatibility
+
+```
+Endpoint compatibility:
+```
+
+Use the **arrow keys** to select **OpenAI-compatible**, then press Enter to confirm.
+
+### Step 5: Enter モデル ID
+
+```
+Model ID:
+```
+
+Enter the model ID you want to use, for example:
+
+```
+claude-sonnet-4-6
+```
+
+## Recommended モデル
+
+| モデル Name | モデル ID | 説明 |
+| --- | --- | --- |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | Best balance of performance and cost |
+| Claude Opus 4.6 | `claude-opus-4-6` | Most capable Claude model for complex tasks |
+| Claude Haiku 4.5 | `claude-haiku-4-5` | Fast and cost-efficient for lightweight tasks |
+| Qwen3 Max | `qwen3-max` | Alibaba Cloud flagship reasoning model |
+| Kimi K2.5 | `kimi-k2.5` | Long-context model from Moonshot AI |
+
+## You're All Set
+
+Once configuration is complete, OpenClaw will use ToAPIs as its backend. All your requests will be routed through ToAPIs to the chosen model.
+
+## Troubleshooting
+
+### 認証 failed?
+
+- Confirm your API key is correct and starts with `sk-`
+- Check that your key is active in the [ToAPIs Console](https://toapis.com/console/token)
+- Ensure your account has sufficient balance
+
+### モデル not available?
+
+- Make sure API Base URL is set to `https://toapis.com/v1` (including the `/v1` suffix)
+- Make sure エンドポイント compatibility is set to **OpenAI-compatible**
+- Double-check the model ID spelling
+
+## Support
+
+If you encounter any issues:
+
+- 📚 [ToAPIs Documentation](https://docs.toapis.com)
+- 💬 [Discord Community](https://discord.gg/hvnszCrJ73)
+- 🐦 [Twitter @toapisai](https://x.com/toapisai)
+- 📧 Technical support: [zhihong@toapis.com](mailto:zhihong@toapis.com)
+
+---
+
+
+[## Get Started with ToAPIs
+
+Sign up for ToAPIs today, get your API key, and start using AI with OpenClaw!](https://toapis.com)

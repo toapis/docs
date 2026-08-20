@@ -1,0 +1,369 @@
+---
+title: "Wan2.6 視頻生成"
+sidebarTitle: "Wan2.6"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用阿里雲萬相 Wan2.6 模型生成高質量視頻 — 支持文生視頻、圖生視頻和參考視頻"
+---
+
+- 阿里雲萬相視頻生成模型
+- 支持**三種模式**：文生視頻（Text-to-Video）、圖生視頻（Image-to-Video）、參考視頻（Reference Video，r2v）
+- 服務端根據請求參數自動路由到合適的上游模型
+- 支持 720p/1080p 分辨率，5/10/15 秒時長
+- 非 Flash 版本視頻默認帶有聲音
+
+<Warning>
+**重要變更**：爲了更好的性能和成本控制，我們不再支持在 `image_urls` 中直接傳入 base64 圖片數據。請先使用 [上傳圖片接口](../../uploads/images) 上傳圖片，獲取 URL 後再調用本接口。
+</Warning>
+
+## 路由邏輯
+
+服務端根據請求參數自動選擇上游模型：
+
+| 提供的參數 | 上游模式 |
+|---|---|
+| `metadata.reference_urls`（視頻 URL） | 參考視頻（r2v） |
+| `image_urls`（圖片） | 圖生視頻（i2v） |
+| 僅 `prompt` | 文生視頻（t2v） |
+
+## 認證
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 請求參數
+
+<ParamField body="model" type="string" required>
+  視頻生成模型名稱，固定爲 `wan2.6`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻內容描述
+
+  文生視頻模式下必填；圖生視頻和參考視頻模式下可選（描述期望的動作或風格）
+
+  示例：`"一隻可愛的貓咪在陽光下伸懶腰"`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖片 URL 數組（圖生視頻模式，僅支持 1 張圖片）
+
+  **⚠️ 僅支持 URL 格式（不再支持 base64）**
+
+  - 公開可訪問的圖像 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+
+  示例：`["https://example.com/image.jpg"]`
+
+  **注意：** 不能與 `metadata.reference_urls` 同時使用
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  視頻寬高比（適用於文生視頻和參考視頻模式）
+
+  可選值：
+  - `16:9` - 橫屏（默認）
+  - `9:16` - 豎屏
+  - `1:1` - 方形
+  - `4:3` - 橫屏
+  - `3:4` - 豎屏
+
+  默認值：`16:9`
+
+  **注意：** 圖生視頻模式不支持此參數
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1080p">
+  視頻分辨率
+
+  可選值：
+  - `720p` - 標清
+  - `1080p` - 高清（默認）
+
+  默認值：`1080p`
+
+  不支持 480p。按秒計費，不同分辨率價格不同，詳見模型市場
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  視頻時長（秒）
+
+  支持：`5`、`10`、`15`
+
+  默認值：`5`
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  負面提示詞，描述不希望出現的內容
+
+  示例：`"模糊, 低質量, 變形"`
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  隨機種子，用於復現結果
+
+  示例：`12345`
+</ParamField>
+
+<ParamField body="prompt_extend" type="boolean" default="true">
+  自動擴展提示詞
+
+  開啓後系統會自動優化並豐富您的提示詞，**默認已啓用**，設爲 `false` 可禁用
+</ParamField>
+
+<ParamField body="audio" type="boolean">
+  在視頻中添加音頻
+
+  非 Flash 的 Wan2.6 模型默認輸出有聲視頻，設爲 `true` 可顯式啓用
+</ParamField>
+
+<ParamField body="shot_type" type="string">
+  鏡頭類型（適用於文生視頻和參考視頻模式）
+
+  可選值：
+  - `single` - 單鏡頭
+  - `multi` - 多鏡頭（電影式剪輯）
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  在生成的視頻上添加阿里雲水印
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  擴展參數
+
+  <Expandable title="展開查看 metadata 字段">
+    <ParamField body="reference_urls" type="string[]">
+      **參考視頻（r2v）模式** — 參考視頻 URL 數組
+
+      當提供此字段時，服務端路由到參考視頻上游（wan2.6-r2v）。模型將參考這些視頻生成具有一致角色或場景的新視頻。
+
+      - 每個條目必須是公開可訪問的視頻 URL（http:// 或 https://）
+
+      示例：`["https://cdn.example.com/ref-character.mp4"]`
+
+      **注意：** 不能與 `image_urls` 同時使用
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## 分辨率與寬高比組合
+
+| 寬高比 | 說明 | 720p 尺寸 | 1080p 尺寸 |
+|---|---|---|---|
+| 16:9 | 橫屏（默認） | 1280×720 | 1920×1080 |
+| 9:16 | 豎屏 | 720×1280 | 1080×1920 |
+| 1:1 | 方形 | 960×960 | 1440×1440 |
+| 4:3 | 橫屏 | 1088×832 | 1632×1248 |
+| 3:4 | 豎屏 | 832×1088 | 1248×1632 |
+
+## 響應
+
+<ResponseField name="id" type="string">
+  唯一任務標識符，用於後續查詢狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據
+</ResponseField>
+
+## 使用場景
+
+### 場景一：文生視頻
+
+```json
+{
+  "model": "wan2.6",
+  "prompt": "一隻可愛的貓咪在草地上奔跑，陽光明媚",
+  "aspect_ratio": "16:9",
+  "resolution": "1080p",
+  "duration": 5
+}
+```
+
+### 場景二：圖生視頻
+
+```json
+{
+  "model": "wan2.6",
+  "prompt": "貓咪開心地跑起來",
+  "image_urls": ["https://example.com/cat.jpg"],
+  "resolution": "1080p",
+  "duration": 10
+}
+```
+
+### 場景三：參考視頻（r2v）
+
+```json
+{
+  "model": "wan2.6",
+  "prompt": "角色揮手並向鏡頭微笑",
+  "metadata": {
+    "reference_urls": ["https://cdn.example.com/ref-character.mp4"]
+  },
+  "shot_type": "single",
+  "resolution": "1080p",
+  "duration": 5
+}
+```
+
+### 場景四：文生視頻（完整參數）
+
+```json
+{
+  "model": "wan2.6",
+  "prompt": "一隻金毛犬在向日葵田裏奔跑",
+  "negative_prompt": "模糊, 低質量, 變形",
+  "aspect_ratio": "16:9",
+  "resolution": "1080p",
+  "duration": 10,
+  "seed": 12345,
+  "prompt_extend": true,
+  "shot_type": "multi",
+  "watermark": false
+}
+```
+
+<Note>
+  **查詢任務結果**
+
+  視頻生成爲異步任務。提交後返回 `task_id`，使用 [獲取視頻任務狀態](../../tasks/video-status) 接口查詢生成進度和結果。
+</Note>
+
+<RequestExample>
+```bash cURL（文生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "wan2.6",
+    "prompt": "一隻可愛的貓咪在草地上奔跑",
+    "aspect_ratio": "16:9",
+    "resolution": "1080p",
+    "duration": 5
+  }'
+```
+
+```bash cURL（圖生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "wan2.6",
+    "prompt": "貓咪開心地跑起來",
+    "image_urls": ["https://example.com/cat.jpg"],
+    "resolution": "1080p",
+    "duration": 10
+  }'
+```
+
+```bash cURL（參考視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "wan2.6",
+    "prompt": "角色揮手並向鏡頭微笑",
+    "metadata": {
+      "reference_urls": ["https://cdn.example.com/ref-character.mp4"]
+    },
+    "resolution": "1080p",
+    "duration": 5
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "wan2.6",
+        "prompt": "一隻可愛的貓咪在草地上奔跑",
+        "aspect_ratio": "16:9",
+        "resolution": "1080p",
+        "duration": 5
+    }
+)
+
+task = response.json()
+print(f"Task ID: {task['id']}")
+print(f"Status: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/videos/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'wan2.6',
+    prompt: '一隻可愛的貓咪在草地上奔跑',
+    aspect_ratio: '16:9',
+    resolution: '1080p',
+    duration: 5
+  })
+});
+
+const task = await response.json();
+console.log(`Task ID: ${task.id}`);
+console.log(`Status: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01J9HA7JPQ9A0Z6JZ3V8M9W6PZ",
+  "object": "generation.task",
+  "model": "wan2.6",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {
+    "aspect_ratio": "16:9"
+  }
+}
+```
+</ResponseExample>

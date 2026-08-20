@@ -1,0 +1,139 @@
+---
+title: "Генерация видео Gemini Omni Flash"
+sidebarTitle: "Gemini Omni Flash Preview Official"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация и редактирование видео Gemini Omni Flash с текстом, до 10 референсных изображений или до 3 входных видео"
+---
+
+- Укажите `gemini-omni-flash-preview-official` в поле `model`
+- Поддерживает text-to-video, image/reference-to-video и редактирование видео
+- Поддерживает до 10 референсных изображений или до 3 входных видео; изображения и видео нельзя смешивать
+- Максимальная длительность видео — 10 секунд; в Playground доступны пресеты 4 / 6 / 8 / 10 секунд
+- Поддерживается только разрешение `720p`; доступны форматы `16:9` и `9:16`
+- Асинхронный API задач: после отправки используйте ID задачи для проверки статуса
+
+<Note>
+Эта страница описывает `gemini-omni-flash-preview-official`. Платформа вызывает её через Vertex AI Interactions API с OAuth сервисного аккаунта, а не через Vertex AI Publisher Model `predictLongRunning`. Она отделена от устаревшей модели `gemini-omni-flash` / `gemini_omni_flash`.
+</Note>
+
+<Warning>
+Сначала загрузите локальные изображения через [Upload Image API](../../uploads/images), а видео через [Upload Video API](../../uploads/videos), затем передайте полученные URL. Не передавайте media в base64 напрямую.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  Используйте Bearer Token:
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-omni-flash-preview-official" required>
+  Название модели. Используйте `gemini-omni-flash-preview-official`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый prompt для генерации видео.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Длительность видео в секундах. Максимум — `10`; в Playground доступны пресеты `4`, `6`, `8`, `10`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон:
+
+  - `16:9` landscape
+  - `9:16` portrait
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Разрешение видео:
+
+  - `720p` по умолчанию
+  - Поддерживается только `720p`; параметры Veo не принимаются
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Необязательный массив URL референсных изображений, до `10` элементов. Не передавайте его для text-to-video. Нельзя использовать вместе с `video_list`.
+</ParamField>
+
+<ParamField body="video_list" type="object[]">
+  Необязательные входные видео для редактирования, до `3` элементов. Каждый объект должен содержать `video_url`. Нельзя использовать вместе с `image_urls`.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Необязательные параметры генерации: `temperature`, `topP` / `top_p`, `candidateCount` / `candidate_count`, `previous_interaction_id` и `task` (`text_to_video`, `image_to_video`, `reference_to_video` или `edit`).
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  ID задачи для проверки статуса.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, обычно `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Название модели, использованной в запросе.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed`, `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи.
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+  URL сгенерированного видео после завершения задачи.
+</ResponseField>
+
+## Examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-omni-flash-preview-official",
+    "prompt": "Синяя бутылка с помпой медленно вращается в белой студии, коммерческое product video",
+    "duration": 6,
+    "aspect_ratio": "9:16",
+    "resolution": "720p",
+    "image_urls": ["https://example.com/reference.jpg"]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01JZEXAMPLE",
+  "object": "generation.task",
+  "model": "gemini-omni-flash-preview-official",
+  "status": "queued",
+  "created_at": 1779247407
+}
+```
+</ResponseExample>
+
+## Query Task
+
+Эндпоинт генерации возвращает ID задачи. Используйте общий эндпоинт статуса видео, чтобы получить статус и результат:
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

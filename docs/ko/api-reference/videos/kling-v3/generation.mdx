@@ -1,0 +1,184 @@
+---
+title: "Kling v3 비디오 생성"
+sidebarTitle: "Kling v3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos with official Kling v3 using explicit reference-image and frame-role semantics"
+---
+
+- Async task API, returns a task ID after submission
+- Supports text-to-video, image-to-video, explicit first/last frame control, and audio video
+- `mode=std` maps to 720P, `mode=pro` maps to 1080P
+- `audio=true` generates an audio video and is billed as Sound
+- `duration` supports `3s`, `4s`, `5s`, `6s`, `7s`, `8s`, `9s`, `10s`, `11s`, `12s`, `13s`, `14s`, `15s`
+
+<Warning>
+Use publicly accessible image URLs. Do not pass base64 image data. Upload local images with the [Upload 이미지 API](../../uploads/images) first.
+</Warning>
+
+## Authorization
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 요청 파라미터
+
+<ParamField body="model" type="string" required>
+  Video generation model name, fixed as `kling-v3`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Text prompt. Describe the subject, action, scene, camera movement, and style.
+</ParamField>
+
+<ParamField body="mode" type="string" default="std">
+  Generation mode.
+
+  - `std` - standard mode, 720P
+  - `pro` - professional mode, 1080P
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Video duration in seconds.
+
+  Options: `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Video aspect ratio. Common values: `16:9`, `9:16`, `1:1`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  Normal reference images.
+
+  - These images are treated as references only
+  - They are **not** automatically converted into first/last frames
+  - Use `image_with_roles` for explicit frame control
+</ParamField>
+
+<ParamField body="image_with_roles" type="object[]">
+  Explicit image-role array for frame control and mixed inputs.
+
+  <Expandable title="Show image_with_roles object fields">
+    <ParamField body="url" type="string" required>
+      Publicly accessible image URL.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Image role.
+
+      Supported values:
+      - `first_frame`
+      - `last_frame`
+      - `reference`
+      - `reference_image`
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    `last_frame` is only sent when explicitly declared in `image_with_roles`. The system no longer infers the last frame from `reference_images[1]`.
+  </Warning>
+</ParamField>
+
+<ParamField body="audio" type="boolean" default="false">
+  Whether to generate an audio video.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters.
+
+  <Expandable title="Show metadata fields">
+    <ParamField body="negative_prompt" type="string">
+      Negative prompt describing content to avoid.
+    </ParamField>
+
+    <ParamField body="watermark" type="boolean">
+      Whether to add watermark.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Input Rules
+
+| Input shape | Behavior |
+|-------------|----------|
+| `reference_images` only | Normal references |
+| `image_with_roles` with only `first_frame` / `last_frame` | Frame control |
+| Both fields used together, or roles include both frame and reference semantics | Mixed mode |
+
+## Examples
+
+### Text-to-Video
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "A golden cat running on a sunlit meadow, slow motion, cinematic quality",
+  "mode": "std",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### Image Reference
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Use the reference character and animate a subtle smile",
+  "reference_images": ["https://example.com/reference.jpg"],
+  "mode": "std",
+  "duration": 5
+}
+```
+
+### First and Last Frame Control
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "The city naturally transitions from day to night",
+  "image_with_roles": [
+    { "url": "https://example.com/day.jpg", "role": "first_frame" },
+    { "url": "https://example.com/night.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### Mixed Reference and Frame Input
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "Keep the character identity consistent while transitioning scenes",
+  "reference_images": ["https://example.com/character-reference.jpg"],
+  "image_with_roles": [
+    { "url": "https://example.com/start-scene.jpg", "role": "first_frame" },
+    { "url": "https://example.com/end-scene.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### Audio Video
+
+```json
+{
+  "model": "kling-v3",
+  "prompt": "A singer performing on stage, crowd cheering, flashing lights",
+  "mode": "std",
+  "duration": 5,
+  "audio": true
+}
+```
+
+<Note>
+  Video generation is asynchronous. Use the [Get Video Task 상태](../../tasks/video-status) endpoint to query progress and results.
+</Note>

@@ -1,0 +1,69 @@
+---
+title: "Codex セットアップガイド"
+sidebarTitle: "Codex"
+description: "CC Switch を使用して Codex CLI を ToAPIs に接続する"
+---
+
+## 準備
+
+1. [ToAPIs Console](https://toapis.com/console/token) で **ToAPIs API キー**を作成します。
+2. [Codex 公式ドキュメント](https://developers.openai.com/codex/cli) に従って Codex CLI をインストールするか、次を実行します。
+
+   ```bash
+   npm install -g @openai/codex
+   ```
+
+3. [CC Switch 公式サイト](https://ccswitch.io) または [公式 GitHub Releases](https://github.com/farion1231/cc-switch/releases) から CC Switch をインストールします。
+
+## CC Switch に ToAPIs を追加
+
+1. CC Switch を開き、アプリ切り替えで **Codex** を選択します。
+2. 右上の **+** をクリックし、**アプリ専用プロバイダー**を選択します。
+3. **Custom** プリセットを選び、以下を入力します。
+
+| 項目 | 値 |
+| --- | --- |
+| 名前 | `ToAPIs` |
+| API Key | ToAPIs API キー |
+| API endpoint / Base URL | `https://toapis.com/v1` |
+| モデル | `gpt-5.3-codex` |
+| API プロトコル | `Responses` |
+| ローカルルーティング／モデルマッピング | **オフ** |
+
+4. **追加**をクリックし、ToAPIs のカードで **有効化**をクリックします。
+5. 実行中の Codex とターミナルを終了し、ターミナルを開き直します。
+
+<Note>
+ToAPIs は `POST /v1/responses` をネイティブにサポートします。Chat Completions 専用プロバイダー向けのローカルルーティングは有効にしないでください。
+</Note>
+
+## 起動と確認
+
+```bash
+codex
+```
+
+次のような簡単なタスクを送信します。
+
+```text
+このプロジェクトを確認し、主なディレクトリ構成を説明してください。
+```
+
+正常に応答すれば設定完了です。
+
+## モデルの変更
+
+CC Switch のモデル取得ボタンで `/v1/models` から利用可能なモデルを取得できます。また、[ToAPIs モデル一覧](../api-reference/chat/models) でもモデル ID を確認できます。
+
+通常は `gpt-5.3-codex`、速度重視なら `gpt-5.3-codex-spark`、公式直結チャネルが必要な場合は `gpt-5.3-codex-official` を選択します。利用可否は CC Switch が `/v1/models` から取得した一覧を優先してください。
+
+## トラブルシューティング
+
+- **以前のプロバイダーが使われる**：Codex とターミナルを完全に終了して再起動します。
+- **`401 Unauthorized`**：API キーの入力、キーの有効期限、残高を確認します。
+- **`404` または Responses パスエラー**：Base URL、`Responses` プロトコル、ローカルルーティングがオフであることを確認します。
+- **モデルを利用できない**：同じキーで `/v1/models` を取得して確認します。
+
+CC Switch は `~/.codex/auth.json` と `~/.codex/config.toml` を管理します。これらのファイルや API キーを Git にコミットしないでください。
+
+詳細は [CC Switch 公式ユーザーマニュアル](https://github.com/farion1231/cc-switch/tree/main/docs/user-manual/ja) を参照してください。

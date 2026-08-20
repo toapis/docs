@@ -1,0 +1,173 @@
+---
+title: "Task Webhooks"
+description: "Receive signed ToAPIs completion events for asynchronous generation tasks"
+---
+
+ToAPIs sends one final event when an asynchronous image or video task completes or permanently fails. Delivery is at least once; deduplicate by event `id`.
+
+## Configure a Token
+
+In the ToAPIs console, edit the Token, set an HTTPS default callback URL, generate a signing secret, enable Task Webhooks, save, and send a test event. The 32-byte secret is shown only when generated or rotated.
+
+If a task request omits `callback_url`, ToAPIs uses the Token default. A request-level URL may only change the path and query while keeping the same scheme, hostname, and port. If Webhooks are disabled or the Token lacks a default URL or secret, sending `callback_url` returns `400 webhook_not_configured`.
+
+## Events
+
+- `generation.completed`
+- `generation.failed`
+- `endpoint.test`
+
+```json
+{
+  "id": "evt_01abcdef",
+  "type": "generation.completed",
+  "api_version": "v1",
+  "created_at": 1783953302,
+  "data": {
+    "task_id": "tsk_01abcdef",
+    "client_business_id": "order_123",
+    "task_type": "image",
+    "model": "model-name",
+    "status": "SUCCESS",
+    "progress": "100%",
+    "result": {
+      "type": "image",
+      "data": [{"url": "https://cdn.example/result.png"}]
+    },
+    "error": null,
+    "submitted_at": 1783953000,
+    "finished_at": 1783953300
+  }
+}
+```
+
+Failed events are sent only after internal retries and refund or billing finalization have completed. Temporary failures do not emit an event.
+
+```json
+{
+  "id": "evt_01failure",
+  "type": "generation.failed",
+  "api_version": "v1",
+  "created_at": 1783953302,
+  "data": {
+    "task_id": "tsk_01failure",
+    "client_business_id": "order_456",
+    "task_type": "video",
+    "model": "model-name",
+    "status": "FAILURE",
+    "progress": "100%",
+    "result": null,
+    "error": {
+      "code": "generation_failed",
+      "message": "Generation failed after retries"
+    },
+    "submitted_at": 1783953000,
+    "finished_at": 1783953300
+  }
+}
+```
+
+Test deliveries use the same signed contract:
+
+```json
+{
+  "id": "evt_01test",
+  "type": "endpoint.test",
+  "api_version": "v1",
+  "created_at": 1783953302,
+  "data": {
+    "task_id": "endpoint_test",
+    "task_type": "image",
+    "status": "SUCCESS",
+    "progress": "100%",
+    "result": {"message": "ToAPIs webhook endpoint test"},
+    "error": null,
+    "submitted_at": 0,
+    "finished_at": 0
+  }
+}
+```
+
+`task_type` is `image` or `video`. Results match the public task-status representation and never contain channel IDs, upstream task IDs or keys, internal credentials, or private task data.
+
+## Headers and signature
+
+```text
+User-Agent: ToAPIs-Webhook/1.0
+X-ToAPIs-Webhook-Id: evt_01abcdef
+X-ToAPIs-Webhook-Timestamp: 1783953302
+X-ToAPIs-Webhook-Signature: v1=<hex-signature>[,v1=<previous-hex-signature>]
+```
+
+The signed bytes are:
+
+```text
+event_id + "." + timestamp + "." + raw_request_body
+```
+
+Compute HMAC-SHA256 with the Token secret and compare signatures in constant time. Reject a first delivery whose timestamp differs from local time by more than five minutes. Retries use the actual resend timestamp and keep the same event ID. During the 24 hours after secret rotation, ToAPIs sends signatures from both the current and previous secret; accept any valid `v1` value.
+
+### Python
+
+```python
+import hashlib, hmac, time
+
+def verify(headers, raw_body, secrets):
+    event_id = headers["X-ToAPIs-Webhook-Id"]
+    timestamp = int(headers["X-ToAPIs-Webhook-Timestamp"])
+    if abs(time.time() - timestamp) > 300:
+        return False
+    signed = f"{event_id}.{timestamp}.".encode() + raw_body
+    received = [v.removeprefix("v1=") for v in headers["X-ToAPIs-Webhook-Signature"].split(",")]
+    return any(hmac.compare_digest(hmac.new(s.encode(), signed, hashlib.sha256).hexdigest(), r)
+               for s in secrets for r in received)
+```
+
+### Node.js
+
+```javascript
+import crypto from 'node:crypto';
+
+export function verify(headers, rawBody, secrets) {
+  const id = headers['x-toapis-webhook-id'];
+  const ts = Number(headers['x-toapis-webhook-timestamp']);
+  if (Math.abs(Date.now() / 1000 - ts) > 300) return false;
+  const signed = Buffer.concat([Buffer.from(`${id}.${ts}.`), rawBody]);
+  const received = headers['x-toapis-webhook-signature'].split(',').map(v => v.replace(/^v1=/, ''));
+  return secrets.some(secret => received.some(sig => {
+    const expected = crypto.createHmac('sha256', secret).update(signed).digest('hex');
+    return expected.length === sig.length && crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
+  }));
+}
+```
+
+### Go
+
+```go
+func Verify(id, timestamp, signature string, body []byte, secrets []string) bool {
+    ts, err := strconv.ParseInt(timestamp, 10, 64)
+    now := time.Now().Unix()
+    if err != nil || now-ts > 300 || ts-now > 300 { return false }
+    signed := append([]byte(id+"."+timestamp+"."), body...)
+    for _, secret := range secrets {
+        mac := hmac.New(sha256.New, []byte(secret)); mac.Write(signed)
+        expected := hex.EncodeToString(mac.Sum(nil))
+        for _, value := range strings.Split(signature, ",") {
+            if hmac.Equal([]byte(expected), []byte(strings.TrimPrefix(value, "v1="))) { return true }
+        }
+    }
+    return false
+}
+```
+
+Persist the event ID before processing side effects so duplicate deliveries return `2xx` without repeating work.
+
+## Delivery and security
+
+Only `2xx` is successful. ToAPIs does not follow redirects, times out after 10 seconds, and retries after approximately 10 seconds, 30 seconds, 2 minutes, 10 minutes, 1 hour, 6 hours, and 24 hours. Use the task-status API if delivery is delayed or exhausted.
+
+Callback endpoints must use HTTPS and cannot contain userinfo or fragments. Private, loopback, link-local, reserved, or disallowed DNS/IP destinations and illegal ports are rejected. DNS and SSRF checks run again for every delivery.
+
+Result URLs may expire. Download and store required assets promptly. Real-avatar verification callbacks, payment Webhooks, and OAuth callbacks keep their existing contracts and are not task Webhooks.
+
+See [Async task rate limits](/docs/en/api-reference/rate-limits/async-tasks).

@@ -1,0 +1,73 @@
+---
+title: "seedance-2.5 影片生成"
+sidebarTitle: "seedance-2.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 seedance-2-5 模型生成影片"
+---
+
+Seedance 2.5 的公共模型名稱為 `seedance-2-5`，火山引擎上游模型 ID 為 `doubao-seedance-2-5-260628`。
+
+- 支援文生影片、首幀/首尾幀圖生影片、影片編輯、影片延長及多模態參考生影片。
+- 支援圖片、影片和音訊參考，也支援純音訊參考。
+- 介面採用非同步任務；提交後返回 `generation.task`，完成後透過任務狀態介面取得影片。
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有請求都需要 Bearer Token。請在 [API Key 管理頁面](https://toapis.com/console/token) 取得金鑰，並加入：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="seedance-2-5" required>ToAPIs 公共模型名稱，固定使用 `seedance-2-5`。</ParamField>
+<ParamField body="prompt" type="string">描述場景、鏡頭運動、主體動作、風格與聲音氛圍。引用素材時使用「圖片1」「影片1」「音訊1」等標籤。</ParamField>
+<ParamField body="video_operation" type="string" default="generate">視頻業務類型：`generate`、`edit` 或 `extend`。編輯和延長至少需要一個 `video_with_roles`；延長需要正數 `duration`。三種操作共用此接口。</ParamField>
+<ParamField body="client_business_id" type="string">客戶側訂單號或業務任務 ID。可用 `GET /v1/videos/generations/{client_business_id}` 查詢。</ParamField>
+<ParamField body="duration" type="integer">影片時長（秒），官方範圍為 `4`–`30`；`-1` 表示自動時長。編輯、延長及上游要求的首尾幀任務需使用 `-1`。</ParamField>
+<ParamField body="aspect_ratio" type="string">可選 `21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`adaptive`。編輯、延長和首尾幀任務按上游要求使用 `adaptive`。</ParamField>
+<ParamField body="image_urls" type="string[]">相容模式圖片 URL 陣列。新接入建議使用 `image_with_roles`；兩個欄位不能同時傳送。</ParamField>
+<ParamField body="image_with_roles" type="array">帶角色的圖片陣列，每項含必填 `url` 和 `role`。角色可為 `first_frame`、`last_frame` 或 `reference_image`，最多 30 張。首尾幀模式與參考圖模式不可混用。</ParamField>
+<ParamField body="video_with_roles" type="array">參考影片陣列，每項含 `url`，角色固定為 `reference_video`，最多 10 段。</ParamField>
+<ParamField body="audio_with_roles" type="array">參考音訊陣列，每項含 `url`，角色固定為 `reference_audio`，最多 10 段；支援純音訊參考。</ParamField>
+<ParamField body="resolution" type="string">解析度：`480p` 或 `720p`。</ParamField>
+<ParamField body="output_format" type="string" default="mp4">支持 `mp4` 和 `mov`。</ParamField>
+<ParamField body="generate_audio" type="boolean" default={true}>是否生成同步音訊。</ParamField>
+<ParamField body="return_last_frame" type="boolean" default={false}>是否在完成結果中返回生成影片的尾幀圖片。</ParamField>
+<ParamField body="tools" type="array">可選工具：`[{ "type": "web_search" }]`。僅適用純文生影片，不能與圖片、影片或音訊輸入同時使用。</ParamField>
+<ParamField body="callback_url" type="string">ToAPIs 任務完成回呼地址，詳見[任務 Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks)。</ParamField>
+<ParamField body="trace_id" type="string">呼叫方自訂的鏈路追蹤 ID。</ParamField>
+
+## 參考素材限制
+
+最多共 50 個參考素材：圖片 30 張、影片 10 段、音訊 10 段。請使用明確角色，避免首幀/尾幀與參考素材被錯誤推斷。
+
+<Warning>非法任務組合可能在非同步階段才失敗，並返回 `InvalidParameter.TaskTypeConstraint`。編輯、延長和首尾幀任務按上游要求將 `aspect_ratio` 設為 `adaptive`。</Warning>
+
+## Response
+
+<ResponseField name="id" type="string">任務 ID，用於查詢狀態。</ResponseField>
+<ResponseField name="client_business_id" type="string">請求傳入此欄位時返回。</ResponseField>
+<ResponseField name="object" type="string">固定為 `generation.task`。</ResponseField>
+<ResponseField name="model" type="string">本次請求的模型名稱。</ResponseField>
+<ResponseField name="status" type="string">`queued`、`in_progress`、`completed` 或 `failed`。</ResponseField>
+<ResponseField name="progress" type="integer">`0`–`100` 的任務進度。</ResponseField>
+<ResponseField name="created_at" type="integer">建立時間戳。</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"model":"seedance-2-5","prompt":"電影感產品特寫，鏡頭緩慢推進。","duration":10,"aspect_ratio":"16:9","resolution":"720p","generate_audio":true}'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{"id":"tsk_vid_xxx","object":"generation.task","model":"seedance-2-5","status":"in_progress","progress":10,"created_at":1781577600}
+```
+</ResponseExample>

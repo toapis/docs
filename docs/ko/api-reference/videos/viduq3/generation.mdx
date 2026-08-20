@@ -1,0 +1,327 @@
+---
+title: "Vidu Q3 비디오 생성"
+sidebarTitle: "Vidu Q3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Generate videos with Vidu Q3 models, including text-to-video, image-to-video, first-last frame, reference-to-video and subjects generation"
+---
+
+- Async task API, returns a task ID after submission
+- Supported models: `viduq3-pro`, `viduq3-turbo`, `viduq3`
+- `viduq3-pro`: High quality model, supports audio-video sync and storyboard generation
+- `viduq3-turbo`: Fast model, intelligent scene switching, fastest generation, best cost-effectiveness
+- `viduq3`: Best multi-camera consistency, intelligent camera switching, multi-reference generation
+
+<Warning>
+Use publicly accessible image URLs. Do not pass base64 image data in `image_urls`; upload local images with the [Upload 이미지 API](../../uploads/images) first.
+</Warning>
+
+## Authorization
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 요청 파라미터
+
+<ParamField body="model" type="string" required>
+  Vidu Q3 model name.
+
+  Options:
+  - `viduq3-pro` - high quality, supports audio-video sync and storyboard generation
+  - `viduq3-turbo` - fastest generation, intelligent scene switching
+  - `viduq3` - best multi-camera consistency, for multi-reference/subjects generation
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Text prompt, maximum **5000 characters**.
+
+  Describes subject, action, scene, camera movement, and style. When using subjects, reference them via `@name` in the prompt.
+
+  Example: `"A cat playing piano, camera slowly zooms in, cinematic quality"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Video duration in seconds.
+
+  - `viduq3-pro` / `viduq3-turbo`: `1` to `16`
+  - `viduq3`: `3` to `16`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Video resolution.
+
+  Options:
+  - `540p`
+  - `720p`
+  - `1080p`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Video aspect ratio.
+
+  Common values: `16:9`, `9:16`, `1:1`
+
+  Q3 models support any aspect ratio. When `image_urls` is provided, the output ratio is usually determined by the reference image.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Reference image URL array.
+
+  - `viduq3-pro` / `viduq3-turbo`
+    - Omitted: text-to-video
+    - 1 image: image-to-video, image as first frame
+    - 2 images: first-last frame
+  - `viduq3`
+    - 필수, up to 7 reference images
+
+  Example: `["https://example.com/reference.jpg"]`
+</ParamField>
+
+<ParamField body="audio" type="boolean">
+  Whether to enable audio-video output.
+
+  - All Q3 models default to `true`
+
+  When `true`, the system generates speech and sound effects based on the prompt.
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed for more reproducible results with the same parameters.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Extended parameters for fields supported by the upstream API but not exposed as top-level fields.
+
+  <Expandable title="Show metadata fields">
+    <ParamField body="subjects" type="array">
+      Subject list (Subjects mode, `viduq3` only). Each subject contains `name` and `images` fields.
+
+      - Up to 7 subjects
+      - Up to 3 images per subject
+      - Reference subjects via `@name` in the prompt
+
+      Example:
+      ```json
+      [
+        {"name": "cat", "images": ["https://example.com/cat.jpg"]},
+        {"name": "dog", "images": ["https://example.com/dog.jpg"]}
+      ]
+      ```
+    </ParamField>
+
+    <ParamField body="auto_subjects" type="boolean">
+      Whether to use intelligent entity library, defaults to `false`.
+    </ParamField>
+
+    <ParamField body="voice_id" type="string">
+      Voice ID for specifying the voice character in the video.
+    </ParamField>
+
+    <ParamField body="audio_type" type="string">
+      Audio type, effective when `audio` is `true`.
+
+      Options:
+      - `all` - sound effects + speech (default)
+      - `speech_only` - speech only
+      - `sound-effect_only` - sound effects only
+    </ParamField>
+
+    <ParamField body="off_peak" type="boolean">
+      Off-peak mode, defaults to `false`.
+
+      - `true`: off-peak generation, consumes fewer credits
+      - Off-peak tasks will be generated within 48 hours; incomplete tasks are auto-cancelled with credits refunded
+      - Q3 models support off-peak when `audio=true`
+    </ParamField>
+
+    <ParamField body="payload" type="string">
+      Transparent passthrough parameter, max 1048576 characters.
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      ToAPIs 최종 Task Webhook입니다. Token URL과 secret을 먼저 설정하세요. [Webhook](/docs/ko/api-reference/webhooks/task-webhooks).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## 모델 Selection
+
+| 모델 | Use Case | Image Input | Resolution | Duration |
+|-------|----------|-------------|------------|----------|
+| `viduq3-pro` | High quality text/image/first-last frame | 선택, up to 2 images | `540p` / `720p` / `1080p` | 1-16s |
+| `viduq3-turbo` | Fast text/image/first-last frame | 선택, up to 2 images | `540p` / `720p` / `1080p` | 1-16s |
+| `viduq3` | Multi-reference/Subjects generation | 필수, up to 7 images | `540p` / `720p` / `1080p` | 3-16s |
+
+## Billing Dimensions
+
+Vidu Q3 is billed by model, resolution, and generation type:
+
+- `viduq3-pro`: high quality tier, approximately 2x the price of turbo
+- `viduq3-turbo`: fast tier, best cost-effectiveness
+- `viduq3`: multi-reference generation, billed at reference generation rate
+
+## 응답
+
+<ResponseField name="id" type="string">
+  Task ID for querying task status.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Object type, usually `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  모델 used for the request.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued`, `in_progress`, `completed`, or `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp.
+</ResponseField>
+
+## Examples
+
+### Text-to-Video
+
+```json
+{
+  "model": "viduq3-pro",
+  "prompt": "A cat playing piano, camera slowly zooms in, cinematic quality",
+  "duration": 8,
+  "resolution": "1080p",
+  "aspect_ratio": "16:9",
+  "audio": true
+}
+```
+
+### Image-to-Video
+
+```json
+{
+  "model": "viduq3-turbo",
+  "prompt": "The person in the image slowly turns and smiles",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 5,
+  "resolution": "720p"
+}
+```
+
+### First-Last Frame
+
+```json
+{
+  "model": "viduq3-pro",
+  "prompt": "The person naturally sits down from standing, smooth motion",
+  "image_urls": [
+    "https://example.com/first-frame.jpg",
+    "https://example.com/last-frame.jpg"
+  ],
+  "duration": 8,
+  "resolution": "720p"
+}
+```
+
+### Multi-Reference Image Video
+
+```json
+{
+  "model": "viduq3",
+  "prompt": "Keep the character consistent from the reference images, walking through a futuristic city street",
+  "image_urls": [
+    "https://example.com/character-front.jpg",
+    "https://example.com/character-side.jpg"
+  ],
+  "duration": 6,
+  "resolution": "1080p"
+}
+```
+
+### Subjects Mode
+
+```json
+{
+  "model": "viduq3",
+  "prompt": "@cat and @dog are running in the park, sunny day",
+  "image_urls": ["https://example.com/park-bg.jpg"],
+  "duration": 8,
+  "resolution": "720p",
+  "audio": true,
+  "metadata": {
+    "subjects": [
+      {"name": "cat", "images": ["https://example.com/cat.jpg"]},
+      {"name": "dog", "images": ["https://example.com/dog.jpg"]}
+    ],
+    "audio_type": "all"
+  }
+}
+```
+
+<Note>
+  Video generation is asynchronous. Use the [Get Video Task 상태](../../tasks/video-status) endpoint to query progress and results.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "viduq3-pro",
+    "prompt": "A cat playing piano, camera slowly zooms in, cinematic quality",
+    "duration": 8,
+    "resolution": "1080p",
+    "aspect_ratio": "16:9",
+    "audio": true
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer <token>",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "viduq3-pro",
+        "prompt": "A cat playing piano, camera slowly zooms in, cinematic quality",
+        "duration": 8,
+        "resolution": "1080p",
+        "aspect_ratio": "16:9",
+        "audio": True,
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer <token>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "viduq3-pro",
+    prompt: "A cat playing piano, camera slowly zooms in, cinematic quality",
+    duration: 8,
+    resolution: "1080p",
+    aspect_ratio: "16:9",
+    audio: true
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>

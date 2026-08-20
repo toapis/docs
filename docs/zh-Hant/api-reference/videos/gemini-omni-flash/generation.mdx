@@ -1,0 +1,127 @@
+---
+title: "Gemini Omni Flash 視頻生成"
+sidebarTitle: "Gemini Omni Flash"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用非官方 Gemini Omni Flash 渠道生成視頻，支持文字和最多 3 張參考圖"
+---
+
+- 通過 `model` 指定 `gemini-omni-flash`（部分渠道配置使用 `gemini_omni_flash` 別名）
+- 支持文生視頻和參考圖生視頻
+- 支持 4 / 6 / 10 秒時長
+- 支持 `720p` 和 `1080p`；`1080p` 僅支持橫屏
+- 異步任務接口，提交後使用任務 ID 查詢結果
+
+<Note>
+本文檔適用於非官方的舊版/FlowReverse 風格 `omni_flash` 渠道。它使用渠道配置的上游接口和 API Key，不使用 Vertex AI Interactions API；其他舊版渠道的限制可能不同。Vertex Service Account/OAuth 渠道請參閱獨立的 `gemini-omni-flash-preview-official` 頁面。
+</Note>
+
+<Warning>
+請先通過[圖片上傳 API](../../uploads/images) 上傳本地圖片，再把返回的 URL 放入 `image_urls`。不要直接傳 base64 圖片。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  使用 Bearer Token 認證：
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-omni-flash" required>
+  模型名稱。舊版渠道使用 `gemini-omni-flash`；部分渠道配置使用等價的 `gemini_omni_flash` 別名。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻生成提示詞。
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  視頻時長，支持 `4`、`6`、`10` 秒。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  視頻比例，支持：
+
+  - `16:9` 橫屏
+  - `9:16` 豎屏
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  視頻分辨率，支持 `720p` 或 `1080p`；舊版渠道的 `1080p` 僅輸出橫屏。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  可選的公開參考圖 URL 數組，最多 `3` 張。不傳時爲文生視頻。此渠道不支持 base64/data URI，也不支持視頻輸入。
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務 ID，用於查詢任務狀態。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，通常爲 `generation.task`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態：`queued`、`in_progress`、`completed`、`failed`。
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳。
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+  任務完成後的生成視頻 URL。
+</ResponseField>
+
+## Examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-omni-flash",
+    "prompt": "一支藍色按壓瓶在純白攝影棚中輕微轉動，商業產品視頻",
+    "duration": 6,
+    "aspect_ratio": "9:16",
+    "resolution": "720p",
+    "image_urls": ["https://example.com/reference.jpg"]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01JZEXAMPLE",
+  "object": "generation.task",
+  "model": "gemini-omni-flash",
+  "status": "queued",
+  "created_at": 1779247407
+}
+```
+</ResponseExample>
+
+## 查詢任務
+
+提交接口會返回任務 ID。使用通用視頻任務查詢接口獲取狀態和結果：
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

@@ -1,0 +1,135 @@
+---
+title: "Grok Video 1.5 视频生成"
+sidebarTitle: "Grok Video 1.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 grok-video-1.5 从单张必填首图生成视频"
+---
+
+- 仅支持图生视频，不支持文生视频。
+- 必须且只能传入 1 张公网首图。
+- 视频时长支持 `1`–`15` 秒，默认 `8` 秒。
+- 支持 `480p` 和 `720p`。
+- 异步任务 API：提交后使用任务 ID 查询视频生成状态。
+
+<Warning>
+不要直接传入 base64 图片数据。请先使用 [上传图片接口](../../uploads/images) 上传本地图片，再将返回的公网 URL 放入 `image`。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要 Bearer Token 认证。
+
+  ```text
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="grok-video-1.5" required>
+  固定使用 `grok-video-1.5`。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  描述参考图需要生成的动态效果、镜头运动和视觉方向。
+</ParamField>
+
+<ParamField body="image" type="string" required>
+  必填首图 URL，且只能传入 1 张。仅支持公网可访问的 `http://` 或 `https://` 地址。
+</ParamField>
+
+<ParamField body="duration" type="integer" default="8">
+  视频时长。
+
+  支持范围：`1`–`15` 秒
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  视频分辨率。支持值：`480p`、`720p`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  视频画面比例。支持值：`1:1`、`16:9`、`9:16`、`3:2`、`2:3`。
+</ParamField>
+
+## Pricing
+
+| 计费单位 | 价格 |
+| --- | --- |
+| 每生成 1 秒 | `$0.01 / second` |
+
+## Response
+
+<ResponseField name="id" type="string">
+  用于查询任务状态的任务 ID。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  对象类型，固定为 `generation.task`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  本次任务使用的模型名。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任务状态：`queued`、`in_progress`、`completed` 或 `failed`。
+</ResponseField>
+
+## 创建视频任务
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "grok-video-1.5",
+    "prompt": "将这张产品图生成电影感商业视频，轻微镜头推进",
+    "image": "https://example.com/product.jpg",
+    "duration": 10,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```python Python
+import requests
+
+task = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "grok-video-1.5",
+        "prompt": "将这张产品图生成电影感商业视频",
+        "image": "https://example.com/product.jpg",
+        "duration": 15,
+        "aspect_ratio": "16:9",
+    },
+).json()
+
+print(task["id"])
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_abc123def456",
+  "object": "generation.task",
+  "model": "grok-video-1.5",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>
+
+## 查询任务状态
+
+使用返回的 `id` 调用 [视频任务状态接口](../../tasks/video-status)。

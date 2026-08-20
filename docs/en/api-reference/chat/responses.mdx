@@ -1,0 +1,130 @@
+---
+title: "Responses API"
+sidebarTitle: "Responses API"
+api: "POST https://toapis.com/v1/responses"
+description: "OpenAI Responses API format with function calling, built-in tools, and server-side multi-turn context"
+---
+
+The Responses API is OpenAI's newer agentic API. Compared with Chat Completions, it adds richer tool use and server-side conversation state.
+
+- **Function calling**: let models call custom functions
+- **Built-in tools**: use tools such as `web_search_preview`
+- **Server-side context**: use `previous_response_id` instead of resending the full conversation
+- **Reasoning control**: tune thinking depth with `reasoning.effort`
+
+<Warning>
+Models marked as **Responses Only**, such as `gpt-5-pro-official` and `gpt-5.3-codex-official`, only support this API and do not support Chat Completions. See the [model list](./models) for details.
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  Use Bearer Token authentication.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+
+  Get your API key from the [API Key management page](https://toapis.com/console/token).
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  Model name.
+
+  Examples: `"gpt-5-pro-official"`, `"gpt-5.3-codex-official"`, `"gpt-5.2-official"`
+</ParamField>
+
+<ParamField body="input" type="string | object[]" required>
+  User input. Supports simple string input or a message array for multi-turn conversations.
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  System instructions that guide model behavior.
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  Whether to enable streaming output.
+</ParamField>
+
+<ParamField body="max_output_tokens" type="integer">
+  Maximum number of output tokens.
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  Sampling temperature, from `0` to `2`.
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  Nucleus sampling threshold, from `0` to `1`.
+</ParamField>
+
+<ParamField body="previous_response_id" type="string">
+  Previous response ID for server-side multi-turn context.
+</ParamField>
+
+<ParamField body="reasoning" type="object">
+  Reasoning configuration. `reasoning.effort` can be `high`, `medium`, `low`, or `none`.
+</ParamField>
+
+<ParamField body="tools" type="object[]">
+  Available tools. Supported tool types include `function` and `web_search_preview`.
+</ParamField>
+
+<ParamField body="tool_choice" type="string" default="auto">
+  Tool selection policy: `auto`, `none`, or `required`.
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique response ID, usable as `previous_response_id`.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Always `response`.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Response status: `completed`, `failed`, or `in_progress`.
+</ResponseField>
+
+<ResponseField name="output" type="object[]">
+  Output items, such as `message`, `function_call`, `reasoning`, or `web_search_call`.
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  Token usage statistics, including input, output, reasoning, and total tokens.
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.3-codex-official",
+    "instructions": "You are a professional code assistant",
+    "input": "Write a quicksort in Python"
+  }'
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.responses.create(
+    model="gpt-5.3-codex-official",
+    instructions="You are a professional code assistant",
+    input="Write a quicksort in Python"
+)
+
+print(response.output[0].content[0].text)
+```
+</RequestExample>

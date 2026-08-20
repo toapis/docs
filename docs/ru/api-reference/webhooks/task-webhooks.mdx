@@ -1,0 +1,50 @@
+---
+title: "Webhook асинхронных задач"
+description: "Подписанные события ToAPIs об успехе и окончательной ошибке"
+---
+
+Для асинхронных image и video ToAPIs отправляет `generation.completed` и `generation.failed`; тест — `endpoint.test`. Доставка at-least-once: обрабатывайте повторный event ID идемпотентно.
+
+В настройках Token задайте HTTPS URL, создайте 32-byte secret (показывается один раз), включите Webhook и отправьте тест. Без `callback_url` используется URL Token. Переопределение может менять только path/query при том же scheme/host/port. Без настройки: `400 webhook_not_configured`.
+
+```json
+{"id":"evt_xxx","type":"generation.completed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_xxx","client_business_id":"order_123","task_type":"video","model":"model-name","status":"SUCCESS","progress":"100%","result":{"type":"video","data":[{"url":"https://cdn.example/result.mp4","format":"mp4"}]},"error":null,"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+Окончательная ошибка отправляется только после завершения внутренних повторов и возврата средств или финального биллинга.
+
+```json
+{"id":"evt_failure","type":"generation.failed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_failure","client_business_id":"order_456","task_type":"video","model":"model-name","status":"FAILURE","progress":"100%","result":null,"error":{"code":"generation_failed","message":"Generation failed after retries"},"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+```json
+{"id":"evt_test","type":"endpoint.test","api_version":"v1","created_at":1783953302,"data":{"task_id":"endpoint_test","task_type":"image","status":"SUCCESS","progress":"100%","result":{"message":"ToAPIs webhook endpoint test"},"error":null,"submitted_at":0,"finished_at":0}}
+```
+
+`task_type`: `image|video`. Result соответствует публичному query API. Channel ID, upstream task ID/keys, credentials и PrivateData не передаются.
+
+```text
+User-Agent: ToAPIs-Webhook/1.0
+X-ToAPIs-Webhook-Id
+X-ToAPIs-Webhook-Timestamp
+X-ToAPIs-Webhook-Signature: v1=<current>[,v1=<previous>]
+```
+
+Строка подписи: `event_id + "." + timestamp + "." + raw_request_body`, HMAC-SHA256. Для первой доставки отклоняйте timestamp старше 5 минут. 24 часа после ротации принимайте новую или предыдущую подпись.
+
+```python Python
+def verify(headers, raw_body, secrets):
+    event_id=headers["X-ToAPIs-Webhook-Id"]; timestamp=int(headers["X-ToAPIs-Webhook-Timestamp"])
+    if abs(int(time.time())-timestamp)>300: return False
+    signed=f"{event_id}.{timestamp}.".encode()+raw_body
+    received=[v.strip()[3:] for v in headers["X-ToAPIs-Webhook-Signature"].split(",") if v.strip().startswith("v1=")]
+    return any(hmac.compare_digest(hmac.new(s.encode(),signed,hashlib.sha256).hexdigest(),r) for s in secrets for r in received)
+```
+```javascript Node.js
+function verify(headers,rawBody,secrets){const id=headers['x-toapis-webhook-id'];const ts=Number(headers['x-toapis-webhook-timestamp']);if(!Number.isFinite(ts)||Math.abs(Date.now()/1000-ts)>300)return false;const signed=Buffer.concat([Buffer.from(`${id}.${ts}.`),rawBody]);const received=headers['x-toapis-webhook-signature'].split(',').filter(v=>v.trim().startsWith('v1=')).map(v=>v.trim().slice(3));return secrets.some(secret=>received.some(sig=>{const expected=crypto.createHmac('sha256',secret).update(signed).digest('hex');return expected.length===sig.length&&crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(sig));}));}
+```
+```go Go
+func Verify(id,ts,sig string,body []byte,secrets []string) bool { unix,err:=strconv.ParseInt(ts,10,64);now:=time.Now().Unix();if err!=nil||now-unix>300||unix-now>300{return false};signed:=append([]byte(id+"."+ts+"."),body...);for _,secret:=range secrets{mac:=hmac.New(sha256.New,[]byte(secret));mac.Write(signed);expected:=hex.EncodeToString(mac.Sum(nil));for _,v:=range strings.Split(sig,","){if hmac.Equal([]byte(expected),[]byte(strings.TrimPrefix(strings.TrimSpace(v),"v1="))){return true}}};return false }
+```
+
+Первая доставка выполняется сразу; затем повторы через 10с, 30с, 2м, 10м, 1ч, 6ч и 24ч. Успех — только `2xx`; `3xx` не перенаправляются, `4xx/5xx` повторяются, timeout 10 секунд. HTTPS, userinfo, fragment, недопустимый port, SSRF, DNS/IP и DNS rebinding проверяются при каждой доставке. Используйте query API как резерв и быстро сохраняйте временные result URL. Real-avatar, платежи и OAuth callback не меняются. [Лимиты](/docs/ru/api-reference/rate-limits/async-tasks).

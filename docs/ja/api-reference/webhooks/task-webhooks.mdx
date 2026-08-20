@@ -1,0 +1,50 @@
+---
+title: "非同期タスク Webhook"
+description: "ToAPIs の署名済み完了・失敗イベント"
+---
+
+非同期の画像と動画に `generation.completed` / `generation.failed`、テストに `endpoint.test` を送信します。at-least-once 配信のため、同じ event ID を冪等に処理してください。
+
+Token 編集画面で HTTPS の既定 URL、1回だけ表示される32-byte秘密鍵、Webhook 有効化、テストを設定します。`callback_url` 未指定時は既定 URL を使用し、指定時は同一 scheme/host/port の path/query のみ変更できます。未設定なら `400 webhook_not_configured` です。
+
+```json
+{"id":"evt_xxx","type":"generation.completed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_xxx","client_business_id":"order_123","task_type":"image","model":"model-name","status":"SUCCESS","progress":"100%","result":{"type":"image","data":[{"url":"https://cdn.example/result.png"}]},"error":null,"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+最終失敗は内部 retry と返金または課金確定の完了後にだけ送信します。
+
+```json
+{"id":"evt_failure","type":"generation.failed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_failure","client_business_id":"order_456","task_type":"video","model":"model-name","status":"FAILURE","progress":"100%","result":null,"error":{"code":"generation_failed","message":"Generation failed after retries"},"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+```json
+{"id":"evt_test","type":"endpoint.test","api_version":"v1","created_at":1783953302,"data":{"task_id":"endpoint_test","task_type":"image","status":"SUCCESS","progress":"100%","result":{"message":"ToAPIs webhook endpoint test"},"error":null,"submitted_at":0,"finished_at":0}}
+```
+
+`task_type` は `image|video`。結果は公開タスク照会と同じ形式で、channel ID、upstream task ID/key、認証情報、PrivateData は含みません。
+
+```text
+User-Agent: ToAPIs-Webhook/1.0
+X-ToAPIs-Webhook-Id
+X-ToAPIs-Webhook-Timestamp
+X-ToAPIs-Webhook-Signature: v1=<current>[,v1=<previous>]
+```
+
+HMAC-SHA256 の入力は `event_id + "." + timestamp + "." + raw_request_body`。初回は5分を超える時刻差を拒否し、ローテーション後24時間は新旧署名のどちらかを検証します。
+
+```python Python
+def verify(headers, raw_body, secrets):
+    event_id=headers["X-ToAPIs-Webhook-Id"]; timestamp=int(headers["X-ToAPIs-Webhook-Timestamp"])
+    if abs(int(time.time())-timestamp)>300: return False
+    signed=f"{event_id}.{timestamp}.".encode()+raw_body
+    received=[v.strip()[3:] for v in headers["X-ToAPIs-Webhook-Signature"].split(",") if v.strip().startswith("v1=")]
+    return any(hmac.compare_digest(hmac.new(s.encode(),signed,hashlib.sha256).hexdigest(),r) for s in secrets for r in received)
+```
+```javascript Node.js
+function verify(headers,rawBody,secrets){const id=headers['x-toapis-webhook-id'];const ts=Number(headers['x-toapis-webhook-timestamp']);if(!Number.isFinite(ts)||Math.abs(Date.now()/1000-ts)>300)return false;const signed=Buffer.concat([Buffer.from(`${id}.${ts}.`),rawBody]);const received=headers['x-toapis-webhook-signature'].split(',').filter(v=>v.trim().startsWith('v1=')).map(v=>v.trim().slice(3));return secrets.some(secret=>received.some(sig=>{const expected=crypto.createHmac('sha256',secret).update(signed).digest('hex');return expected.length===sig.length&&crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(sig));}));}
+```
+```go Go
+func Verify(id,ts,sig string,body []byte,secrets []string) bool { unix,err:=strconv.ParseInt(ts,10,64);now:=time.Now().Unix();if err!=nil||now-unix>300||unix-now>300{return false};signed:=append([]byte(id+"."+ts+"."),body...);for _,secret:=range secrets{mac:=hmac.New(sha256.New,[]byte(secret));mac.Write(signed);expected:=hex.EncodeToString(mac.Sum(nil));for _,v:=range strings.Split(sig,","){if hmac.Equal([]byte(expected),[]byte(strings.TrimPrefix(strings.TrimSpace(v),"v1="))){return true}}};return false }
+```
+
+初回は即時、失敗後は10秒、30秒、2分、10分、1時間、6時間、24時間で再試行します。成功は `2xx` のみで、`3xx` は追従せず、`4xx/5xx` は再試行します。timeout は10秒です。HTTPS、userinfo、fragment、不正 port、SSRF、DNS/IP、DNS rebinding を配信ごとに検査します。失敗時はタスク照会をフォールバックにし、期限付き result URL は早めに保存してください。本人認証、決済、OAuth callback は対象外です。[レート制限](/docs/ja/api-reference/rate-limits/async-tasks)。

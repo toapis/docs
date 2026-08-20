@@ -1,0 +1,65 @@
+---
+title: "非同步任務 Webhook"
+description: "接收 ToAPIs 簽名的最終成功與失敗事件"
+---
+
+ToAPIs 對非同步圖片與影片發送 `generation.completed`、`generation.failed`，測試事件為 `endpoint.test`。投遞至少一次；重試保留相同 event ID，請以 `id` 冪等去重。
+
+在控制台編輯 Token，設定 HTTPS 預設 URL、產生僅顯示一次的 32-byte 密鑰、啟用並測試。請求未帶 `callback_url` 時使用預設 URL；覆蓋 URL 只能更改同協議、同網域、同連接埠的路徑與 query。未設定時返回 `400 webhook_not_configured`。
+
+```json
+{"id":"evt_xxx","type":"generation.completed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_xxx","client_business_id":"order_123","task_type":"video","model":"model-name","status":"SUCCESS","progress":"100%","result":{"type":"video","data":[{"url":"https://cdn.example/result.mp4","format":"mp4"}]},"error":null,"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+最終失敗只會在內部重試結束、退款或計費完成後發送：
+
+```json
+{"id":"evt_failure","type":"generation.failed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_failure","client_business_id":"order_456","task_type":"video","model":"model-name","status":"FAILURE","progress":"100%","result":null,"error":{"code":"generation_failed","message":"Generation failed after retries"},"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+控制台測試使用相同簽名協議：
+
+```json
+{"id":"evt_test","type":"endpoint.test","api_version":"v1","created_at":1783953302,"data":{"task_id":"endpoint_test","task_type":"image","status":"SUCCESS","progress":"100%","result":{"message":"ToAPIs webhook endpoint test"},"error":null,"submitted_at":0,"finished_at":0}}
+```
+
+`task_type` 為 `image|video`。結果與公開任務查詢一致；不返回渠道 ID、上游 task ID/密鑰、憑證或 PrivateData。
+
+```text
+User-Agent: ToAPIs-Webhook/1.0
+X-ToAPIs-Webhook-Id
+X-ToAPIs-Webhook-Timestamp
+X-ToAPIs-Webhook-Signature: v1=<current>[,v1=<previous>]
+```
+
+簽名原文：`event_id + "." + timestamp + "." + raw_request_body`；HMAC-SHA256。首次投遞拒絕超過 5 分鐘的時間戳。輪換後 24 小時同時驗證新舊密鑰。
+
+```python Python
+def verify(headers, raw_body, secrets):
+    event_id=headers["X-ToAPIs-Webhook-Id"]
+    timestamp=int(headers["X-ToAPIs-Webhook-Timestamp"])
+    if abs(int(time.time())-timestamp)>300: return False
+    signed=f"{event_id}.{timestamp}.".encode()+raw_body
+    received=[v.strip()[3:] for v in headers["X-ToAPIs-Webhook-Signature"].split(",") if v.strip().startswith("v1=")]
+    return any(hmac.compare_digest(hmac.new(s.encode(),signed,hashlib.sha256).hexdigest(),r) for s in secrets for r in received)
+```
+```javascript Node.js
+function verify(headers, rawBody, secrets) {
+  const id=headers['x-toapis-webhook-id']; const ts=Number(headers['x-toapis-webhook-timestamp']);
+  if (!Number.isFinite(ts) || Math.abs(Date.now()/1000-ts)>300) return false;
+  const signed=Buffer.concat([Buffer.from(`${id}.${ts}.`),rawBody]);
+  const received=headers['x-toapis-webhook-signature'].split(',').filter(v=>v.trim().startsWith('v1=')).map(v=>v.trim().slice(3));
+  return secrets.some(secret=>received.some(sig=>{const expected=crypto.createHmac('sha256',secret).update(signed).digest('hex'); return expected.length===sig.length&&crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(sig));}));
+}
+```
+```go Go
+func Verify(id, ts, sig string, body []byte, secrets []string) bool {
+    unix, err := strconv.ParseInt(ts,10,64); now:=time.Now().Unix()
+    if err!=nil || now-unix>300 || unix-now>300 { return false }
+    signed:=append([]byte(id+"."+ts+"."),body...)
+    for _,secret:=range secrets { mac:=hmac.New(sha256.New,[]byte(secret)); mac.Write(signed); expected:=hex.EncodeToString(mac.Sum(nil)); for _,v:=range strings.Split(sig,",") { if hmac.Equal([]byte(expected),[]byte(strings.TrimPrefix(strings.TrimSpace(v),"v1="))) { return true } } }
+    return false
+}
+```
+
+首次投遞立即執行；失敗後約於 10秒、30秒、2分鐘、10分鐘、1小時、6小時、24小時重試。僅 `2xx` 成功；`3xx` 不跟隨，`4xx/5xx` 會重試，HTTP 逾時為 10 秒。HTTPS、userinfo、fragment、非法 port、SSRF、DNS/IP 與 DNS rebinding 防護會在每次投遞重新驗證。回調失敗以任務查詢兜底，結果 URL 可能過期，請及時保存。真人認證、支付與 OAuth callback 不受影響。參閱 [限流](/docs/zh-Hant/api-reference/rate-limits/async-tasks)。

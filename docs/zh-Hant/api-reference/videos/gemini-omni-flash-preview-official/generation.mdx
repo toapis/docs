@@ -1,0 +1,139 @@
+---
+title: "Gemini Omni Flash 視頻生成"
+sidebarTitle: "Gemini Omni Flash Preview Official"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 Gemini Omni Flash 生成或編輯視頻，支持文字、最多 10 張參考圖或最多 3 個輸入視頻"
+---
+
+- 通過 `model` 指定 `gemini-omni-flash-preview-official`
+- 支持文生視頻、圖像/參考圖生視頻和視頻編輯
+- 最多支持 10 張參考圖或 3 個輸入視頻；圖片與視頻不能混用
+- 視頻最長 10 秒；Playground 提供 4 / 6 / 8 / 10 秒預設
+- 僅支持 `720p` 分辨率；支持 `16:9` 和 `9:16` 畫幅
+- 異步任務接口，提交後使用任務 ID 查詢結果
+
+<Note>
+本文檔僅適用於 `gemini-omni-flash-preview-official`。平台通過 Vertex AI Interactions API 調用它（使用 Service Account OAuth），而不是 Vertex AI Publisher Model 的 `predictLongRunning` 接口。它與舊版 `gemini-omni-flash` / `gemini_omni_flash` 是兩個獨立模型。
+</Note>
+
+<Warning>
+請先通過[圖片上傳 API](../../uploads/images)上傳本地圖片，通過[視頻上傳 API](../../uploads/videos)上傳本地視頻，再傳入返回的 URL。不要直接傳 base64 媒體數據。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  使用 Bearer Token 認證：
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-omni-flash-preview-official" required>
+  模型名稱。使用 `gemini-omni-flash-preview-official`。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻生成提示詞。
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  視頻時長（秒），最大爲 `10`。Playground 提供 `4`、`6`、`8`、`10` 秒預設。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  視頻比例，支持：
+
+  - `16:9` 橫屏
+  - `9:16` 豎屏
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  視頻分辨率：
+
+  - `720p` 默認分辨率
+  - 僅支持 `720p`，不接受 Veo 專屬參數
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  可選的參考圖 URL 數組，最多 `10` 張。不傳時爲文生視頻。不能與 `video_list` 同時使用。
+</ParamField>
+
+<ParamField body="video_list" type="object[]">
+  可選的視頻編輯輸入，最多 `3` 個。每一項必須包含 `video_url`，例如 `{ "video_url": "https://example.com/input.mp4" }`。支持 HTTPS URL、data URI 和平台上傳後返回的視頻 URL；後端下載的單個輸入視頻最大 50 MB。不能與 `image_urls` 同時使用。
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  可選的 Interactions 生成參數。支持 `temperature`（`0.0`–`2.0`）、`topP` / `top_p`（`0.0`–`1.0`）、`candidateCount` / `candidate_count`、`previous_interaction_id`，以及 `task`（`text_to_video`、`image_to_video`、`reference_to_video` 或 `edit`）。省略 `task` 時，平臺不會擅自預設；由上游根據 prompt 與媒體推斷。對 `edit`（或帶參考影片且未明確指定非 edit 任務）路徑，平臺會省略 `aspect_ratio`，因為上游拒絕在 edit 的 `response_format` 中設定長寬比。
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務 ID，用於查詢任務狀態。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，通常爲 `generation.task`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態：`queued`、`in_progress`、`completed`、`failed`。
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳。
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+  任務完成後的生成視頻 URL。
+</ResponseField>
+
+## Examples
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-omni-flash-preview-official",
+    "prompt": "一支藍色按壓瓶在純白攝影棚中輕微轉動，商業產品視頻",
+    "duration": 6,
+    "aspect_ratio": "9:16",
+    "resolution": "720p",
+    "image_urls": ["https://example.com/reference.jpg"]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01JZEXAMPLE",
+  "object": "generation.task",
+  "model": "gemini-omni-flash-preview-official",
+  "status": "queued",
+  "created_at": 1779247407
+}
+```
+</ResponseExample>
+
+## 查詢任務
+
+提交接口會返回任務 ID。使用通用視頻任務查詢接口獲取狀態和結果：
+
+```bash
+curl --request GET \
+  --url https://toapis.com/v1/videos/generations/{task_id} \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```

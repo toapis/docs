@@ -1,0 +1,178 @@
+---
+title: "Kling v2.6 視頻生成"
+sidebarTitle: "Kling v2.6"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用官方 Kling v2.6 生成視頻，普通參考圖與首尾幀控制採用顯式區分語義"
+---
+
+- 異步處理模式，返回任務 ID 供後續查詢
+- 支持文生視頻、圖生視頻、顯式首尾幀控制和有聲視頻
+- 支持標準模式（720P）和專業模式（1080P）
+- 專業模式支持自動音頻生成
+
+## 認證
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證。
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 請求參數
+
+<ParamField body="model" type="string" required>
+  視頻生成模型名稱，固定爲 `kling-v2-6`。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  文字提示詞，最多 **2500 字符**。
+</ParamField>
+
+<ParamField body="mode" type="string" default="std">
+  生成模式。
+
+  - `std` - 標準模式（720P，僅支持靜音視頻）
+  - `pro` - 專業模式（1080P，支持自動音頻生成）
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  視頻時長（秒）。
+
+  可選值：`5` 或 `10`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  視頻寬高比。常用值：`16:9`、`9:16`、`1:1`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  普通參考圖。
+
+  - 這裏只表示參考圖語義
+  - 不會再自動把第二張參考圖推斷爲尾幀
+  - 首尾幀請使用 `image_with_roles` 顯式傳入
+</ParamField>
+
+<ParamField body="image_with_roles" type="object[]">
+  顯式圖片角色數組，用於首尾幀控制或混合輸入。
+
+  <Expandable title="顯示 image_with_roles 字段">
+    <ParamField body="url" type="string" required>
+      公網可訪問的圖片 URL。
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      圖片角色。
+
+      支持值：
+      - `first_frame`
+      - `last_frame`
+      - `reference`
+      - `reference_image`
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    只有在 `image_with_roles` 中顯式聲明 `last_frame` 時，系統纔會發送尾幀控制字段；不會再從 `reference_images[1]` 自動猜測。
+  </Warning>
+</ParamField>
+
+<ParamField body="negative_prompt" type="string">
+  負面提示詞，描述不希望出現的內容。
+</ParamField>
+
+<ParamField body="audio" type="boolean" default="false">
+  是否自動生成音頻。
+
+  <Warning>
+    僅在 `mode: "pro"` 下可用。
+  </Warning>
+</ParamField>
+
+<ParamField body="watermark" type="boolean">
+  是否添加水印。
+</ParamField>
+
+## 輸入規則
+
+| 輸入形態 | 行爲 |
+|----------|------|
+| 只有 `reference_images` | 普通參考圖 |
+| 只有 `image_with_roles` 且角色僅有 `first_frame` / `last_frame` | 首尾幀控制 |
+| 兩者混用，或 roles 中同時含 frame/reference 語義 | 混合模式 |
+
+## 示例
+
+### 文生視頻
+
+```json
+{
+  "model": "kling-v2-6",
+  "prompt": "一隻金色的貓咪在陽光普照的草地上奔跑，慢動作，電影質感",
+  "mode": "std",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### 普通參考圖
+
+```json
+{
+  "model": "kling-v2-6",
+  "prompt": "參考人物形象，讓角色輕輕微笑",
+  "reference_images": ["https://example.com/reference.jpg"],
+  "mode": "std",
+  "duration": 5
+}
+```
+
+### 首尾幀控制
+
+```json
+{
+  "model": "kling-v2-6",
+  "prompt": "城市延時攝影，從白天過渡到夜晚",
+  "image_with_roles": [
+    { "url": "https://example.com/day-city.jpg", "role": "first_frame" },
+    { "url": "https://example.com/night-city.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### 參考圖與首尾幀混合
+
+```json
+{
+  "model": "kling-v2-6",
+  "prompt": "保持角色一致性，同時完成場景過渡",
+  "reference_images": ["https://example.com/character-reference.jpg"],
+  "image_with_roles": [
+    { "url": "https://example.com/start-scene.jpg", "role": "first_frame" },
+    { "url": "https://example.com/end-scene.jpg", "role": "last_frame" }
+  ],
+  "mode": "pro",
+  "duration": 5
+}
+```
+
+### 專業模式 + 自動音頻
+
+```json
+{
+  "model": "kling-v2-6",
+  "prompt": "海浪拍打礁石，海鷗在空中盤旋，遠處有一座燈塔",
+  "mode": "pro",
+  "duration": 10,
+  "audio": true,
+  "aspect_ratio": "16:9"
+}
+```
+
+<Note>
+  視頻生成爲異步任務。使用 [獲取視頻任務狀態](../../tasks/video-status) 接口查詢生成進度和結果。
+</Note>

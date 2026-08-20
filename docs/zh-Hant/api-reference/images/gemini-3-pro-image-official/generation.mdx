@@ -1,0 +1,300 @@
+---
+title: "Gemini-3-Pro Official 圖像生成"
+sidebarTitle: "Gemini-3-Pro-Image Official"
+api: "POST https://toapis.com/v1/images/generations"
+description: "使用 Google Gemini 3 Pro 官方直連模型生成圖像，支持原生參數控制"
+---
+
+- 直連 Google Vertex AI，使用 Gemini 3 Pro Image 原生 API
+- 通過 model 參數選擇 `gemini-3-pro-image-preview-official` 模型
+- Nano Banana Pro alias: `nano-banana-pro-official`
+- 支持文生圖、圖生圖
+- 支持 temperature、topP、maxOutputTokens 等原生生成參數
+- 支持 resolution（1K/2K/4K）、personGeneration、imageOutputOptions 圖像配置
+- 支持 thinkingConfig 思考模式，提升複雜場景生成質量
+- 支持 safetySettings 安全設置
+- 異步任務管理，通過任務 ID 查詢結果
+
+<Warning>
+**重要變更**：爲了更好的性能和成本控制，我們不再支持在 `image_urls` 中直接傳入 base64 圖片數據。請先使用 [上傳圖片接口](../../uploads/images) 上傳圖片，獲取 URL 後再調用本接口。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gemini-3-pro-image-preview-official" required>
+  圖像生成模型名稱
+
+  示例：`"gemini-3-pro-image-preview-official"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  圖像生成的文本描述
+</ParamField>
+
+<ParamField body="size" type="string">
+  圖像寬高比
+
+  支持的格式：
+  - `1:1` - 正方形
+  - `3:2` / `2:3`
+  - `3:4` / `4:3`
+  - `4:5` / `5:4`
+  - `9:16` / `16:9`
+  - `21:9`
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  生成圖像的數量
+
+  固定爲 1
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖像 URL 數組，用於圖生圖或圖像編輯
+
+  **⚠️ 僅支持 URL 格式（不再支持 base64）**
+
+  - 公開可訪問的圖片 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+
+  **限制：**
+  - 最多 14 張圖片
+  - 單張圖片不得超過 10MB
+  - 支持格式：.jpeg, .jpg, .png, .webp
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Vertex AI 原生擴展參數
+
+  <Expandable title="顯示 metadata 字段">
+    <ParamField body="temperature" type="number">
+      生成溫度，控制輸出的隨機性
+
+      取值範圍：`0.0` - `2.0`
+    </ParamField>
+
+    <ParamField body="topP" type="number">
+      Top-P 採樣參數
+
+      取值範圍：`0.0` - `1.0`，默認 `0.95`
+    </ParamField>
+
+    <ParamField body="maxOutputTokens" type="integer">
+      最大輸出 token 數
+
+      默認 `32768`
+    </ParamField>
+
+    <ParamField body="resolution" type="string">
+      輸出圖像分辨率，後端自動映射爲 Vertex AI 原生 imageSize
+
+      可選值：`1K`、`2K`、`4K`，默認 `1K`
+    </ParamField>
+
+    <ParamField body="personGeneration" type="string">
+      人物生成控制
+
+      可選值：
+      - `ALLOW_ALL` - 允許生成所有人物（包括成人和兒童）
+      - `ALLOW_ADULT` - 僅允許生成成人
+      - `ALLOW_NONE` - 禁止生成人物
+    </ParamField>
+
+    <ParamField body="imageOutputOptions" type="object">
+      圖像輸出格式配置
+
+      <Expandable title="imageOutputOptions 字段">
+        <ParamField body="mimeType" type="string">
+          輸出圖像格式
+
+          可選值：`image/png`、`image/jpeg`、`image/webp`
+        </ParamField>
+
+        <ParamField body="compressionQuality" type="integer">
+          壓縮質量（僅 JPEG 有效）
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="thinkingConfig" type="object">
+      思考模式配置，啓用後模型會先進行推理再生成圖像，適合複雜場景
+
+      <Expandable title="thinkingConfig 字段">
+        <ParamField body="thinkingBudget" type="integer">
+          思考 token 預算，控制模型思考的深度
+
+          取值範圍：`0` - `24576`，默認由模型自動決定
+        </ParamField>
+
+        <ParamField body="thinkingLevel" type="string">
+          思考級別
+
+          可選值：`LOW`、`MEDIUM`、`HIGH`、`MINIMAL`
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="safetySettings" type="array">
+      安全設置數組，控制內容安全過濾級別
+
+      <Expandable title="safetySettings 元素">
+        <ParamField body="category" type="string">
+          安全類別
+
+          可選值：`HARM_CATEGORY_HATE_SPEECH`、`HARM_CATEGORY_DANGEROUS_CONTENT`、`HARM_CATEGORY_SEXUALLY_EXPLICIT`、`HARM_CATEGORY_HARASSMENT`
+        </ParamField>
+
+        <ParamField body="threshold" type="string">
+          過濾閾值
+
+          可選值：`OFF`、`BLOCK_LOW_AND_ABOVE`、`BLOCK_MEDIUM_AND_ABOVE`、`BLOCK_ONLY_HIGH`
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gemini-3-pro-image-preview-official",
+    "prompt": "未來城市的天際線，霓虹燈光，賽博朋克風格",
+    "size": "16:9",
+    "n": 1,
+    "metadata": {
+      "temperature": 1.0,
+      "topP": 0.95,
+      "resolution": "2K",
+      "personGeneration": "ALLOW_ALL",
+      "thinkingConfig": {
+        "thinkingLevel": "HIGH"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "gemini-3-pro-image-preview-official",
+        "prompt": "未來城市的天際線，霓虹燈光，賽博朋克風格",
+        "size": "16:9",
+        "n": 1,
+        "metadata": {
+            "temperature": 1.0,
+            "topP": 0.95,
+            "resolution": "2K",
+            "personGeneration": "ALLOW_ALL",
+            "thinkingConfig": {
+                "thinkingLevel": "HIGH"
+            }
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'gemini-3-pro-image-preview-official',
+    prompt: '未來城市的天際線，霓虹燈光，賽博朋克風格',
+    size: '16:9',
+    n: 1,
+    metadata: {
+      temperature: 1.0,
+      topP: 0.95,
+      resolution: '2K',
+      personGeneration: 'ALLOW_ALL',
+      thinkingConfig: {
+        thinkingLevel: 'HIGH'
+      }
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_img_abc123def456",
+  "object": "generation.task",
+  "model": "gemini-3-pro-image-preview-official",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

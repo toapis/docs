@@ -1,0 +1,327 @@
+---
+title: "Responses API"
+sidebarTitle: "Responses API"
+api: "POST https://toapis.com/v1/responses"
+description: "OpenAI Responses API 格式，支持函數調用、內置工具與服務端多輪上下文管理"
+---
+
+Responses API 是 OpenAI 推出的新一代 Agentic 接口，相比 Chat Completions 提供更強大的能力：
+
+- **函數調用（Function Calling）**：模型可調用自定義函數
+- **內置工具**：`web_search_preview`（聯網搜索）等開箱即用
+- **服務端多輪上下文**：通過 `previous_response_id` 自動維護對話歷史，無需客戶端傳完整消息
+- **推理力度控制**：通過 `reasoning.effort` 精確調節思考深度
+
+<Warning>
+標註爲 **Responses Only** 的模型（如 `gpt-5-pro-official`、`gpt-5.3-codex-official`）僅支持此 API，不支持 Chat Completions。完整模型列表請參閱 [模型一覽](./models)。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  使用 Bearer Token 認證
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token)
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  模型名稱
+
+  示例：`"gpt-5-pro-official"`、`"gpt-5.3-codex-official"`、`"gpt-5.2-official"`
+</ParamField>
+
+<ParamField body="input" type="string | object[]" required>
+  用戶輸入，支持兩種格式：
+
+  - **字符串**：簡單文本輸入
+  - **消息數組**：多輪對話格式
+
+  <Expandable title="消息數組格式">
+    <ParamField body="role" type="string" required>
+      消息角色：`user`、`assistant`、`developer`
+    </ParamField>
+    <ParamField body="content" type="string | object[]" required>
+      消息內容，支持純文本或包含圖片的內容塊數組
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  系統指令，指導模型行爲（等同於 Chat Completions 中的 system message）
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  是否啓用流式輸出
+</ParamField>
+
+<ParamField body="max_output_tokens" type="integer">
+  生成內容的最大 token 數量
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  採樣溫度，範圍 `0` ~ `2`
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  核採樣概率閾值，範圍 `0` ~ `1`
+</ParamField>
+
+<ParamField body="previous_response_id" type="string">
+  上一次響應的 ID，用於服務端自動拼接多輪上下文，無需客戶端傳完整歷史消息
+</ParamField>
+
+<ParamField body="reasoning" type="object">
+  推理配置
+
+  <Expandable title="reasoning">
+    <ParamField body="effort" type="string">
+      推理力度：`high`、`medium`、`low`、`none`
+
+      值越高，模型思考越深入，消耗的 reasoning tokens 越多
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="tools" type="object[]">
+  可用工具列表
+
+  <Expandable title="tools[n]">
+    <ParamField body="type" type="string" required>
+      工具類型：`function`（自定義函數）、`web_search_preview`（聯網搜索）
+    </ParamField>
+    <ParamField body="name" type="string">
+      函數名稱（`type` 爲 `function` 時必填）
+    </ParamField>
+    <ParamField body="description" type="string">
+      函數描述
+    </ParamField>
+    <ParamField body="parameters" type="object">
+      函數參數的 JSON Schema
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="tool_choice" type="string" default="auto">
+  工具選擇策略：`auto`、`none`、`required`
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  響應的唯一標識符（可用作 `previous_response_id`）
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  固定爲 `response`
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  響應狀態：`completed`、`failed`、`in_progress`
+</ResponseField>
+
+<ResponseField name="output" type="object[]">
+  輸出項列表，可能包含多種類型：
+
+  - **`message`**：文本回復，包含 `content[].text`
+  - **`function_call`**：函數調用請求，包含 `name` 和 `arguments`
+  - **`reasoning`**：推理過程（當 `reasoning.effort` 非 `none` 時出現）
+  - **`web_search_call`**：聯網搜索調用記錄
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  token 消耗統計
+
+  - `usage.input_tokens`：輸入 token 數
+  - `usage.output_tokens`：輸出 token 數
+  - `usage.output_tokens_details.reasoning_tokens`：推理 token 數
+  - `usage.total_tokens`：總 token 數
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.3-codex-official",
+    "instructions": "你是一個專業的代碼助手",
+    "input": "用 Python 寫一個快速排序"
+  }'
+```
+
+```bash cURL（聯網搜索）
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.3-codex-official",
+    "input": "2026年最流行的 AI 框架有哪些？",
+    "tools": [{"type": "web_search_preview"}]
+  }'
+```
+
+```bash cURL（函數調用）
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5-pro-official",
+    "instructions": "你是一個天氣助手",
+    "input": "北京今天天氣怎麼樣？",
+    "tools": [
+      {
+        "type": "function",
+        "name": "get_weather",
+        "description": "獲取指定城市的天氣",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {"type": "string", "description": "城市名稱"}
+          },
+          "required": ["location"]
+        }
+      }
+    ]
+  }'
+```
+
+```bash cURL（多輪對話）
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.3-codex-official",
+    "previous_response_id": "resp_abc123",
+    "input": [
+      {"role": "user", "content": "現在給這個函數加上錯誤處理"}
+    ]
+  }'
+```
+
+```python Python (openai SDK)
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response = client.responses.create(
+    model="gpt-5.3-codex-official",
+    instructions="你是一個專業的代碼助手",
+    input="用 Python 寫一個快速排序"
+)
+
+print(response.output[0].content[0].text)
+```
+
+```python Python（多輪對話）
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com/v1"
+)
+
+response1 = client.responses.create(
+    model="gpt-5.3-codex-official",
+    instructions="你是一個專業的代碼助手",
+    input="寫一個斐波那契函數"
+)
+
+response2 = client.responses.create(
+    model="gpt-5.3-codex-official",
+    previous_response_id=response1.id,
+    input=[{"role": "user", "content": "加上輸入驗證"}]
+)
+
+print(response2.output[0].content[0].text)
+```
+
+```javascript JavaScript (openai SDK)
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "your-ToAPIs-key",
+  baseURL: "https://toapis.com/v1",
+});
+
+const response = await client.responses.create({
+  model: "gpt-5.3-codex-official",
+  instructions: "你是一個專業的代碼助手",
+  input: "用 Python 寫一個快速排序",
+});
+
+console.log(response.output[0].content[0].text);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200（文本響應）
+{
+  "id": "resp_abc123",
+  "object": "response",
+  "status": "completed",
+  "model": "gpt-5.3-codex-official",
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "```python\ndef quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)\n```"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 80,
+    "total_tokens": 105
+  }
+}
+```
+
+```json 200（函數調用）
+{
+  "id": "resp_def456",
+  "object": "response",
+  "status": "completed",
+  "model": "gpt-5-pro-official",
+  "output": [
+    {
+      "type": "function_call",
+      "name": "get_weather",
+      "arguments": "{\"location\":\"Beijing\"}",
+      "call_id": "call_abc123"
+    }
+  ],
+  "usage": {
+    "input_tokens": 85,
+    "output_tokens": 24,
+    "total_tokens": 109
+  }
+}
+```
+
+```json 400
+{
+  "error": {
+    "code": "invalid_request_error",
+    "message": "The 'input' field is required.",
+    "type": "invalid_request_error"
+  }
+}
+```
+</ResponseExample>

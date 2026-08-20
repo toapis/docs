@@ -1,0 +1,183 @@
+---
+title: "GPT-Image-2 Генерация изображений"
+sidebarTitle: "gpt-image-2"
+api: "POST https://toapis.com/v1/images/generations"
+description: "Генерация изображений с помощью gpt-image-2, поддержка text-to-image и generation по reference_images"
+---
+
+- Унифицированный API генерации изображений
+- Выбор модели `gpt-image-2` через параметр `model`
+- Поддержка text-to-image, single-reference и multi-reference generation
+- Асинхронное управление задачами с получением результата по task ID
+
+<Warning>
+**Важное изменение**: Для повышения производительности и контроля затрат base64 больше не поддерживается в `image_urls` и `reference_images`. Сначала используйте [API загрузки изображений](../../uploads/images), затем передайте полученный URL.
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все API требуют аутентификации Bearer Token
+  
+  Получите API Key на [странице управления API ключами](https://toapis.com/console/token)
+  
+  Добавьте в заголовок:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="gpt-image-2" required>
+  Название модели генерации изображений
+  
+  Пример: `"gpt-image-2"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый промпт для генерации изображения
+  
+  Максимум 32 000 символов для GPT image models
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  Соотношение сторон выходного изображения
+  
+  Сейчас поддерживаются следующие соотношения:
+  
+  `1:1`, `3:2`, `2:3`, `4:3`, `3:4`, `5:4`, `4:5`, `16:9`, `9:16`, `2:1`, `1:2`, `21:9`, `9:21`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Уровень разрешения изображения
+  
+  Поддерживаемые значения: `1k`, `2k`, `4k`
+</ParamField>
+
+### Таблица размеров
+
+| size | 1k | 2k | 4k |
+| --- | --- | --- | --- |
+| `1:1` | `1024x1024` | `2048x2048` | `2880x2880` |
+| `3:2` | `1536x1024` | `2048x1360` | `3520x2336` |
+| `2:3` | `1024x1536` | `1360x2048` | `2336x3520` |
+| `4:3` | `1024x768` | `2048x1536` | `3312x2480` |
+| `3:4` | `768x1024` | `1536x2048` | `2480x3312` |
+| `5:4` | `1280x1024` | `2560x2048` | `3216x2576` |
+| `4:5` | `1024x1280` | `2048x2560` | `2576x3216` |
+| `16:9` | `1536x864` | `2048x1152` | `3840x2160` |
+| `9:16` | `864x1536` | `1152x2048` | `2160x3840` |
+| `2:1` | `2048x1024` | `2688x1344` | `3840x1920` |
+| `1:2` | `1024x2048` | `1344x2688` | `1920x3840` |
+| `21:9` | `2016x864` | `2688x1152` | `3840x1648` |
+| `9:21` | `864x2016` | `1152x2688` | `1648x3840` |
+
+<ParamField body="n" type="integer" default={1}>
+  Количество изображений
+  
+  По умолчанию: 1
+</ParamField>
+
+<ParamField body="response_format" type="string" default="url">
+  Формат ответа
+  
+  API возвращает URL изображения, рекомендуемое значение: `url`
+</ParamField>
+
+<ParamField body="reference_images" type="string[]">
+  URL эталонных изображений для image-to-image
+  
+  **⚠️ Только URL (base64 больше не поддерживается)**
+  
+  - Публично доступные URL (`http://` или `https://`)
+  - Можно использовать [API загрузки изображений](../../uploads/images) для загрузки локальных файлов
+  - Поддерживаются одиночные и множественные reference images
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Поле обратной совместимости
+  
+  В ToAPIs автоматически нормализуется в `reference_images`
+</ParamField>
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  Уникальный идентификатор задачи
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Используемая модель
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи
+  - `queued`
+  - `in_progress`
+  - `completed`
+  - `failed`
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Прогресс задачи (0-100)
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Время создания задачи (Unix timestamp)
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Сгенерируй постер ночного города будущего с неоном и кинематографичной композицией",
+    "n": 1,
+    "size": "1:1",
+    "resolution": "1k",
+    "response_format": "url"
+  }'
+```
+
+```bash cURL (Image-to-Image)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "保留主体结构，把画面改成赛博朋克风格，增强光影和细节",
+    "n": 1,
+    "size": "1:1",
+    "resolution": "1k",
+    "image_urls": [
+      "https://example.com/source.png",
+       "https://example.com/source.png",
+      "https://example.com/source.png"
+    ],
+    "response_format": "url"
+  }'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_img_abc123def456",
+  "object": "generation.task",
+  "model": "gpt-image-2",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

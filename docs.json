@@ -1,0 +1,2191 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "ToAPIs Documentation",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#3B82F6",
+    "dark": "#1D4ED8"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "height": 48
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "X",
+        "href": "https://x.com/toapisai"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/hvnszCrJ73"
+      },
+      {
+        "label": "WeChat",
+        "href": "https://toapis.com/wechat"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://toapis.com/dashboard"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/docs/cn",
+      "destination": "/docs/cn/quickstart",
+      "permanent": false
+    },
+    {
+      "source": "/docs/zh-Hant",
+      "destination": "/docs/zh-Hant/quickstart",
+      "permanent": false
+    }
+  ],
+  "navigation": {
+    "languages": [
+      {
+        "language": "cn",
+        "tabs": [
+          {
+            "tab": "API 手册",
+            "groups": [
+              {
+                "group": "概览",
+                "pages": [
+                  "docs/cn/quickstart"
+                ]
+              },
+              {
+                "group": "快速上手",
+                "pages": [
+                  "docs/cn/quickstart",
+                  "docs/cn/integrations/claude-code",
+                  "docs/cn/integrations/codex",
+                  "docs/cn/integrations/openclaw",
+                  "docs/cn/integrations/cherry-studio",
+                  "docs/cn/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "文本对话系列",
+                "pages": [
+                  "docs/cn/api-reference/chat/models",
+                  "docs/cn/api-reference/chat/list-models",
+                  {
+                    "group": "GPT-5 系列",
+                    "pages": [
+                      "docs/cn/api-reference/chat/gpt-5.4/chat",
+                      "docs/cn/api-reference/chat/gpt-5.5/chat",
+                      "docs/cn/api-reference/chat/gpt-5.6/chat"
+                    ]
+                  },
+                  {
+                    "group": "OpenAI 格式",
+                    "pages": [
+                      "docs/cn/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Anthropic 格式",
+                    "pages": [
+                      "docs/cn/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Responses 格式",
+                    "pages": [
+                      "docs/cn/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "图像系列",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview（Nano banana Pro）",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview（Nano banana2）",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview（Nano Banana official）",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/cn/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/cn/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/cn/api-reference/images/gpt-image-2/generation",
+                      "docs/cn/api-reference/images/gpt-image-2/official",
+                      "docs/cn/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/cn/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/cn/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/cn/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/cn/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0-Pro",
+                    "pages": [
+                      "docs/cn/api-reference/images/seedream-5.0-pro/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/cn/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/cn/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/cn/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/cn/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/cn/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu 图片",
+                    "pages": [
+                      "docs/cn/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "视频系列",
+                "pages": [
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/cn/api-reference/videos/sora2/generation",
+                      "docs/cn/api-reference/videos/sora2/create-persona",
+                      "docs/cn/api-reference/videos/sora2/get-personas",
+                      "docs/cn/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/cn/api-reference/videos/sora-2-official/generation",
+                      "docs/cn/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/cn/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/cn/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/cn/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/cn/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/cn/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/cn/api-reference/videos/seedance-2/generation",
+                      "docs/cn/api-reference/videos/seedance-2/private-avatar",
+                      "docs/cn/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/cn/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/cn/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/cn/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/cn/api-reference/videos/wan2.6/generation",
+                      "docs/cn/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/cn/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/cn/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/cn/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/cn/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/cn/api-reference/videos/vidu-ali/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/cn/api-reference/videos/grok-video-1.5/generation",
+                      "docs/cn/api-reference/videos/grok-video/generation",
+                      "docs/cn/api-reference/videos/grok-video/remix",
+                      "docs/cn/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "任务管理",
+                "pages": [
+                  {
+                    "group": "获取图片任务状态",
+                    "pages": [
+                      "docs/cn/api-reference/tasks/image-status"
+                    ]
+                  },
+                  {
+                    "group": "获取视频任务状态",
+                    "pages": [
+                      "docs/cn/api-reference/tasks/video-status"
+                    ]
+				  },
+				  "docs/cn/api-reference/webhooks/task-webhooks",
+				  "docs/cn/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "文件上传",
+                "pages": [
+                  "docs/cn/api-reference/uploads/images",
+                  "docs/cn/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "账户",
+                "pages": [
+                  "docs/cn/api-reference/account/token-balance",
+                  "docs/cn/api-reference/account/user-balance",
+                  "docs/cn/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "常见问题",
+                "pages": [
+                  "docs/cn/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh-Hant",
+        "tabs": [
+          {
+            "tab": "API 手冊",
+            "groups": [
+              {
+                "group": "概覽",
+                "pages": [
+                  "docs/zh-Hant/quickstart"
+                ]
+              },
+              {
+                "group": "快速上手",
+                "pages": [
+                  "docs/zh-Hant/quickstart",
+                  "docs/zh-Hant/integrations/claude-code",
+                  "docs/zh-Hant/integrations/codex",
+                  "docs/zh-Hant/integrations/openclaw",
+                  "docs/zh-Hant/integrations/cherry-studio",
+                  "docs/zh-Hant/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "文本對話系列",
+                "pages": [
+                  "docs/zh-Hant/api-reference/chat/models",
+                  "docs/zh-Hant/api-reference/chat/list-models",
+                  {
+                    "group": "GPT-5 系列",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/chat/gpt-5.4/chat",
+                      "docs/zh-Hant/api-reference/chat/gpt-5.5/chat"
+                    ]
+                  },
+                  {
+                    "group": "OpenAI 格式",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Anthropic 格式",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Responses 格式",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "圖像系列",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview（Nano banana Pro）",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview（Nano banana2）",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview（Nano Banana official）",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gpt-image-2/generation",
+                      "docs/zh-Hant/api-reference/images/gpt-image-2/official",
+                      "docs/zh-Hant/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0-Pro",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/seedream-5.0-pro/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/zh-Hant/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu 圖片",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "視頻系列",
+                "pages": [
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/sora2/generation",
+                      "docs/zh-Hant/api-reference/videos/sora2/create-persona",
+                      "docs/zh-Hant/api-reference/videos/sora2/get-personas",
+                      "docs/zh-Hant/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/sora-2-official/generation",
+                      "docs/zh-Hant/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/seedance-2/generation",
+                      "docs/zh-Hant/api-reference/videos/seedance-2/private-avatar",
+                      "docs/zh-Hant/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/wan2.6/generation",
+                      "docs/zh-Hant/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/videos/grok-video-1.5/generation",
+                      "docs/zh-Hant/api-reference/videos/grok-video/generation",
+                      "docs/zh-Hant/api-reference/videos/grok-video/remix",
+                      "docs/zh-Hant/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "任務管理",
+                "pages": [
+                  {
+                    "group": "獲取圖片任務狀態",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/tasks/image-status"
+                    ]
+                  },
+                  {
+                    "group": "獲取視頻任務狀態",
+                    "pages": [
+                      "docs/zh-Hant/api-reference/tasks/video-status"
+                    ]
+				  },
+				  "docs/zh-Hant/api-reference/webhooks/task-webhooks",
+				  "docs/zh-Hant/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "文件上傳",
+                "pages": [
+                  "docs/zh-Hant/api-reference/uploads/images",
+                  "docs/zh-Hant/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "賬戶",
+                "pages": [
+                  "docs/zh-Hant/api-reference/account/token-balance",
+                  "docs/zh-Hant/api-reference/account/user-balance",
+                  "docs/zh-Hant/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "常見問題",
+                "pages": [
+                  "docs/zh-Hant/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "en",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Overview",
+                "pages": [
+                  "docs/en"
+                ]
+              },
+              {
+                "group": "Quick Start",
+                "pages": [
+                  "docs/en/quickstart",
+                  "docs/en/integrations/claude-code",
+                  "docs/en/integrations/codex",
+                  "docs/en/integrations/openclaw",
+                  "docs/en/integrations/cherry-studio",
+                  "docs/en/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "Chat API",
+                "pages": [
+                  "docs/en/api-reference/chat/models",
+                  "docs/en/api-reference/chat/list-models",
+                  {
+                    "group": "GPT-5 Series",
+                    "pages": [
+                      "docs/en/api-reference/chat/gpt-5.4/chat",
+                      "docs/en/api-reference/chat/gpt-5.5/chat",
+                      "docs/en/api-reference/chat/gpt-5.6/chat"
+                    ]
+                  },
+                  {
+                    "group": "OpenAI Format",
+                    "pages": [
+                      "docs/en/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Anthropic Format",
+                    "pages": [
+                      "docs/en/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Responses Format",
+                    "pages": [
+                      "docs/en/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Image API",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview (Nano banana)",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/en/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/en/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/en/api-reference/images/gpt-image-2/generation",
+                      "docs/en/api-reference/images/gpt-image-2/official",
+                      "docs/en/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/en/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/en/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/en/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/en/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/en/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/en/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0-Pro",
+                    "pages": [
+                      "docs/en/api-reference/images/seedream-5.0-pro/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/en/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/en/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/en/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Image",
+                    "pages": [
+                      "docs/en/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Video API",
+                "pages": [
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/en/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/en/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/en/api-reference/videos/seedance-2/generation",
+                      "docs/en/api-reference/videos/seedance-2/private-avatar",
+                      "docs/en/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/en/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/en/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/en/api-reference/videos/sora2/generation",
+                      "docs/en/api-reference/videos/sora2/create-persona",
+                      "docs/en/api-reference/videos/sora2/get-personas",
+                      "docs/en/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/en/api-reference/videos/sora-2-official/generation",
+                      "docs/en/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/en/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/en/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/en/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/en/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/en/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/en/api-reference/videos/wan2.6/generation",
+                      "docs/en/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/en/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/en/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/en/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/en/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/en/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/en/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/en/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/en/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/en/api-reference/videos/grok-video-1.5/generation",
+                      "docs/en/api-reference/videos/grok-video/generation",
+                      "docs/en/api-reference/videos/grok-video/remix",
+                      "docs/en/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Task Management",
+                "pages": [
+                  "docs/en/api-reference/tasks/image-status",
+				  "docs/en/api-reference/tasks/video-status",
+				  "docs/en/api-reference/webhooks/task-webhooks",
+				  "docs/en/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "File Uploads",
+                "pages": [
+                  "docs/en/api-reference/uploads/images",
+                  "docs/en/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "Account",
+                "pages": [
+                  "docs/en/api-reference/account/token-balance",
+                  "docs/en/api-reference/account/user-balance",
+                  "docs/en/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "FAQs",
+                "pages": [
+                  "docs/en/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ja",
+        "tabs": [
+          {
+            "tab": "APIリファレンス",
+            "groups": [
+              {
+                "group": "概要",
+                "pages": [
+                  "docs/ja"
+                ]
+              },
+              {
+                "group": "クイックスタート",
+                "pages": [
+                  "docs/ja/quickstart",
+                  "docs/ja/integrations/claude-code",
+                  "docs/ja/integrations/codex",
+                  "docs/ja/integrations/openclaw",
+                  "docs/ja/integrations/cherry-studio",
+                  "docs/ja/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "チャットAPI",
+                "pages": [
+                  "docs/ja/api-reference/chat/models",
+                  "docs/ja/api-reference/chat/list-models",
+                  {
+                    "group": "GPT-5シリーズ",
+                    "pages": [
+                      "docs/ja/api-reference/chat/gpt-5.4/chat",
+                      "docs/ja/api-reference/chat/gpt-5.5/chat"
+                    ]
+                  },
+                  {
+                    "group": "OpenAI形式",
+                    "pages": [
+                      "docs/ja/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Anthropic形式",
+                    "pages": [
+                      "docs/ja/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Responses形式",
+                    "pages": [
+                      "docs/ja/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "画像API",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview (Nano banana)",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/ja/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/ja/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/ja/api-reference/images/gpt-image-2/generation",
+                      "docs/ja/api-reference/images/gpt-image-2/official",
+                      "docs/ja/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/ja/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/ja/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/ja/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/ja/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/ja/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/ja/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/ja/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/ja/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/ja/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Image",
+                    "pages": [
+                      "docs/ja/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "動画API",
+                "pages": [
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/ja/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/ja/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/ja/api-reference/videos/seedance-2/generation",
+                      "docs/ja/api-reference/videos/seedance-2/private-avatar",
+                      "docs/ja/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/ja/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/ja/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/ja/api-reference/videos/sora2/generation",
+                      "docs/ja/api-reference/videos/sora2/create-persona",
+                      "docs/ja/api-reference/videos/sora2/get-personas",
+                      "docs/ja/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/ja/api-reference/videos/sora-2-official/generation",
+                      "docs/ja/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/ja/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/ja/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/ja/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/ja/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/ja/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/ja/api-reference/videos/wan2.6/generation",
+                      "docs/ja/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/ja/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/ja/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/ja/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/ja/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/ja/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/ja/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/ja/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/ja/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/ja/api-reference/videos/grok-video-1.5/generation",
+                      "docs/ja/api-reference/videos/grok-video/generation",
+                      "docs/ja/api-reference/videos/grok-video/remix",
+                      "docs/ja/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "タスク管理",
+                "pages": [
+                  "docs/ja/api-reference/tasks/image-status",
+				  "docs/ja/api-reference/tasks/video-status",
+				  "docs/ja/api-reference/webhooks/task-webhooks",
+				  "docs/ja/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "ファイルアップロード",
+                "pages": [
+                  "docs/ja/api-reference/uploads/images",
+                  "docs/ja/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "アカウント",
+                "pages": [
+                  "docs/ja/api-reference/account/token-balance",
+                  "docs/ja/api-reference/account/user-balance",
+                  "docs/ja/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "よくある質問",
+                "pages": [
+                  "docs/ja/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ko",
+        "tabs": [
+          {
+            "tab": "API 참조",
+            "groups": [
+              {
+                "group": "개요",
+                "pages": [
+                  "docs/ko"
+                ]
+              },
+              {
+                "group": "빠른 시작",
+                "pages": [
+                  "docs/ko/quickstart",
+                  "docs/ko/integrations/claude-code",
+                  "docs/ko/integrations/codex",
+                  "docs/ko/integrations/openclaw",
+                  "docs/ko/integrations/cherry-studio",
+                  "docs/ko/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "채팅 API",
+                "pages": [
+                  "docs/ko/api-reference/chat/models",
+                  "docs/ko/api-reference/chat/list-models",
+                  {
+                    "group": "GPT-5 시리즈",
+                    "pages": [
+                      "docs/ko/api-reference/chat/gpt-5.4/chat",
+                      "docs/ko/api-reference/chat/gpt-5.5/chat"
+                    ]
+                  },
+                  {
+                    "group": "OpenAI 형식",
+                    "pages": [
+                      "docs/ko/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Anthropic 형식",
+                    "pages": [
+                      "docs/ko/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Responses 형식",
+                    "pages": [
+                      "docs/ko/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "이미지 API",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview (Nano banana)",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/ko/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/ko/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/ko/api-reference/images/gpt-image-2/generation",
+                      "docs/ko/api-reference/images/gpt-image-2/official",
+                      "docs/ko/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/ko/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/ko/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/ko/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/ko/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/ko/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/ko/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/ko/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/ko/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/ko/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Image",
+                    "pages": [
+                      "docs/ko/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "비디오 API",
+                "pages": [
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/ko/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/ko/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/ko/api-reference/videos/seedance-2/generation",
+                      "docs/ko/api-reference/videos/seedance-2/private-avatar",
+                      "docs/ko/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/ko/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/ko/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/ko/api-reference/videos/sora2/generation",
+                      "docs/ko/api-reference/videos/sora2/create-persona",
+                      "docs/ko/api-reference/videos/sora2/get-personas",
+                      "docs/ko/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/ko/api-reference/videos/sora-2-official/generation",
+                      "docs/ko/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/ko/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/ko/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/ko/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/ko/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/ko/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/ko/api-reference/videos/wan2.6/generation",
+                      "docs/ko/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/ko/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/ko/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/ko/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/ko/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/ko/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/ko/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/ko/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/ko/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/ko/api-reference/videos/grok-video-1.5/generation",
+                      "docs/ko/api-reference/videos/grok-video/generation",
+                      "docs/ko/api-reference/videos/grok-video/remix",
+                      "docs/ko/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "작업 관리",
+                "pages": [
+                  "docs/ko/api-reference/tasks/image-status",
+				  "docs/ko/api-reference/tasks/video-status",
+				  "docs/ko/api-reference/webhooks/task-webhooks",
+				  "docs/ko/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "파일 업로드",
+                "pages": [
+                  "docs/ko/api-reference/uploads/images",
+                  "docs/ko/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "계정",
+                "pages": [
+                  "docs/ko/api-reference/account/token-balance",
+                  "docs/ko/api-reference/account/user-balance",
+                  "docs/ko/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "자주 묻는 질문",
+                "pages": [
+                  "docs/ko/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ru",
+        "tabs": [
+          {
+            "tab": "Справочник API",
+            "groups": [
+              {
+                "group": "Обзор",
+                "pages": [
+                  "docs/ru"
+                ]
+              },
+              {
+                "group": "Быстрый старт",
+                "pages": [
+                  "docs/ru/quickstart",
+                  "docs/ru/integrations/claude-code",
+                  "docs/ru/integrations/codex",
+                  "docs/ru/integrations/openclaw",
+                  "docs/ru/integrations/cherry-studio",
+                  "docs/ru/integrations/chatbox"
+                ]
+              },
+              {
+                "group": "API чата",
+                "pages": [
+                  "docs/ru/api-reference/chat/models",
+                  "docs/ru/api-reference/chat/list-models",
+                  {
+                    "group": "Серия GPT-5",
+                    "pages": [
+                      "docs/ru/api-reference/chat/gpt-5.4/chat",
+                      "docs/ru/api-reference/chat/gpt-5.5/chat",
+                      "docs/ru/api-reference/chat/gpt-5.6/chat"
+                    ]
+                  },
+                  {
+                    "group": "Формат OpenAI",
+                    "pages": [
+                      "docs/ru/api-reference/chat/chat"
+                    ]
+                  },
+                  {
+                    "group": "Формат Anthropic",
+                    "pages": [
+                      "docs/ru/api-reference/chat/messages"
+                    ]
+                  },
+                  {
+                    "group": "Формат Responses",
+                    "pages": [
+                      "docs/ru/api-reference/chat/responses"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "API изображений",
+                "pages": [
+                  {
+                    "group": "Gemini-3-Pro-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-3-pro-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image-preview (Nano banana2)",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-3.1-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image-preview (Nano banana)",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-2.5-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3-Pro-Image Official / Nano Banana Pro",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-3-pro-image-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-3.1-Flash-Image Official / Nano Banana 2",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-3.1-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini-2.5-Flash-Image Official",
+                    "pages": [
+                      "docs/ru/api-reference/images/gemini-2.5-flash-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-4o-image",
+                    "pages": [
+                      "docs/ru/api-reference/images/gpt-4o/generation"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2",
+                    "pages": [
+                      "docs/ru/api-reference/images/gpt-image-2/generation",
+                      "docs/ru/api-reference/images/gpt-image-2/official",
+                      "docs/ru/api-reference/images/gpt-image-2/edits"
+                    ]
+                  },
+                  {
+                    "group": "GPT-Image-2-VIP",
+                    "pages": [
+                      "docs/ru/api-reference/images/gpt-image-2-vip/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.0",
+                    "pages": [
+                      "docs/ru/api-reference/images/seedream-4.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-4.5",
+                    "pages": [
+                      "docs/ru/api-reference/images/seedream-4.5/generation"
+                    ]
+                  },
+                  {
+                    "group": "Seedream-5.0",
+                    "pages": [
+                      "docs/ru/api-reference/images/seedream-5.0/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux Kontext",
+                    "pages": [
+                      "docs/ru/api-reference/images/flux-kontext/generation"
+                    ]
+                  },
+                  {
+                    "group": "Flux 2.0",
+                    "pages": [
+                      "docs/ru/api-reference/images/flux-2/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Image",
+                    "pages": [
+                      "docs/ru/api-reference/images/grok-image/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Imagine 1.0",
+                    "pages": [
+                      "docs/ru/api-reference/images/grok-imagine-1.0/generation",
+                      "docs/ru/api-reference/images/grok-imagine-1.0/edits"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Image",
+                    "pages": [
+                      "docs/ru/api-reference/images/vidu-image/generation"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "API видео",
+                "pages": [
+                  {
+                    "group": "doubao-seedance-1-0-pro",
+                    "pages": [
+                      "docs/ru/api-reference/videos/doubao-seedance/generation"
+                    ]
+                  },
+                  {
+                    "group": "doubao-seedance-1-5-pro",
+                    "pages": [
+                      "docs/ru/api-reference/videos/doubao-seedance-1-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2",
+                    "pages": [
+                      "docs/ru/api-reference/videos/seedance-2/generation",
+                      "docs/ru/api-reference/videos/seedance-2/private-avatar",
+                      "docs/ru/api-reference/videos/seedance-2/real-avatar"
+                    ]
+                  },
+                  {
+                    "group": "seedance-2-5",
+                    "pages": [
+                      "docs/ru/api-reference/videos/seedance-2-5/generation"
+                    ]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "pages": [
+                      "docs/ru/api-reference/videos/happyhorse/generation"
+                    ]
+                  },
+                  {
+                    "group": "Sora2",
+                    "pages": [
+                      "docs/ru/api-reference/videos/sora2/generation",
+                      "docs/ru/api-reference/videos/sora2/create-persona",
+                      "docs/ru/api-reference/videos/sora2/get-personas",
+                      "docs/ru/api-reference/videos/sora2/remix"
+                    ]
+                  },
+                  {
+                    "group": "Sora 2 Official (Azure)",
+                    "pages": [
+                      "docs/ru/api-reference/videos/sora-2-official/generation",
+                      "docs/ru/api-reference/videos/sora-2-official/remix"
+                    ]
+                  },
+                  {
+                    "group": "Veo3",
+                    "pages": [
+                      "docs/ru/api-reference/videos/veo3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash",
+                    "pages": [
+                      "docs/ru/api-reference/videos/gemini-omni-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Gemini Omni Flash Preview Official",
+                    "pages": [
+                      "docs/ru/api-reference/videos/gemini-omni-flash-preview-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "Veo3 Official (including Veo3.1 Lite)",
+                    "pages": [
+                      "docs/ru/api-reference/videos/veo3-official/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-02",
+                    "pages": [
+                      "docs/ru/api-reference/videos/minimax-hailuo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Wan2.6",
+                    "pages": [
+                      "docs/ru/api-reference/videos/wan2.6/generation",
+                      "docs/ru/api-reference/videos/wan2.6-flash/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v2.6",
+                    "pages": [
+                      "docs/ru/api-reference/videos/kling-2-6/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3",
+                    "pages": [
+                      "docs/ru/api-reference/videos/kling-v3/generation"
+                    ]
+                  },
+                  {
+                    "group": "kling-3.0-turbo",
+                    "pages": [
+                      "docs/ru/api-reference/videos/kling-3.0-turbo/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling v3 Omni",
+                    "pages": [
+                      "docs/ru/api-reference/videos/kling-v3-omni/generation"
+                    ]
+                  },
+                  {
+                    "group": "Kling Video O1",
+                    "pages": [
+                      "docs/ru/api-reference/videos/kling-video-o1/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-Hailuo-2.3",
+                    "pages": [
+                      "docs/ru/api-reference/videos/minimax-hailuo-2.3/generation"
+                    ]
+                  },
+                  {
+                    "group": "MiniMax-H3",
+                    "pages": [
+                      "docs/ru/api-reference/videos/minimax-h3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Vidu Q3",
+                    "pages": [
+                      "docs/ru/api-reference/videos/viduq3/generation"
+                    ]
+                  },
+                  {
+                    "group": "Grok Video",
+                    "pages": [
+                      "docs/ru/api-reference/videos/grok-video-1.5/generation",
+                      "docs/ru/api-reference/videos/grok-video/generation",
+                      "docs/ru/api-reference/videos/grok-video/remix",
+                      "docs/ru/api-reference/videos/grok-video/extend"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Управление задачами",
+                "pages": [
+                  "docs/ru/api-reference/tasks/image-status",
+				  "docs/ru/api-reference/tasks/video-status",
+				  "docs/ru/api-reference/webhooks/task-webhooks",
+				  "docs/ru/api-reference/rate-limits/async-tasks"
+                ]
+              },
+              {
+                "group": "Загрузка файлов",
+                "pages": [
+                  "docs/ru/api-reference/uploads/images",
+                  "docs/ru/api-reference/uploads/videos"
+                ]
+              },
+              {
+                "group": "Аккаунт",
+                "pages": [
+                  "docs/ru/api-reference/account/token-balance",
+                  "docs/ru/api-reference/account/user-balance",
+                  "docs/ru/api-reference/account/create-token"
+                ]
+              },
+              {
+                "group": "Часто задаваемые вопросы",
+                "pages": [
+                  "docs/ru/faqs"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view"
+    ],
+    "display": "header"
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/toapisai",
+      "github": "https://github.com/ToAPIs",
+      "linkedin": "https://linkedin.com/company/ToAPIs",
+      "discord": "https://discord.gg/hvnszCrJ73"
+    }
+  }
+}

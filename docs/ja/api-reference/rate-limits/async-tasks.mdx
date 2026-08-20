@@ -1,0 +1,32 @@
+---
+title: "非同期タスクのレート制限"
+description: "ToAPIs の送信・照会レート制限"
+---
+
+ToAPIs は非同期送信と状態照会に独立した token bucket を使用し、同期モデルのリクエスト枠を消費しません。
+
+| グループ | 送信 RPM / RPS / 10秒バースト | 照会 RPM / RPS / 10秒バースト |
+| --- | --- | --- |
+| `default` | 300 / 5 / 50 | 3,000 / 50 / 500 |
+| `vip` | 1,000 / 16.7 / 167 | 10,000 / 166.7 / 1,667 |
+| `svip` | 2,000 / 33.3 / 334 | 30,000 / 500 / 5,000 |
+
+ユーザー ID 単位で、同一ユーザーの Token は共有します。送信と照会は独立し、業務エラーは消費、`429` は消費しません。バッチ照会は1リクエストとして数え、最大100件です。
+
+```text
+Retry-After
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+X-RateLimit-Category: async_submit | async_query
+```
+
+```json 429
+{"error":{"code":"rate_limit_exceeded","message":"Async task request rate exceeded"}}
+```
+
+```json 503
+{"error":{"code":"rate_limit_unavailable","message":"The async task submit limiter is temporarily unavailable"}}
+```
+
+送信リミッター障害は `503`、照会はフェイルオープンです。[Webhook](/docs/ja/api-reference/webhooks/task-webhooks) を主経路にし、ポーリングは5～10秒以上、ランダムジッター付きにしてください。`429/503` では `Retry-After` を優先し、なければ指数バックオフを使用します。

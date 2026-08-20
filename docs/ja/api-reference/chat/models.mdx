@@ -1,0 +1,118 @@
+---
+title: "Supported Text モデル"
+sidebarTitle: "モデル List"
+description: "Text model list supporting both Chat Completions and レスポンスs API formats"
+---
+
+The platform provides two API formats. Use the `model` parameter to switch models:
+
+| API Format | エンドポイント | 説明 |
+|----------|------|------|
+| **Chat Completions** (default) | `POST /v1/chat/completions` | Classic chat API, compatible with OpenAI SDKs. [View docs](./chat) |
+| **レスポンスs** (new) | `POST /v1/responses` | Newer OpenAI agentic API with function calling, built-in tools, and server-side multi-turn context. [View docs](./responses) |
+
+<Tip>
+モデル marked as <code>レスポンスs Only</code> only support the レスポンスs API and do not support Chat Completions. Other models are called through Chat Completions by default.
+</Tip>
+
+---
+
+## Anthropic / Claude
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `claude-haiku-4-5` | Fastest and most cost-effective Claude model, ideal for high-throughput lightweight tasks | ✓ | |
+| `claude-sonnet-4-6` | Best balance of performance and cost, suitable for most business use cases | ✓ | |
+| `claude-opus-4-6` | Claude flagship model, ideal for complex reasoning and high-quality generation | ✓ | |
+
+## OpenAI / GPT-5
+
+### GPT-5 Official
+
+Direct access through the official Azure OpenAI API, with the highest stability and compliance.
+
+| モデル ID | 説明 | Vision | Thinking | API Format |
+|---------|------|:----:|:--------:|:--------:|
+| `gpt-5-pro-official` | Official GPT-5 Pro, OpenAI's strongest flagship reasoning model | ✓ | ✓ | レスポンスs Only |
+| `gpt-5.2-official` | Official GPT-5.2 with enhanced multimodal capabilities | ✓ | ✓ | All |
+| `gpt-5.3-codex-official` | Official GPT-5.3 Codex, latest code-optimized model with function calling and built-in tools | ✓ | ✓ | レスポンスs Only |
+
+### GPT-5 Standard
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `gpt-5` | OpenAI flagship model with powerful general reasoning and multimodal capabilities | ✓ | |
+| `gpt-5-codex` | GPT-5 optimized for code, excels at code generation and debugging | | |
+| `gpt-5-codex-mini` | Lightweight code model with ultra-fast response and low cost | | |
+| `gpt-5.1` | GPT-5 enhanced, with improved instruction following and reasoning | ✓ | |
+| `gpt-5.1-codex` | GPT-5.1 code-specialized variant | | |
+| `gpt-5.1-codex-max` | GPT-5.1 flagship code model, maximum coding capability | | |
+| `gpt-5.1-codex-mini` | GPT-5.1 lightweight code variant, fast and cost-efficient | | |
+| `gpt-5.2` | GPT-5 second generation with enhanced multimodal capabilities | ✓ | |
+| `gpt-5.2-codex` | GPT-5.2 code-specialized variant | | |
+| `gpt-5.3-codex` | Latest GPT-5 code model with continuously improving capabilities | | |
+| `gpt-5.3-codex-spark` | GPT-5.3 Codex Spark variant, focused on high-speed code generation | | |
+| `gpt-5.4` | GPT-5 generation 4, enhanced general reasoning and multimodal capabilities | ✓ | |
+| `gpt-5.5` | GPT-5.5 with enhanced general reasoning, coding, and multimodal capabilities | ✓ | |
+
+## Google / Gemini
+
+### Gemini 3 Series
+
+| モデル ID | 説明 | Vision | Thinking |
+|---------|------|:----:|:--------:|
+| `gemini-3.1-pro-preview-official` | Gemini 3.1 Pro, latest flagship reasoning model | ✓ | ✓ |
+| `gemini-3.1-flash-lite-preview-official` | Gemini 3.1 Flash Lite, cost-effective lightweight model with fast responses | ✓ | |
+| `gemini-3-pro-official` | Gemini 3 Pro flagship with strong reasoning and multimodal capabilities | ✓ | ✓ |
+| `gemini-3-pro-preview-official` | Gemini 3 Pro Preview, same as gemini-3-pro-official | ✓ | ✓ |
+| `gemini-3-flash-official` | Gemini 3 Flash, fast and efficient | ✓ | ✓ |
+| `gemini-3-flash-preview-official` | Gemini 3 Flash Preview, same as gemini-3-flash-official | ✓ | ✓ |
+| `gemini-3.1-fast` | Google Gemini fast variant, high-value multimodal model | ✓ | |
+| `gemini-3.1-thinking` | Google Gemini thinking variant with built-in reasoning chain | ✓ | ✓ |
+
+### Gemini 2.5 Series
+
+| モデル ID | 説明 | Vision | Thinking |
+|---------|------|:----:|:--------:|
+| `gemini-2.5-pro-official` | Gemini 2.5 Pro with strong reasoning and long-context capabilities | ✓ | ✓ |
+| `gemini-2.5-flash-official` | Gemini 2.5 Flash, fast reasoning with thinking mode | ✓ | ✓ |
+| `gemini-2.5-flash-lite-official` | Gemini 2.5 Flash Lite, ultra-low-cost and fast lightweight model | ✓ | |
+
+### Gemini 2.0 Series
+
+| モデル ID | 説明 | Vision | Thinking |
+|---------|------|:----:|:--------:|
+| `gemini-2.0-flash-official` | Gemini 2.0 Flash, classic fast model | ✓ | |
+| `gemini-2.0-flash-lite-official` | Gemini 2.0 Flash Lite, lowest-cost lightweight model | ✓ | |
+
+## DeepSeek
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `deepseek-v3.2` | DeepSeek flagship model with extended thinking support, excels at code and complex reasoning | | ✓ |
+
+## Alibaba / Qwen
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `qwen3-max` | Qwen flagship model with deep thinking support, excels at complex reasoning and code generation | | ✓ |
+| `qwen3.5-plus` | Qwen enhanced model, balanced performance and cost | | |
+| `qwen3.5-flash` | Qwen ultra-fast model, ideal for low-latency and high-throughput scenarios | | |
+
+## Zhipu / GLM
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `glm-5` | Zhipu flagship model with outstanding Chinese language understanding and generation | | |
+
+## Moonshot / Kimi
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `kimi-k2.5` | Moonshot flagship model with ultra-long context and strong Chinese language capabilities | | |
+
+## MiniMax
+
+| モデル ID | 説明 | Vision | Thinking |
+|----------|-------------|:------:|:--------:|
+| `MiniMax-M2.5` | MiniMax flagship model with excellent cost-effectiveness | | |

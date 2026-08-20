@@ -1,0 +1,425 @@
+---
+title: "Seedream-4.5 圖像生成"
+sidebarTitle: "Seedream-4.5"
+api: "POST https://toapis.com/v1/images/generations"
+description: "使用 Seedream 4.5 模型生成高質量圖像，最新版本"
+---
+
+- Seedream 4.5 最新高質量圖像生成模型
+- 通過 model 參數選擇 `doubao-seedream-4-5` 模型
+- 支持文本到圖像生成，畫質更優
+- 異步任務管理，通過任務 ID 查詢結果
+
+<Warning>
+**重要變更**：爲了更好的性能和成本控制，我們不再支持在 `image_urls` 中直接傳入 base64 圖片數據。請先使用 [上傳圖片接口](../../uploads/images) 上傳圖片，獲取 URL 後再調用本接口。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="doubao-seedream-4-5" required>
+  圖像生成模型名稱
+
+  示例：`"doubao-seedream-4-5"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  圖像生成的文本描述
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  圖像寬高比
+
+  支持的寬高比：
+  - `1:1` - 正方形（默認）
+  - `4:3` - 橫向 4:3
+  - `3:4` - 豎向 3:4
+  - `16:9` - 橫向寬屏
+  - `9:16` - 豎向長圖
+  - `3:2` - 橫向 3:2
+  - `2:3` - 豎向 2:3
+  - `21:9` - 超寬屏
+  - `9:21` - 超窄屏
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  生成圖像的數量
+
+  範圍：1-15（最少 1 張，最多 15 張）
+
+  默認：1
+
+  **注意：**
+  - 實際可生成的圖像數量受此參數和輸入參考圖像數量共同影響。參考圖像 + 生成圖像總數必須 ≤ 15
+  - **必須輸入純數字（如 `1`），不要加引號，否則會報錯**
+
+  會根據生成數量進行預扣費
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖像 URL 列表，用於圖生圖或圖像編輯
+
+  **⚠️ 僅支持 URL 格式（不再支持 base64）**
+
+  - 公開可訪問的圖像 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+
+  **限制：**
+  - 最多 10 張圖片
+  - 圖像格式：jpeg, png
+  - 寬高比（寬/高）範圍：[1/3, 3]
+  - 寬度和高度（px）> 14
+  - 大小：不超過 10MB
+  - 總像素：不超過 6000×6000 px
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  渠道特有參數，用於傳遞 Seedream 4.5 模型的高級配置
+
+  <Expandable title="metadata 屬性">
+    <ParamField body="metadata.resolution" type="string" default="2K">
+      圖像分辨率
+
+      支持的分辨率：
+      - `2K` - 標準分辨率（默認）
+      - `4K` - 高清分辨率
+
+      > **注意：** Seedream-4.5 不支持 1K 分辨率
+
+      **分辨率參考尺寸：**
+
+      | 分辨率 | 1:1 尺寸 | 16:9 尺寸 |
+      |--------|----------|-----------|
+      | 2K | 2048x2048 | 2560x1440 |
+      | 4K | 4096x4096 | 5404x3040 |
+    </ParamField>
+
+    <ParamField body="metadata.optimize_prompt_options" type="object">
+      提示詞優化選項
+
+      **屬性：**
+      - `mode`（字符串）：優化模式
+        - `standard`：標準模式，生成質量更高，處理時間更長（默認）
+        - `fast`：快速模式，處理時間更短，質量一般
+
+      **示例：**
+      ```json
+      "optimize_prompt_options": { "mode": "standard" }
+      ```
+    </ParamField>
+
+    <ParamField body="metadata.sequential_image_generation" type="string" default="disabled">
+      順序圖像生成模式（豆包專屬功能）
+
+      控制是否生成多張圖像：
+      - `disabled`：禁用順序模式，即使有多張參考圖像也只生成 1 張（默認）
+      - `auto`：啓用順序模式，可以生成多張圖像
+
+      **使用說明：**
+      - ✅ 設置 `n: 3` 或使用 `sequential_image_generation: "auto"` + `max_images: 3`
+      - ✅ 支持文生圖：僅提供文本提示詞，最多生成 15 張圖像
+      - ✅ 支持圖生圖：提供 `image_urls`，基於參考圖像生成多張圖像
+      - ⚠️ 當 `n > 1` 時，會自動設置爲 `auto`
+
+      **注意：**
+      - 輸入的參考圖數量 + 最終生成圖片數量 ≤ 15 張
+    </ParamField>
+
+    <ParamField body="metadata.sequential_image_generation_options" type="object">
+      順序圖像生成選項
+
+      當 `sequential_image_generation` 設置爲 `auto` 時可用
+
+      **屬性：**
+      - `max_images`（整數）：指定生成的圖像數量，範圍：1-15
+
+      **示例：**
+      ```json
+      "sequential_image_generation_options": { "max_images": 3 }
+      ```
+    </ParamField>
+
+    <ParamField body="metadata.watermark" type="boolean" default={true}>
+      是否爲生成的圖像添加水印
+
+      - `true`：添加水印（默認）
+      - `false`：不添加水印
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-4-5",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 1,
+    "metadata": {
+      "resolution": "2K"
+    }
+  }'
+```
+
+```bash cURL (圖生圖)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-4-5",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 1,
+    "image_urls": [
+      "https://example.com/panda.jpg"
+    ],
+    "metadata": {
+      "resolution": "2K"
+    }
+  }'
+```
+
+```bash cURL (高級功能)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-4-5",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 3,
+    "image_urls": [
+      "https://example.com/panda.jpg"
+    ],
+    "metadata": {
+      "resolution": "4K",
+      "optimize_prompt_options": { "mode": "standard" },
+      "sequential_image_generation": "auto",
+      "sequential_image_generation_options": { "max_images": 3 },
+      "watermark": false
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedream-4-5",
+        "prompt": "可愛的熊貓在竹林中玩耍",
+        "size": "1:1",
+        "n": 1,
+        "metadata": {
+            "resolution": "2K"
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```python Python (圖生圖)
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedream-4-5",
+        "prompt": "可愛的熊貓在竹林中玩耍",
+        "size": "1:1",
+        "n": 1,
+        "image_urls": ["https://example.com/panda.jpg"],
+        "metadata": {
+            "resolution": "2K"
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```python Python (高級功能)
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedream-4-5",
+        "prompt": "可愛的熊貓在竹林中玩耍",
+        "size": "1:1",
+        "n": 3,
+        "image_urls": ["https://example.com/panda.jpg"],
+        "metadata": {
+            "resolution": "4K",
+            "optimize_prompt_options": {"mode": "standard"},
+            "sequential_image_generation": "auto",
+            "sequential_image_generation_options": {"max_images": 3},
+            "watermark": False
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedream-4-5',
+    prompt: '可愛的熊貓在竹林中玩耍',
+    size: '1:1',
+    n: 1,
+    metadata: {
+      resolution: '2K'
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+
+```javascript JavaScript (圖生圖)
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedream-4-5',
+    prompt: '可愛的熊貓在竹林中玩耍',
+    size: '1:1',
+    n: 1,
+    image_urls: ['https://example.com/panda.jpg'],
+    metadata: {
+      resolution: '2K'
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+
+```javascript JavaScript (高級功能)
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedream-4-5',
+    prompt: '可愛的熊貓在竹林中玩耍',
+    size: '1:1',
+    n: 3,
+    image_urls: ['https://example.com/panda.jpg'],
+    metadata: {
+      resolution: '4K',
+      optimize_prompt_options: { mode: 'standard' },
+      sequential_image_generation: 'auto',
+      sequential_image_generation_options: { max_images: 3 },
+      watermark: false
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_img_abc123def456",
+  "object": "generation.task",
+   "model": "doubao-seedream-4-5",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>

@@ -1,0 +1,165 @@
+---
+title: "List モデル"
+sidebarTitle: "List モデル"
+api: "GET https://toapis.com/v1/models"
+description: "List models available to the current API key, compatible with the OpenAI モデル API"
+---
+
+- Compatible with the OpenAI モデル API format
+- Returns models available to the current API key and user group
+- Returns text models by default; use `type=all` to include all model types
+- Supports filtering by text, image, video, or audio models
+
+Use this endpoint to retrieve the models accessible by the current API key. Results are filtered dynamically based on token model restrictions, user group, enabled channels, and model pricing configuration.
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All API requests require Bearer Token authentication.
+
+  Get your API key from the [API Key management page](https://toapis.com/console/token).
+
+  Add it to the request header:
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Query パラメータ
+
+<ParamField query="type" type="string" default="text">
+  Filters models by type.
+
+  Supported values:
+
+  - `text` or `chat`: return text/chat models only
+  - `image`: return image models only
+  - `video`: return video models only
+  - `audio`: return audio models only
+  - `all`: return all available models
+
+  If omitted, only text models are returned by default.
+</ParamField>
+
+## レスポンス
+
+<ResponseField name="success" type="boolean">
+  Whether the request succeeded.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  List object type. Always `list`.
+</ResponseField>
+
+<ResponseField name="data" type="object[]">
+  The list of models.
+
+  <Expandable title="data[n]">
+    <ResponseField name="id" type="string">
+      モデル ID. Use this value as the `model` parameter in other API requests.
+    </ResponseField>
+
+    <ResponseField name="object" type="string">
+      Object type. Always `model`.
+    </ResponseField>
+
+    <ResponseField name="created" type="integer">
+      モデル creation timestamp. Some custom models may return the platform default timestamp.
+    </ResponseField>
+
+    <ResponseField name="owned_by" type="string">
+      モデル owner, provider, or channel name.
+    </ResponseField>
+
+    <ResponseField name="supported_endpoint_types" type="string[]">
+      エンドポイント types supported by the model. Different models may support Chat Completions, レスポンスs, image, video, or other endpoints.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request GET \
+  --url 'https://toapis.com/v1/models' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```bash cURL (all model types)
+curl --request GET \
+  --url 'https://toapis.com/v1/models?type=all' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```python Python
+import requests
+
+API_BASE = 'https://toapis.com'
+API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx'
+
+headers = {
+    'Authorization': f'Bearer {API_KEY}'
+}
+
+response = requests.get(f'{API_BASE}/v1/models', headers=headers)
+data = response.json()
+
+if data.get('success'):
+    for model in data.get('data', []):
+        print(model['id'])
+else:
+    print(data)
+```
+
+```javascript JavaScript
+const API_BASE = 'https://toapis.com';
+const API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx';
+
+async function listModels(type = 'text') {
+  const url = new URL('/v1/models', API_BASE);
+  if (type) url.searchParams.set('type', type);
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  });
+
+  const data = await response.json();
+  console.log(data.data?.map((model) => model.id));
+  return data;
+}
+
+listModels('all');
+```
+</RequestExample>
+
+<ResponseExample>
+```json
+{
+  "success": true,
+  "object": "list",
+  "data": [
+    {
+      "id": "claude-sonnet-4-6",
+      "object": "model",
+      "created": 1626777600,
+      "owned_by": "anthropic",
+      "supported_endpoint_types": ["chat_completions", "responses"]
+    },
+    {
+      "id": "gpt-5",
+      "object": "model",
+      "created": 1626777600,
+      "owned_by": "openai",
+      "supported_endpoint_types": ["chat_completions"]
+    }
+  ]
+}
+```
+</ResponseExample>
+
+## Notes
+
+- If the API key has model restrictions, only allowed models are returned.
+- If `type` is omitted, async task models such as video and audio models are excluded from the default result.
+- To retrieve image, video, audio, and text models together, call `GET /v1/models?type=all`.

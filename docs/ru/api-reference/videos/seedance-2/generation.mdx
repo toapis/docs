@@ -1,0 +1,364 @@
+---
+title: "seedance-2 Генерация видео"
+sidebarTitle: "seedance-2"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео с помощью seedance-2, seedance-2-fast и seedance-2-mini"
+---
+
+- Поддерживаются `seedance-2`, `seedance-2-fast` и `seedance-2-mini`
+- Поддерживаются text-to-video и мультимодальный reference-to-video; `seedance-2` и `seedance-2-fast` также поддерживают сценарии с первым и последним кадром
+- Поддерживаются совместные image / video / audio reference; для `seedance-2-mini` лимиты составляют `9` изображений, `3` видео и `3` аудио
+- Асинхронный сценарий: submit API возвращает `generation.task`, а готовый результат забирается через API статуса задачи
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  Все запросы требуют Bearer Token аутентификацию.
+
+  Получить API Key можно на странице [API Key Management Page](https://toapis.com/console/token).
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="seedance-2" required>
+  Название модели генерации видео.
+
+  Доступные модели:
+  - `seedance-2` - стандартная версия для более качественного результата и полного Seedance 2 workflow
+  - `seedance-2-fast` - быстрая версия для превью и низкой задержки
+  - `seedance-2-mini` - облегченная версия для недорогих черновиков и мультимодальных reference workflow, сейчас всегда создает `1` результат за запрос
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Текстовый prompt для видео.
+
+  Рекомендуется явно описывать сцену, движение камеры, действие, стиль и аудио-настроение.
+</ParamField>
+
+<ParamField body="client_business_id" type="string">
+  Ваш бизнесовый ID, например номер заказа или внутренний ID задачи. Он сохраняется вместе с задачей и может использоваться для последующего запроса статуса:
+  `GET /v1/videos/generations/{client_business_id}`.
+
+  Также поддерживается `metadata.client_business_id`, но рекомендуется верхнеуровневое поле.
+</ParamField>
+
+<ParamField body="duration" type="integer" default={0}>
+  Длительность видео в секундах.
+
+  Правила:
+  - `seedance-2`: `4-15`
+  - `seedance-2-fast`: `4-15`
+  - `seedance-2-mini`: `4-15`
+  - `0`: авто-длительность (только `seedance-2` / `seedance-2-fast`)
+  - `-1`: авто-длительность (только `seedance-2` / `seedance-2-fast`)
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+  Соотношение сторон видео.
+
+  Варианты:
+  - `21:9`
+  - `16:9`
+  - `4:3`
+  - `1:1`
+  - `3:4`
+  - `9:16`
+  - `adaptive`
+
+  `adaptive` позволяет upstream выбрать подходящее соотношение по входным media.
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Массив URL изображений в режиме совместимости.
+
+  Рекомендуется использовать `image_with_roles`, чтобы явно задавать `first_frame`, `last_frame` или `reference_image`.
+
+  <Warning>
+    - Не используйте `image_urls` одновременно с `image_with_roles`.
+    - Для новых интеграций используйте `image_with_roles`, чтобы явно указать назначение каждого изображения.
+  </Warning>
+</ParamField>
+
+<ParamField body="image_with_roles" type="array">
+  Список изображений с ролями.
+
+  Поддерживаемые сценарии:
+  - `seedance-2` / `seedance-2-fast` / `seedance-2-mini`
+    - `first_frame` для генерации по первому кадру
+    - `first_frame` + `last_frame` для first-last-frame генерации
+    - `reference_image` для мультимодального reference режима
+
+  <Expandable title="Описание полей">
+    <ParamField body="url" type="string" required>
+      URL изображения, Base64-данные или URI загруженного asset.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Роль изображения.
+
+      Разрешенные значения:
+      - `first_frame`
+      - `last_frame`
+      - `reference_image`
+    </ParamField>
+  </Expandable>
+
+  <Warning>
+    - Максимум `1` `first_frame`
+    - Максимум `1` `last_frame`
+    - Максимум `9` `reference_image`
+    - Frame mode и reference mode нельзя смешивать
+    - `seedance-2-mini` также поддерживает `first_frame`, `last_frame` и `reference_image`
+  </Warning>
+</ParamField>
+
+<ParamField body="video_with_roles" type="array">
+  Список видео с ролями.
+
+  В мультимодальном reference режиме сейчас поддерживается только `reference_video`.
+
+  <Expandable title="Описание полей">
+    <ParamField body="url" type="string" required>
+      URL видео или URI загруженного asset.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Фиксированное значение:
+      - `reference_video`
+    </ParamField>
+  </Expandable>
+
+  Ограничения:
+  - `seedance-2-mini`: до `3` reference video
+</ParamField>
+
+<ParamField body="audio_with_roles" type="array">
+  Список аудио с ролями.
+
+  В мультимодальном reference режиме сейчас поддерживается только `reference_audio`.
+
+  <Expandable title="Описание полей">
+    <ParamField body="url" type="string" required>
+      URL аудио, Base64-данные или URI загруженного asset.
+    </ParamField>
+
+    <ParamField body="role" type="string" required>
+      Фиксированное значение:
+      - `reference_audio`
+    </ParamField>
+  </Expandable>
+
+  Ограничения:
+  - `seedance-2-mini`: до `3` reference audio
+
+  <Warning>
+    `audio_with_roles` нельзя использовать само по себе. Нужен хотя бы один визуальный input.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Разрешение видео.
+
+  Варианты:
+  - `seedance-2`: `480p`, `720p`, `1080p`, `4k`
+  - `seedance-2-fast`: `480p`, `720p`
+  - `seedance-2-mini`: `480p`, `720p`
+</ParamField>
+
+<ParamField body="generate_audio" type="boolean" default={true}>
+  Генерировать ли синхронное аудио.
+
+  `seedance-2-mini` также поддерживает это поле.
+</ParamField>
+
+<ParamField body="return_last_frame" type="boolean" default={false}>
+  Возвращать ли изображение последнего кадра созданного видео.
+
+  При значении `true` URL изображения возвращается в `result.data[0].last_frame_url` после завершения задачи.
+</ParamField>
+
+<ParamField body="tools" type="array">
+  Инструменты, доступные модели. Серия Seedance 2 сейчас поддерживает веб-поиск:
+
+  ```json
+  [{ "type": "web_search" }]
+  ```
+
+  Фактическое число поисков возвращается в `usage.tool_usage.web_search`; значение `0` означает, что поиск не выполнялся.
+
+  <Warning>
+    `tools` поддерживается только для text-to-video и не может использоваться вместе с изображениями, видео или аудио.
+  </Warning>
+</ParamField>
+
+<ParamField body="seed" type="integer">
+  Random seed для контроля генерации.
+</ParamField>
+
+<ParamField body="callback_url" type="string">
+  Стандартный callback ToAPIs. Сначала настройте URL и secret Token; разрешено только same-origin переопределение. См. [Webhook](/docs/ru/api-reference/webhooks/task-webhooks).
+</ParamField>
+
+<ParamField body="trace_id" type="string">
+  Поле трассировки клиента, не зависящее от Webhook.
+</ParamField>
+
+## Использование загруженных asset
+
+Если вы уже загрузили приватные asset и получили `asset_id`, передавать исходный media URL повторно не нужно. Используйте:
+
+- `asset://<ASSET_ID>`
+
+Asset можно использовать так:
+
+- Изображения: `first_frame`, `last_frame`, `reference_image`
+- Видео: `reference_video`
+- Аудио: `reference_audio`
+
+Перед использованием убедитесь, что asset имеет статус `active`.
+
+Связанные руководства:
+
+- [Материалы виртуального аватара](./private-avatar)
+- [Материалы реального аватара](./real-avatar)
+
+## Комбинации входов
+
+Типичные поддерживаемые комбинации:
+- Только текст: text-to-video
+- Текст + первый кадр: генерация по первому кадру
+- Текст + первый кадр + последний кадр: first-last-frame генерация
+- Текст + reference images: мультимодальный reference режим
+- Текст + reference video: генерация с reference видео
+- Текст + reference images + reference audio: мультимодальный reference режим
+- Текст + reference images + reference video + reference audio: мультимодальный reference режим
+
+<Warning>
+  `seedance-2-mini` также поддерживает сценарии с первым кадром и первым/последним кадром. Используйте `image_with_roles` с явными ролями `first_frame` / `last_frame`.
+</Warning>
+
+## Возможности
+
+| Параметр | seedance-2 | seedance-2-fast | seedance-2-mini |
+|----------|------------|-----------------|-----------------|
+| Позиционирование | Более высокое качество и длинные ролики | Более быстрая генерация и меньшая задержка | Недорогие черновики и мультимодальные reference |
+| Длительность | `4-15` секунд, поддерживается авто-длительность | `4-15` секунд, поддерживается авто-длительность | `4-15` секунд |
+| Разрешение | `480p` / `720p` / `1080p` / `4k` | `480p` / `720p` | `480p` / `720p` |
+| Роли изображений | `first_frame` / `last_frame` / `reference_image` | `first_frame` / `last_frame` / `reference_image` | `first_frame` / `last_frame` / `reference_image` |
+| Роли видео | `reference_video` | `reference_video` | `reference_video` |
+| Роли аудио | `reference_audio` | `reference_audio` | `reference_audio` |
+| Frame mode | Поддерживается | Поддерживается | Поддерживается |
+| Лимит reference image | `9` | `9` | `9` |
+| Лимит reference video | Зависит от выбранного routed channel | Зависит от выбранного routed channel | `3` |
+| Лимит reference audio | Зависит от выбранного routed channel | Зависит от выбранного routed channel | `3` |
+| Поле синхронного аудио | `generate_audio` | `generate_audio` | `generate_audio` |
+| ToAPIs callback | `callback_url` (`trace_id` опционально) | `callback_url` (`trace_id` опционально) | `callback_url` (`trace_id` опционально) |
+
+<Note>
+  `seedance-2-mini` сейчас всегда генерирует `1` результат за запрос и не открывает `count` / `n`. Управление кадрами задавайте через `image_with_roles` с `first_frame` / `last_frame`.
+</Note>
+
+## Response
+
+<ResponseField name="id" type="string">
+  ID задачи для запроса статуса.
+</ResponseField>
+
+<ResponseField name="client_business_id" type="string">
+  Ваш бизнесовый ID. Возвращается только если `client_business_id` был передан в запросе.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Название модели, использованной в запросе.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed` или `failed`.
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Прогресс задачи в процентах (`0-100`).
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи.
+</ResponseField>
+
+<Info>
+  Submit API возвращает базовый объект задачи. После завершения используйте [Get Video Task Status](../../tasks/video-status), чтобы получить `completed_at`, `expires_at` и `result.type = "video"` вместе с `result.data[].url` и `result.data[].format`. При `return_last_frame` последний кадр возвращается в `result.data[0].last_frame_url`; при `web_search` число поисков возвращается в `usage.tool_usage.web_search`.
+</Info>
+
+<RequestExample>
+```bash cURL (seedance-2-mini мультимодальный reference)
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "seedance-2-mini",
+    "client_business_id": "order_20260616_001",
+    "prompt": "Сохрани персонажа с изображения 1, используй движение камеры из видео 1 и ритм аудио 1 для короткого indoor product ролика.",
+    "duration": 10,
+    "aspect_ratio": "16:9",
+    "image_with_roles": [
+      {"url": "https://example.com/ref-image-1.jpg", "role": "reference_image"}
+    ],
+    "video_with_roles": [
+      {"url": "https://example.com/ref-video-1.mp4", "role": "reference_video"}
+    ],
+    "audio_with_roles": [
+      {"url": "https://example.com/ref-audio-1.mp3", "role": "reference_audio"}
+    ],
+    "resolution": "480p"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "seedance-2-mini",
+        "prompt": "Сохрани персонажа и используй ритм reference image и reference video для короткого indoor ad clip",
+        "duration": 8,
+        "aspect_ratio": "16:9",
+        "resolution": "720p",
+        "image_with_roles": [
+            {"url": "https://example.com/ref.png", "role": "reference_image"}
+        ],
+        "video_with_roles": [
+            {"url": "https://example.com/ref.mp4", "role": "reference_video"}
+        ],
+    },
+)
+
+print(response.json())
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_vid_xxx",
+  "client_business_id": "order_20260616_001",
+  "object": "generation.task",
+  "model": "seedance-2-mini",
+  "status": "in_progress",
+  "progress": 10,
+  "created_at": 1781577600
+}
+```
+</ResponseExample>

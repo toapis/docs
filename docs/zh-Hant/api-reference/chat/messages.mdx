@@ -1,0 +1,393 @@
+---
+title: "Anthropic Messages API"
+sidebarTitle: "POST /v1/messages"
+api: "POST https://toapis.com/v1/messages"
+description: "使用 Anthropic Messages API 原生格式與 Claude 系列模型對話"
+---
+
+- 兼容 Anthropic Messages API 原生格式
+- 支持 Anthropic 官方 SDK（Python / JavaScript）直接對接，僅需修改 `base_url`
+- 支持流式輸出（SSE）
+- 支持多輪對話、系統提示詞、視覺輸入、工具調用
+
+<Note>
+  如果你已經在使用 OpenAI SDK，建議使用 [OpenAI 格式接口](./chat)。
+  如果你在使用 Anthropic SDK 或 Claude Code，推薦使用本接口。
+</Note>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string">
+  Bearer Token 認證，適用於直接 HTTP 調用
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+<ParamField header="x-api-key" type="string">
+  API Key 認證，與 Anthropic SDK 兼容
+
+  ```
+  x-api-key: YOUR_API_KEY
+  ```
+</ParamField>
+
+<ParamField header="anthropic-version" type="string" default="2023-06-01">
+  Anthropic API 版本號，使用 Anthropic SDK 時自動傳入
+
+  推薦值：`2023-06-01`
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  模型名稱
+
+  支持所有 Claude 系列模型，例如：
+  - `claude-opus-4-6`
+  - `claude-sonnet-4-6`
+  - `claude-haiku-4-5`
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  對話消息列表，按時間順序排列。只支持 `user` 和 `assistant` 角色，系統提示詞請使用頂層 `system` 字段
+
+  <Expandable title="messages[n]">
+    <ParamField body="role" type="string" required>
+      消息角色，可選值：`user`、`assistant`
+    </ParamField>
+    <ParamField body="content" type="string | object[]" required>
+      消息內容，字符串或內容塊數組
+
+      <Expandable title="內容塊（content block）">
+        <ParamField body="type" type="string" required>
+          內容類型：`text`（文本）或 `image`（圖片）
+        </ParamField>
+        <ParamField body="text" type="string">
+          文本內容，`type` 爲 `text` 時必填
+        </ParamField>
+        <ParamField body="source" type="object">
+          圖片來源，`type` 爲 `image` 時必填
+
+          <Expandable title="source">
+            <ParamField body="type" type="string" required>
+              圖片來源類型：`base64` 或 `url`
+            </ParamField>
+            <ParamField body="media_type" type="string">
+              MIME 類型，`type` 爲 `base64` 時必填，例如 `image/jpeg`、`image/png`
+            </ParamField>
+            <ParamField body="data" type="string">
+              Base64 編碼的圖片數據，`type` 爲 `base64` 時必填
+            </ParamField>
+            <ParamField body="url" type="string">
+              圖片 URL，`type` 爲 `url` 時必填
+            </ParamField>
+          </Expandable>
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="max_tokens" type="integer" required>
+  生成內容的最大 token 數量
+
+  - Claude Sonnet 4-6 最大支持 `64000`
+  - Claude Opus 4-6 最大支持 `32000`
+</ParamField>
+
+<ParamField body="system" type="string | object[]">
+  系統提示詞，在頂層設置（不放在 `messages` 中）
+
+  支持字符串或內容塊數組格式
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  是否啓用流式輸出（Server-Sent Events）
+
+  - `true`：逐 token 流式返回，事件格式遵循 Anthropic SSE 規範
+  - `false`：等待完整響應後一次性返回
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  採樣溫度，控制輸出隨機性
+
+  範圍：`0` ~ `1`
+</ParamField>
+
+<ParamField body="top_p" type="number">
+  核採樣概率閾值
+
+  範圍：`0` ~ `1`，建議不要同時設置 `temperature` 和 `top_p`
+</ParamField>
+
+<ParamField body="stop_sequences" type="string[]">
+  停止序列，遇到指定字符串時停止生成
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  本次請求的唯一標識符，格式爲 `msg_*`
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  對象類型，固定爲 `message`
+</ResponseField>
+
+<ResponseField name="role" type="string">
+  響應角色，固定爲 `assistant`
+</ResponseField>
+
+<ResponseField name="content" type="object[]">
+  生成的內容塊列表
+
+  - `content[].type`：內容類型，通常爲 `text`
+  - `content[].text`：生成的文本內容
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  實際使用的模型名稱
+</ResponseField>
+
+<ResponseField name="stop_reason" type="string">
+  停止原因
+
+  - `end_turn`：模型正常結束
+  - `max_tokens`：達到 `max_tokens` 限制
+  - `stop_sequence`：觸發了停止序列
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  本次請求的 token 消耗統計
+
+  - `usage.input_tokens`：輸入 token 數
+  - `usage.output_tokens`：輸出 token 數
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/messages \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": "你好，請介紹一下你自己"
+      }
+    ]
+  }'
+```
+
+```bash cURL（系統提示詞）
+curl --request POST \
+  --url https://toapis.com/v1/messages \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "system": "你是一個專業的代碼助手，擅長 Python 和 Go 語言。",
+    "messages": [
+      {
+        "role": "user",
+        "content": "用 Python 寫一個快速排序"
+      }
+    ]
+  }'
+```
+
+```bash cURL（流式輸出）
+curl --request POST \
+  --url https://toapis.com/v1/messages \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "stream": true,
+    "messages": [
+      {
+        "role": "user",
+        "content": "解釋一下什麼是遞歸"
+      }
+    ]
+  }'
+```
+
+```python Python (Anthropic SDK)
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com"
+)
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "你好，請介紹一下你自己"}
+    ]
+)
+
+print(message.content[0].text)
+```
+
+```python Python（帶系統提示詞）
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com"
+)
+
+message = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    system="你是一個專業的代碼助手，擅長 Python 和 Go 語言。",
+    messages=[
+        {"role": "user", "content": "用 Python 寫一個快速排序"}
+    ]
+)
+
+print(message.content[0].text)
+```
+
+```python Python（流式輸出）
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key="your-ToAPIs-key",
+    base_url="https://toapis.com"
+)
+
+with client.messages.stream(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "解釋一下什麼是遞歸"}
+    ]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+```
+
+```javascript JavaScript (Anthropic SDK)
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: "your-ToAPIs-key",
+  baseURL: "https://toapis.com",
+});
+
+const message = await client.messages.create({
+  model: "claude-sonnet-4-6",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "你好，請介紹一下你自己" }],
+});
+
+console.log(message.content[0].text);
+```
+
+```javascript JavaScript（流式輸出）
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: "your-ToAPIs-key",
+  baseURL: "https://toapis.com",
+});
+
+const stream = await client.messages.stream({
+  model: "claude-sonnet-4-6",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "解釋一下什麼是遞歸" }],
+});
+
+for await (const chunk of stream) {
+  if (
+    chunk.type === "content_block_delta" &&
+    chunk.delta.type === "text_delta"
+  ) {
+    process.stdout.write(chunk.delta.text);
+  }
+}
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "你好！我是 Claude，由 Anthropic 開發的 AI 助手。我可以幫助你回答問題、分析信息、編寫代碼、創作內容等。有什麼我可以幫你的嗎？"
+    }
+  ],
+  "model": "claude-sonnet-4-6",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 38
+  }
+}
+```
+
+```json 200（流式，SSE 事件示例）
+data: {"type":"message_start","message":{"id":"msg_01abc","type":"message","role":"assistant","content":[],"model":"claude-sonnet-4-6","stop_reason":null,"usage":{"input_tokens":12,"output_tokens":0}}}
+
+data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
+
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"你好"}}
+
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"！我是"}}
+
+data: {"type":"content_block_stop","index":0}
+
+data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":38}}
+
+data: {"type":"message_stop"}
+```
+
+```json 400
+{
+  "type": "error",
+  "error": {
+    "type": "invalid_request_error",
+    "message": "messages: field required"
+  }
+}
+```
+
+```json 401
+{
+  "type": "error",
+  "error": {
+    "type": "authentication_error",
+    "message": "Invalid API key"
+  }
+}
+```
+
+```json 429
+{
+  "type": "error",
+  "error": {
+    "type": "rate_limit_error",
+    "message": "Rate limit exceeded"
+  }
+}
+```
+
+</ResponseExample>

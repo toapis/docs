@@ -1,0 +1,50 @@
+---
+title: "비동기 작업 Webhook"
+description: "ToAPIs 서명 완료/실패 이벤트"
+---
+
+비동기 이미지와 비디오 작업에 `generation.completed`, `generation.failed`를 전송하고 테스트는 `endpoint.test`입니다. 최소 1회 전달이므로 동일 event ID를 멱등 처리하세요.
+
+Token 편집에서 HTTPS 기본 URL, 한 번만 표시되는 32-byte secret, 활성화와 테스트를 설정합니다. `callback_url`이 없으면 기본 URL을 사용하며, 지정 시 같은 scheme/host/port의 path/query만 변경할 수 있습니다. 미설정 시 `400 webhook_not_configured`입니다.
+
+```json
+{"id":"evt_xxx","type":"generation.completed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_xxx","client_business_id":"order_123","task_type":"image","model":"model-name","status":"SUCCESS","progress":"100%","result":{"type":"image","data":[{"url":"https://cdn.example/result.png"}]},"error":null,"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+최종 실패는 내부 재시도와 환불 또는 과금 확정이 끝난 뒤에만 전송됩니다.
+
+```json
+{"id":"evt_failure","type":"generation.failed","api_version":"v1","created_at":1783953302,"data":{"task_id":"tsk_failure","client_business_id":"order_456","task_type":"video","model":"model-name","status":"FAILURE","progress":"100%","result":null,"error":{"code":"generation_failed","message":"Generation failed after retries"},"submitted_at":1783953000,"finished_at":1783953300}}
+```
+
+```json
+{"id":"evt_test","type":"endpoint.test","api_version":"v1","created_at":1783953302,"data":{"task_id":"endpoint_test","task_type":"image","status":"SUCCESS","progress":"100%","result":{"message":"ToAPIs webhook endpoint test"},"error":null,"submitted_at":0,"finished_at":0}}
+```
+
+`task_type`: `image|video`. 결과는 공개 작업 조회 형식과 같으며 channel ID, upstream task ID/key, credential, PrivateData는 포함하지 않습니다.
+
+```text
+User-Agent: ToAPIs-Webhook/1.0
+X-ToAPIs-Webhook-Id
+X-ToAPIs-Webhook-Timestamp
+X-ToAPIs-Webhook-Signature: v1=<current>[,v1=<previous>]
+```
+
+서명 원문은 `event_id + "." + timestamp + "." + raw_request_body`, 알고리즘은 HMAC-SHA256입니다. 최초 요청은 5분 초과 timestamp를 거부하고 secret 회전 후 24시간은 신/구 서명을 모두 허용합니다.
+
+```python Python
+def verify(headers, raw_body, secrets):
+    event_id=headers["X-ToAPIs-Webhook-Id"]; timestamp=int(headers["X-ToAPIs-Webhook-Timestamp"])
+    if abs(int(time.time())-timestamp)>300: return False
+    signed=f"{event_id}.{timestamp}.".encode()+raw_body
+    received=[v.strip()[3:] for v in headers["X-ToAPIs-Webhook-Signature"].split(",") if v.strip().startswith("v1=")]
+    return any(hmac.compare_digest(hmac.new(s.encode(),signed,hashlib.sha256).hexdigest(),r) for s in secrets for r in received)
+```
+```javascript Node.js
+function verify(headers,rawBody,secrets){const id=headers['x-toapis-webhook-id'];const ts=Number(headers['x-toapis-webhook-timestamp']);if(!Number.isFinite(ts)||Math.abs(Date.now()/1000-ts)>300)return false;const signed=Buffer.concat([Buffer.from(`${id}.${ts}.`),rawBody]);const received=headers['x-toapis-webhook-signature'].split(',').filter(v=>v.trim().startsWith('v1=')).map(v=>v.trim().slice(3));return secrets.some(secret=>received.some(sig=>{const expected=crypto.createHmac('sha256',secret).update(signed).digest('hex');return expected.length===sig.length&&crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(sig));}));}
+```
+```go Go
+func Verify(id,ts,sig string,body []byte,secrets []string) bool { unix,err:=strconv.ParseInt(ts,10,64);now:=time.Now().Unix();if err!=nil||now-unix>300||unix-now>300{return false};signed:=append([]byte(id+"."+ts+"."),body...);for _,secret:=range secrets{mac:=hmac.New(sha256.New,[]byte(secret));mac.Write(signed);expected:=hex.EncodeToString(mac.Sum(nil));for _,v:=range strings.Split(sig,","){if hmac.Equal([]byte(expected),[]byte(strings.TrimPrefix(strings.TrimSpace(v),"v1="))){return true}}};return false }
+```
+
+첫 전달은 즉시 수행하며 실패 후 10초, 30초, 2분, 10분, 1시간, 6시간, 24시간에 재시도합니다. `2xx`만 성공이고 `3xx`는 따라가지 않으며 `4xx/5xx`는 재시도합니다. timeout은 10초입니다. 매 전달마다 HTTPS, userinfo, fragment, 잘못된 port, SSRF, DNS/IP와 DNS rebinding을 검증합니다. 실패 시 상태 조회를 대체 경로로 사용하고 만료 가능한 결과 URL을 즉시 저장하세요. 실명 인증, 결제, OAuth callback은 제외됩니다. [속도 제한](/docs/ko/api-reference/rate-limits/async-tasks).

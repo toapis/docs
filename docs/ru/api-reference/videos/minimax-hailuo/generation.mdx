@@ -1,0 +1,304 @@
+---
+title: "Генерация видео MiniMax-Hailuo-02"
+sidebarTitle: "MiniMax-Hailuo-02"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео с помощью модели MiniMax Hailuo 02, поддержка текст-в-видео, изображение-в-видео и генерации по первому и последнему кадру"
+---
+
+- Асинхронный режим, возвращает ID задачи
+- Поддерживаемая модель: `MiniMax-Hailuo-02`
+- Три режима генерации: текст-в-видео, изображение-в-видео, генерация по первому и последнему кадру
+- Разрешения 512P / 768P / 1080P, длительность 6 и 10 секунд
+
+<Warning>
+Используйте публично доступные URL изображений. Не передавайте base64 данные в `image_urls` или `metadata`; для локальных изображений сначала используйте [API загрузки изображений](../../uploads/images) для получения URL.
+</Warning>
+
+## Аутентификация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют аутентификации Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" required>
+  Название модели, фиксированное значение `MiniMax-Hailuo-02`.
+</ParamField>
+
+<ParamField body="prompt" type="string">
+  Описание содержимого видео, максимум **2000 символов**.
+
+  - В режиме текст-в-видео — **обязательно**
+  - В режиме изображение-в-видео и генерации по кадрам — необязательно (можно описать желаемое движение)
+
+  Поддерживается 15 типов команд камеры (например `[推进]`, `[拉远]`, `[左摇,上升]`), см. таблицу ниже.
+
+  Пример: `"Кот бежит к камере, улыбается и моргает"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Длительность видео (секунды).
+
+  Доступные значения: `6` или `10`
+
+  <Warning>
+  При разрешении `1080P` поддерживается только длительность `6` секунд.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="768P">
+  Разрешение видео.
+
+  Доступные значения:
+  - `512P` - стандартное разрешение (для изображение-в-видео)
+  - `768P` - HD (по умолчанию)
+  - `1080P` - Full HD (только 6 секунд)
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Массив URL изображений первого кадра.
+
+  - Не передавать: текст-в-видео
+  - 1 изображение: изображение-в-видео, изображение используется как первый кадр
+
+  Требования к изображению:
+  - Формат: JPG, JPEG, PNG, WebP
+  - Размер: до 20MB
+  - Разрешение: короткая сторона > 300px, соотношение сторон от 2:5 до 5:2
+
+  Пример: `["https://example.com/first-frame.jpg"]`
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Расширенные параметры.
+
+  <Expandable title="Показать поля metadata">
+    <ParamField body="last_frame_image" type="string">
+      URL изображения последнего кадра для **режима генерации по первому и последнему кадру**.
+
+      При передаче этого параметра автоматически активируется режим генерации по кадрам — система создаст переходное видео от первого кадра к последнему.
+
+      - При одновременной передаче `image_urls` (первый кадр) и `last_frame_image` (последний кадр) размер видео определяется по первому кадру
+      - При несовпадении размеров кадров модель обрежет последний кадр по первому
+      - Режим генерации по кадрам **не поддерживает 512P**
+
+      Требования к изображению аналогичны `image_urls`.
+
+      Пример: `"https://example.com/last-frame.jpg"`
+    </ParamField>
+
+    <ParamField body="prompt_optimizer" type="boolean" default="true">
+      Автоматическая оптимизация промпта. Установите `false` для более точного контроля.
+    </ParamField>
+
+    <ParamField body="fast_pretreatment" type="boolean" default="false">
+      Сократить время оптимизации промпта. Ускоряет обработку при включении.
+    </ParamField>
+
+    <ParamField body="aigc_watermark" type="boolean" default="false">
+      Добавить водяной знак к сгенерированному видео.
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      Финальный Task Webhook ToAPIs. Сначала настройте URL и secret Token; см. [Webhook](/docs/ru/api-reference/webhooks/task-webhooks).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Три режима генерации
+
+| Режим | image_urls | metadata.last_frame_image | Описание |
+|-------|:----------:|:-------------------------:|----------|
+| Текст-в-видео | Не передавать | Не передавать | Генерация видео по текстовому описанию |
+| Изображение-в-видео | ✅ 1 изображение | Не передавать | Генерация видео с первым кадром |
+| По первому и последнему кадру | ✅ 1 изображение (первый кадр) | ✅ Передать (последний кадр) | Переходное видео от первого к последнему кадру |
+
+## Комбинации разрешения и длительности
+
+| Разрешение | Поддерживаемая длительность | Текст-в-видео | Изображение-в-видео | По кадрам |
+|------------|----------------------------|:-------------:|:-------------------:|:---------:|
+| 512P | 6 с, 10 с | ✅ | ✅ | ❌ |
+| 768P | 6 с, 10 с | ✅ | ✅ | ✅ |
+| 1080P | 6 с | ✅ | ✅ | ✅ |
+
+## Команды камеры
+
+В `prompt` используйте синтаксис `[команда]` для управления камерой:
+
+| Категория | Команды |
+|-----------|---------|
+| Панорама | `[左移]` `[右移]` |
+| Поворот | `[左摇]` `[右摇]` |
+| Наезд/отъезд | `[推进]` `[拉远]` |
+| Подъём/спуск | `[上升]` `[下降]` |
+| Наклон | `[上摇]` `[下摇]` |
+| Зум | `[变焦推近]` `[变焦拉远]` |
+| Прочее | `[晃动]` `[跟随]` `[固定]` |
+
+**Правила использования**:
+- Комбинация: несколько команд в одних `[]` действуют одновременно, например `[左摇,上升]`, рекомендуется не более 3
+- Последовательность: команды в разных позициях промпта действуют по порядку, например `"...[推进], затем...[拉远]"`
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  ID задачи для запроса статуса.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Использованная модель.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed` или `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи.
+</ResponseField>
+
+## Примеры
+
+### Текст-в-видео
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Ночной город, мерцающие неоновые огни, поток транспорта [推进]",
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Изображение-в-видео
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Человек медленно поворачивается, улыбается",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### Генерация по первому и последнему кадру
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Девочка постепенно взрослеет",
+  "image_urls": ["https://example.com/child.jpg"],
+  "duration": 6,
+  "resolution": "1080P",
+  "metadata": {
+    "last_frame_image": "https://example.com/adult.jpg"
+  }
+}
+```
+
+### Управление камерой
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Человек берёт книгу [上升], затем начинает читать [固定]",
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### 10-секундное видео + быстрая предобработка
+
+```json
+{
+  "model": "MiniMax-Hailuo-02",
+  "prompt": "Волны бьются о берег на закате, золотистый свет на воде",
+  "duration": 10,
+  "resolution": "768P",
+  "metadata": {
+    "prompt_optimizer": true,
+    "fast_pretreatment": true
+  }
+}
+```
+
+<Note>
+Генерация видео — асинхронная задача. После отправки используйте [Получить статус задачи](../../tasks/video-status) для запроса прогресса и результатов.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-Hailuo-02",
+    "prompt": "Ночной город, мерцающие неоновые огни, поток транспорта",
+    "duration": 6,
+    "resolution": "1080P"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "MiniMax-Hailuo-02",
+        "prompt": "Ночной город, мерцающие неоновые огни, поток транспорта",
+        "duration": 6,
+        "resolution": "1080P",
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer your-ToAPIs-key",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "MiniMax-Hailuo-02",
+    prompt: "Ночной город, мерцающие неоновые огни, поток транспорта",
+    duration: 6,
+    resolution: "1080P"
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01K8SGYNNNVBQTXNR4MM964S7K",
+  "object": "generation.task",
+  "model": "MiniMax-Hailuo-02",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>

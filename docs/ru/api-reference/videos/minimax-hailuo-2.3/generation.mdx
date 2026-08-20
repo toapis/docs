@@ -1,0 +1,285 @@
+---
+title: "Генерация видео MiniMax-Hailuo-2.3"
+sidebarTitle: "MiniMax-Hailuo-2.3"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео с помощью серии моделей MiniMax Hailuo 2.3, поддержка текст-в-видео и изображение-в-видео, режим Fast"
+---
+
+- Асинхронный режим, возвращает ID задачи
+- Поддерживаемые модели: `MiniMax-Hailuo-2.3`, `MiniMax-Hailuo-2.3-Fast`
+- `MiniMax-Hailuo-2.3`: поддержка текст-в-видео и изображение-в-видео, максимальное качество
+- `MiniMax-Hailuo-2.3-Fast`: **только изображение-в-видео** (обязательно передать первый кадр), ускоренная генерация
+
+<Warning>
+Используйте публично доступные URL изображений. Не передавайте base64 данные в `image_urls`; для локальных изображений сначала используйте [API загрузки изображений](../../uploads/images) для получения URL.
+</Warning>
+
+## Аутентификация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют аутентификации Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" required>
+  Название модели.
+
+  Доступные значения:
+  - `MiniMax-Hailuo-2.3` - поддержка текст-в-видео и изображение-в-видео
+  - `MiniMax-Hailuo-2.3-Fast` - только изображение-в-видео (обязательно передать `image_urls`)
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Описание содержимого видео, максимум **2000 символов**.
+
+  Поддерживается 15 типов команд камеры (например `[推进]`, `[拉远]`, `[左摇,上升]`), см. таблицу ниже.
+
+  Пример: `"Кот бежит по саду [推进], затем останавливается и смотрит в камеру [固定]"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="6">
+  Длительность видео (секунды).
+
+  Доступные значения: `6` или `10`
+
+  <Warning>
+  При разрешении `1080P` поддерживается только длительность `6` секунд.
+  </Warning>
+</ParamField>
+
+<ParamField body="resolution" type="string" default="768P">
+  Разрешение видео.
+
+  Доступные значения:
+  - `768P` - HD (по умолчанию)
+  - `1080P` - Full HD (только 6 секунд)
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  Массив URL изображений первого кадра.
+
+  - Не передавать: текст-в-видео (`MiniMax-Hailuo-2.3-Fast` не поддерживает, обязательно передать)
+  - 1 изображение: изображение-в-видео, изображение используется как первый кадр
+
+  Требования к изображению:
+  - Формат: JPG, JPEG, PNG, WebP
+  - Размер: до 20MB
+  - Разрешение: короткая сторона > 300px, соотношение сторон от 2:5 до 5:2
+
+  Пример: `["https://example.com/first-frame.jpg"]`
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Расширенные параметры.
+
+  <Expandable title="Показать поля metadata">
+    <ParamField body="prompt_optimizer" type="boolean" default="true">
+      Автоматическая оптимизация промпта. Установите `false` для более точного контроля.
+    </ParamField>
+
+    <ParamField body="fast_pretreatment" type="boolean" default="false">
+      Сократить время оптимизации промпта. Ускоряет обработку при включении.
+    </ParamField>
+
+    <ParamField body="aigc_watermark" type="boolean" default="false">
+      Добавить водяной знак к сгенерированному видео.
+    </ParamField>
+
+    <ParamField body="callback_url" type="string">
+      Финальный Task Webhook ToAPIs. Сначала настройте URL и secret Token; см. [Webhook](/docs/ru/api-reference/webhooks/task-webhooks).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Сравнение моделей
+
+| Модель | Текст-в-видео | Изображение-в-видео | Разрешение | Длительность |
+|--------|:-------------:|:-------------------:|------------|--------------|
+| `MiniMax-Hailuo-2.3` | ✅ | ✅ | `768P` / `1080P` | 6с / 10с |
+| `MiniMax-Hailuo-2.3-Fast` | ❌ | ✅ (обязателен первый кадр) | `768P` / `1080P` | 6с / 10с |
+
+## Комбинации разрешения и длительности
+
+| Разрешение | Поддерживаемая длительность | Примечание |
+|------------|----------------------------|------------|
+| 768P | 6 с, 10 с | По умолчанию |
+| 1080P | 6 с | 10 с не поддерживается |
+
+## Команды камеры
+
+В `prompt` используйте синтаксис `[команда]` для управления камерой:
+
+| Категория | Команды |
+|-----------|---------|
+| Панорама | `[左移]` `[右移]` |
+| Поворот | `[左摇]` `[右摇]` |
+| Наезд/отъезд | `[推进]` `[拉远]` |
+| Подъём/спуск | `[上升]` `[下降]` |
+| Наклон | `[上摇]` `[下摇]` |
+| Зум | `[变焦推近]` `[变焦拉远]` |
+| Прочее | `[晃动]` `[跟随]` `[固定]` |
+
+**Правила использования**:
+- Комбинация: несколько команд в одних `[]` действуют одновременно, например `[左摇,上升]`, рекомендуется не более 3
+- Последовательность: команды в разных позициях промпта действуют по порядку, например `"...[推进], затем...[拉远]"`
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  ID задачи для запроса статуса.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Использованная модель.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed` или `failed`.
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Временная метка создания задачи.
+</ResponseField>
+
+## Примеры
+
+### Текст-в-видео
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "Кот бежит по саду, камера медленно приближается, кинематографичное качество",
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Изображение-в-видео
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "Человек на изображении медленно поворачивается и улыбается",
+  "image_urls": ["https://example.com/portrait.jpg"],
+  "duration": 6,
+  "resolution": "1080P"
+}
+```
+
+### Изображение-в-видео (режим Fast)
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3-Fast",
+  "prompt": "Человек начинает медленно идти",
+  "image_urls": ["https://example.com/person.jpg"],
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### Управление камерой
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "Человек берёт книгу [上升], затем начинает читать [固定]",
+  "duration": 6,
+  "resolution": "768P"
+}
+```
+
+### 10-секундное видео
+
+```json
+{
+  "model": "MiniMax-Hailuo-2.3",
+  "prompt": "Волны бьются о берег на закате, золотистый свет на воде",
+  "duration": 10,
+  "resolution": "768P",
+  "metadata": {
+    "prompt_optimizer": true,
+    "fast_pretreatment": true
+  }
+}
+```
+
+<Note>
+Генерация видео — асинхронная задача. После отправки используйте [Получить статус задачи](../../tasks/video-status) для запроса прогресса и результатов.
+</Note>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "MiniMax-Hailuo-2.3",
+    "prompt": "Кот бежит по саду, камера медленно приближается, кинематографичное качество",
+    "duration": 6,
+    "resolution": "1080P"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "MiniMax-Hailuo-2.3",
+        "prompt": "Кот бежит по саду, камера медленно приближается, кинематографичное качество",
+        "duration": 6,
+        "resolution": "1080P",
+    },
+)
+
+print(response.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://toapis.com/v1/videos/generations", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer your-ToAPIs-key",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "MiniMax-Hailuo-2.3",
+    prompt: "Кот бежит по саду, камера медленно приближается, кинематографичное качество",
+    duration: 6,
+    resolution: "1080P"
+  })
+});
+
+console.log(await response.json());
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "vid_01J9HA7JPQ9A0Z6JZ3V8M9W6PZ",
+  "object": "generation.task",
+  "model": "MiniMax-Hailuo-2.3",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {}
+}
+```
+</ResponseExample>

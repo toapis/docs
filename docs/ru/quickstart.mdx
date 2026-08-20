@@ -1,0 +1,102 @@
+---
+title: "Быстрый старт"
+sidebarTitle: "Руководство пользователя"
+description: "Вызов текстовых, графических и видеомоделей через ToAPIs"
+---
+
+# Быстрый старт
+
+ToAPIs предоставляет OpenAI-совместимый текстовый API и единые асинхронные API генерации изображений и видео. Ниже используются актуальные доступные модели.
+
+## Шаг 1: Получите API-ключ
+
+1. Откройте [страницу управления API-ключами](https://toapis.com/console/token)
+2. Войдите и создайте новый ключ
+3. Сразу сохраните его в безопасном месте: ключ показывается только один раз
+
+## Шаг 2: Выберите модель
+
+| Тип | Рекомендуемая модель | Описание |
+| --- | --- | --- |
+| Текст | `gpt-5.6-terra` | Сбалансированная модель для чата и Agent-сценариев |
+| Изображения | `gpt-image-2` | Генерация по тексту и референсным изображениям |
+| Видео | `sora-2-vvip` | Генерация по тексту, изображению и ссылкам на персонажей |
+
+Проверяйте доступность через [список моделей](./api-reference/chat/list-models) и страницы отдельных моделей.
+
+## Шаг 3: Отправьте запросы
+
+### Генерация текста
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "Привет, расскажи о себе"}
+    ]
+  }'
+```
+
+### Генерация изображения
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Милая панда в кинематографическом освещении",
+    "size": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+### Генерация видео
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "Волны разбиваются о берег, кинематографическое движение камеры",
+    "duration": 12,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+## Шаг 4: Проверьте асинхронную задачу
+
+Текстовый запрос возвращает результат сразу. Изображения и видео возвращают ID задачи; используйте соответствующий эндпоинт:
+
+```bash
+# Изображение
+curl https://toapis.com/v1/images/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Видео
+curl https://toapis.com/v1/videos/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Настройте Task Webhook
+
+Укажите HTTPS URL и secret в Token; при необходимости передайте same-origin `callback_url`. Проверяйте raw body и `X-ToAPIs-Webhook-*` через HMAC-SHA256, обеспечьте идемпотентность event ID, а polling используйте как резерв. Для `429` соблюдайте `Retry-After`. См. [Webhook](/docs/ru/api-reference/webhooks/task-webhooks).
+
+## Следующие шаги
+
+<CardGroup cols={2}>
+  <Card title="Документация API" icon="book" href="./api-reference/chat/chat">
+    Просмотрите все эндпоинты, модели и параметры.
+  </Card>
+  <Card title="Интеграция Codex" icon="terminal" href="./integrations/codex">
+    Подключите ToAPIs к Codex через CC Switch.
+  </Card>
+</CardGroup>

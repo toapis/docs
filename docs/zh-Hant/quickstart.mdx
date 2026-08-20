@@ -1,0 +1,105 @@
+---
+title: "快速開始"
+sidebarTitle: "用戶指南"
+description: "使用 ToAPIs 調用文字、圖像和視頻模型"
+---
+
+# 快速開始
+
+ToAPIs 提供 OpenAI 相容的文字接口，以及統一的異步圖像、視頻生成接口。本指南使用目前可用的模型完成第一次調用。
+
+## 第一步：取得 API 密鑰
+
+1. 訪問 [API 密鑰管理頁面](https://toapis.com/console/token)
+2. 登入帳戶並建立 API 密鑰
+3. 密鑰只顯示一次，請立即安全保存
+
+## 第二步：選擇模型
+
+| 類型 | 建議入門模型 | 說明 |
+| --- | --- | --- |
+| 文字 | `gpt-5.6-terra` | 效能與成本均衡，適合一般對話和 Agent 工作流 |
+| 圖像 | `gpt-image-2` | 支援文生圖和參考圖生成 |
+| 視頻 | `sora-2-vvip` | 支援文生視頻、圖生視頻和角色引用 |
+
+完整可用型號請以 [模型列表接口](./api-reference/chat/list-models) 和各模型文件為準。
+
+## 第三步：發送請求
+
+### 文字生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "你好，請介紹一下你自己"}
+    ]
+  }'
+```
+
+### 圖像生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "一隻可愛的熊貓，電影感光線",
+    "size": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+### 視頻生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "海浪拍打著海岸，電影感鏡頭",
+    "duration": 12,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+## 第四步：查詢異步任務
+
+文字請求會直接返回結果；圖像和視頻請求會返回任務 ID。請按任務類型使用對應接口：
+
+```bash
+# 圖像任務
+curl https://toapis.com/v1/images/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# 視頻任務
+curl https://toapis.com/v1/videos/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## 設定任務 Webhook
+
+在 Token 編輯頁設定 HTTPS URL 並產生密鑰。任務可帶同源 `callback_url`；以 `X-ToAPIs-Webhook-*` 對 raw body 驗證 HMAC-SHA256，按 event ID 冪等，輪詢作後備。`429` 時讀取 `Retry-After`。參閱 [Webhook](/docs/zh-Hant/api-reference/webhooks/task-webhooks)。
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="查看 API 文件" icon="book" href="./index">
+    查看全部接口、模型和參數。
+  </Card>
+  <Card title="Claude Code 整合" icon="code" href="./integrations/claude-code">
+    在 Claude Code 中使用 ToAPIs。
+  </Card>
+  <Card title="Codex 整合" icon="terminal" href="./integrations/codex">
+    透過 CC Switch 在 Codex 中使用 ToAPIs。
+  </Card>
+</CardGroup>

@@ -1,0 +1,96 @@
+---
+title: "APIマニュアル"
+sidebarTitle: "APIマニュアル"
+description: "APIキーを取得"
+---
+
+GPT-5、Claude、Geminiを1つのOpenAI互換エンドポイントから利用できます。ベースURLを `https://toapis.com/v1` に変更するだけで、既存のSDKをそのまま使い、数分でOpenAIから移行できます。マルチプロバイダールーティングにより、低レイテンシーと高い稼働率を実現します。
+
+## [​](#quick-start)クイックスタート
+
+[## 今すぐ始める
+
+GPT-5、Claude Sonnet 4.5、Gemini 2.0に対応したOpenAI互換Chat API。ベースURLを切り替えるだけで、コード変更は不要です。](./ja/api-reference/chat/chat)
+
+## [​](#openai-compatible-endpoints)OpenAI互換エンドポイント
+
+ToAPIsはスムーズな移行のためにOpenAI形式のエンドポイントを提供します。ベースURLを変更するだけで、既存のSDKをそのまま利用できます。すべてのインターフェースはOpenAI標準に準拠し、Claude、Gemini、Sora、VEOモデルも拡張サポートします。
+
+### [​](#chat-completion-api)Chat Completion API
+
+GPT-5、GPT-4o、Claude Sonnet 4.5、Gemini 2.0 Flashによるチャット補完。ストリーミング対応、低レイテンシーのOpenAI互換APIです。
+
+### [​](#image-creation-api)画像生成API
+
+GPT-4o Image、Gemini 2.5 Flash Image-previewなどに対応した画像生成APIです。
+
+### [​](#video-creation-api)動画生成API
+
+OpenAI Sora2、Google VEO3などに対応した動画生成APIです。非同期タスク管理、ステータス確認、Webhookに対応しています。
+
+## [​](#platform-benefits)プラットフォームの特長
+
+### [​](#transparent-pricing)透明な料金体系
+
+サブスクリプション不要の従量課金です。各モデルのトークン単価が明確で、公式プロバイダー品質を維持しながら利用できます。
+
+- モデルごとの明確なトークン単価
+- エンタープライズ利用向けのボリュームディスカウント
+- 隠れた料金なし
+- 実際に使った分だけ支払い
+
+### [​](#multi-provider-routing-enterprise-sla)マルチプロバイダールーティングとSLA
+
+複数のLLMプロバイダーを横断するインテリジェントルーティングにより、高い稼働率と低レイテンシーを確保します。1つのプロバイダーで障害が発生しても、リクエストは自動的にバックアップへルーティングされます。
+
+### [​](#global-cdn-acceleration)グローバルCDNアクセラレーション
+
+世界中のエッジロケーションにより、低レイテンシーで応答できます。
+
+## [​](#sdks-code-examples)SDKとコード例
+
+Python、Node.js、JavaのOpenAI互換SDKを利用できます。ベースURL設定だけを変更して移行できます。
+
+### [​](#python-sdk)Python SDK
+
+```shiki
+from openai import OpenAI
+client = OpenAI(
+    base_url="https://toapis.com/v1",
+    api_key="your-ToAPIs-key"
+)
+```
+
+### [​](#node-js-sdk)Node.js SDK
+
+```shiki
+import OpenAI from 'openai';
+const client = new OpenAI({
+  baseURL: 'https://toapis.com/v1',
+  apiKey: 'your-ToAPIs-key'
+});
+```
+
+## [​](#migration-from-openai)OpenAIからの移行
+
+ToAPIsへの移行は5分以内で完了できます。コードを書き換える必要はなく、ベースURLとAPIキーを変更するだけです。
+
+1. [Console Dashboard](https://toapis.com/console/token) でAPIキーを取得
+2. OpenAIのベースURLをToAPIsエンドポイントに変更
+3. 既存コードを新しいベースURLでテスト
+
+## [​](#supported-models)統一エンドポイントで利用できるモデル
+
+- **GPT-5**: 強化された推論能力を持つOpenAIのフラッグシップモデル
+- **Claude Sonnet 4.5 & Haiku 4.5**: 複雑な推論に適したAnthropicモデル
+- **Gemini 2.0 Flash**: Googleのマルチモーダルモデル
+- **GPT-4o Image / GPT-Image-2**: 画像生成モデル
+- **OpenAI Sora2 / Google VEO3**: 動画生成モデル
+
+## [​](#faq)FAQ
+
+OpenAIから移行するには？
+
+ベースURLを `https://toapis.com/v1` に変更し、ToAPIsのAPIキーを使うだけです。既存SDKはそのまま利用できます。
+
+[一般Chat API](./ja/api-reference/chat/chat)

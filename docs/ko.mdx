@@ -1,0 +1,96 @@
+---
+title: "API 매뉴얼"
+sidebarTitle: "API 매뉴얼"
+description: "API 키 받기"
+---
+
+GPT-5, Claude, Gemini를 하나의 OpenAI 호환 엔드포인트에서 사용할 수 있습니다. 기본 URL을 `https://toapis.com/v1` 로 변경하기만 하면 기존 SDK를 그대로 사용하며 몇 분 안에 OpenAI에서 이전할 수 있습니다. 멀티 프로바이더 라우팅으로 낮은 지연 시간과 높은 가용성을 제공합니다.
+
+## [​](#quick-start)빠른 시작
+
+[## 지금 시작하기
+
+GPT-5, Claude Sonnet 4.5, Gemini 2.0을 지원하는 OpenAI 호환 Chat API입니다. 기본 URL만 바꾸면 코드 변경 없이 사용할 수 있습니다.](./ko/api-reference/chat/chat)
+
+## [​](#openai-compatible-endpoints)OpenAI 호환 엔드포인트
+
+ToAPIs는 원활한 이전을 위해 OpenAI 스타일 엔드포인트를 제공합니다. 기본 URL만 변경하고 기존 SDK를 계속 사용할 수 있습니다. 모든 인터페이스는 OpenAI 표준을 따르며 Claude, Gemini, Sora, VEO 모델도 확장 지원합니다.
+
+### [​](#chat-completion-api)Chat Completion API
+
+GPT-5, GPT-4o, Claude Sonnet 4.5, Gemini 2.0 Flash를 사용하는 채팅 완성 API입니다. 스트리밍과 낮은 지연 시간을 지원합니다.
+
+### [​](#image-creation-api)이미지 생성 API
+
+GPT-4o Image, Gemini 2.5 Flash Image-preview 등 이미지 생성 모델을 OpenAI 스타일 API로 사용할 수 있습니다.
+
+### [​](#video-creation-api)비디오 생성 API
+
+OpenAI Sora2, Google VEO3 등 비디오 생성 모델을 지원합니다. 비동기 작업 관리, 상태 조회, Webhook을 제공합니다.
+
+## [​](#platform-benefits)플랫폼 장점
+
+### [​](#transparent-pricing)투명한 요금제
+
+구독 없이 사용량 기반으로 과금됩니다. 모델별 토큰 단가가 명확하며 공식 제공자 품질을 유지합니다.
+
+- 모델별 명확한 토큰 단가
+- 엔터프라이즈 사용량 할인
+- 숨겨진 비용 없음
+- 실제 사용량만 과금
+
+### [​](#multi-provider-routing-enterprise-sla)멀티 프로바이더 라우팅 및 SLA
+
+여러 LLM 제공자를 아우르는 지능형 라우팅으로 높은 가용성과 낮은 지연 시간을 보장합니다. 한 제공자에 문제가 생기면 요청이 자동으로 백업 제공자로 라우팅됩니다.
+
+### [​](#global-cdn-acceleration)글로벌 CDN 가속
+
+전 세계 엣지 위치를 통해 낮은 지연 시간으로 응답합니다.
+
+## [​](#sdks-code-examples)SDK 및 코드 예시
+
+Python, Node.js, Java용 OpenAI 호환 SDK를 사용할 수 있습니다. 기본 URL 설정만 변경하면 됩니다.
+
+### [​](#python-sdk)Python SDK
+
+```shiki
+from openai import OpenAI
+client = OpenAI(
+    base_url="https://toapis.com/v1",
+    api_key="your-ToAPIs-key"
+)
+```
+
+### [​](#node-js-sdk)Node.js SDK
+
+```shiki
+import OpenAI from 'openai';
+const client = new OpenAI({
+  baseURL: 'https://toapis.com/v1',
+  apiKey: 'your-ToAPIs-key'
+});
+```
+
+## [​](#migration-from-openai)OpenAI에서 이전
+
+ToAPIs로의 이전은 5분 이내에 완료할 수 있습니다. 코드를 다시 작성할 필요 없이 기본 URL과 API 키만 변경하면 됩니다.
+
+1. [Console Dashboard](https://toapis.com/console/token) 에서 API 키 받기
+2. OpenAI 기본 URL을 ToAPIs 엔드포인트로 변경
+3. 새 기본 URL로 기존 코드 테스트
+
+## [​](#supported-models)통합 엔드포인트로 지원되는 모델
+
+- **GPT-5**: 향상된 추론을 제공하는 OpenAI 플래그십 모델
+- **Claude Sonnet 4.5 & Haiku 4.5**: 복잡한 추론에 적합한 Anthropic 모델
+- **Gemini 2.0 Flash**: Google 멀티모달 모델
+- **GPT-4o Image / GPT-Image-2**: 이미지 생성 모델
+- **OpenAI Sora2 / Google VEO3**: 비디오 생성 모델
+
+## [​](#faq)FAQ
+
+OpenAI에서 어떻게 이전하나요?
+
+기본 URL을 `https://toapis.com/v1` 로 변경하고 ToAPIs API 키를 사용하면 됩니다. 기존 SDK는 그대로 사용할 수 있습니다.
+
+[일반 Chat API](./ko/api-reference/chat/chat)

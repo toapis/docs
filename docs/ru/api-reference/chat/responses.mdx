@@ -1,0 +1,113 @@
+---
+title: "Responses API"
+sidebarTitle: "Responses API"
+api: "POST https://toapis.com/v1/responses"
+description: "Формат OpenAI Responses API с function calling, встроенными инструментами и серверным контекстом"
+---
+
+Responses API — новый agentic API от OpenAI. По сравнению с Chat Completions он добавляет более мощную работу с инструментами и серверное хранение контекста диалога.
+
+- **Function calling**: модель может вызывать пользовательские функции
+- **Встроенные инструменты**: например `web_search_preview`
+- **Серверный контекст**: используйте `previous_response_id`, не отправляя всю историю сообщений
+- **Управление рассуждением**: настройка глубины мышления через `reasoning.effort`
+
+<Warning>
+Модели с пометкой **Responses Only**, например `gpt-5-pro-official` и `gpt-5.3-codex-official`, поддерживают только этот API и не поддерживают Chat Completions. Подробности см. в [списке моделей](./models).
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Используйте Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+
+  Получите API key на [странице управления API ключами](https://toapis.com/console/token).
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" required>
+  Название модели.
+
+  Примеры: `"gpt-5-pro-official"`, `"gpt-5.3-codex-official"`, `"gpt-5.2-official"`
+</ParamField>
+
+<ParamField body="input" type="string | object[]" required>
+  Пользовательский ввод. Поддерживается строка или массив сообщений для многоходового диалога.
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  Системные инструкции для поведения модели.
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  Включить потоковый вывод.
+</ParamField>
+
+<ParamField body="max_output_tokens" type="integer">
+  Максимальное количество выходных токенов.
+</ParamField>
+
+<ParamField body="temperature" type="number" default={1}>
+  Температура сэмплирования, диапазон `0`–`2`.
+</ParamField>
+
+<ParamField body="top_p" type="number" default={1}>
+  Порог nucleus sampling, диапазон `0`–`1`.
+</ParamField>
+
+<ParamField body="previous_response_id" type="string">
+  ID предыдущего ответа для серверного многоходового контекста.
+</ParamField>
+
+<ParamField body="reasoning" type="object">
+  Конфигурация рассуждения. `reasoning.effort`: `high`, `medium`, `low` или `none`.
+</ParamField>
+
+<ParamField body="tools" type="object[]">
+  Доступные инструменты. Поддерживаются `function` и `web_search_preview`.
+</ParamField>
+
+<ParamField body="tool_choice" type="string" default="auto">
+  Стратегия выбора инструментов: `auto`, `none` или `required`.
+</ParamField>
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  Уникальный ID ответа, который можно использовать как `previous_response_id`.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Всегда `response`.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус ответа: `completed`, `failed` или `in_progress`.
+</ResponseField>
+
+<ResponseField name="output" type="object[]">
+  Элементы вывода, например `message`, `function_call`, `reasoning` или `web_search_call`.
+</ResponseField>
+
+<ResponseField name="usage" type="object">
+  Статистика токенов: входные, выходные, reasoning и total tokens.
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/responses \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.3-codex-official",
+    "instructions": "Ты профессиональный помощник по коду",
+    "input": "Напиши quicksort на Python"
+  }'
+```
+</RequestExample>

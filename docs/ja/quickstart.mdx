@@ -1,0 +1,105 @@
+---
+title: "クイックスタート"
+sidebarTitle: "ガイド"
+description: "ToAPIs でテキスト、画像、動画モデルを呼び出す"
+---
+
+# クイックスタート
+
+ToAPIs は OpenAI 互換のテキスト API と、統一された非同期の画像・動画生成 API を提供します。このガイドでは、現在利用可能なモデルで最初のリクエストを送信します。
+
+## ステップ 1: API キーを取得
+
+1. [API Key Management](https://toapis.com/console/token) を開く
+2. サインインして API キーを作成する
+3. キーは一度だけ表示されるため、安全に保存する
+
+## ステップ 2: モデルを選択
+
+| 種類 | 推奨モデル | 説明 |
+| --- | --- | --- |
+| テキスト | `gpt-5.6-terra` | チャットや Agent ワークフロー向けのバランス型モデル |
+| 画像 | `gpt-image-2` | テキスト生成と参照画像生成に対応 |
+| 動画 | `sora-2-vvip` | テキスト、画像、キャラクター参照から動画を生成 |
+
+利用可能なモデルは [モデル一覧 API](./api-reference/chat/list-models) と各モデルのページで確認してください。
+
+## ステップ 3: リクエストを送信
+
+### テキスト生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "自己紹介してください"}
+    ]
+  }'
+```
+
+### 画像生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "映画のような光に照らされたかわいいパンダ",
+    "size": "1:1",
+    "resolution": "1k",
+    "n": 1
+  }'
+```
+
+### 動画生成
+
+```bash
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "model": "sora-2-vvip",
+    "prompt": "海岸に打ち寄せる波、映画のようなカメラワーク",
+    "duration": 12,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+## ステップ 4: 非同期タスクを確認
+
+テキストは直接結果を返します。画像と動画はタスク ID を返すため、種類に対応したエンドポイントを使用します。
+
+```bash
+# 画像タスク
+curl https://toapis.com/v1/images/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# 動画タスク
+curl https://toapis.com/v1/videos/generations/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Task Webhook の設定
+
+Token に HTTPS URL と署名 secret を設定し、必要なら同一 origin の `callback_url` を送信します。raw body と `X-ToAPIs-Webhook-*` を HMAC-SHA256 で検証し、event ID を冪等処理します。照会はフォールバックにし、`429` では `Retry-After` を使用します。[Webhook](/docs/ja/api-reference/webhooks/task-webhooks)。
+
+## 次のステップ
+
+<CardGroup cols={2}>
+  <Card title="API ドキュメント" icon="book" href=".">
+    エンドポイント、モデル、パラメータを確認します。
+  </Card>
+  <Card title="Claude Code 連携" icon="code" href="./integrations/claude-code">
+    Claude Code で ToAPIs を使用します。
+  </Card>
+  <Card title="Codex 連携" icon="terminal" href="./integrations/codex">
+    CC Switch 経由で Codex に ToAPIs を接続します。
+  </Card>
+</CardGroup>

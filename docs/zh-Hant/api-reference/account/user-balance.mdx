@@ -1,0 +1,413 @@
+---
+title: "查詢用戶餘額"
+sidebarTitle: "查詢用戶餘額"
+api: "GET https://toapis.com/v1/user/balance"
+description: "查詢當前用戶賬戶的剩餘額度和已使用額度"
+---
+
+- 查詢當前用戶賬戶的總體餘額
+- 監控用戶級別的使用情況
+- 支持 CORS 跨域請求
+- 實時餘額監控
+
+獲取當前用戶賬戶的剩餘餘額和已使用餘額。此接口返回用戶級別的餘額信息，與具體令牌無關，用於查看用戶賬戶的總體餘額，同時會返回積分字段，固定按 `1 USD = 200 積分` 換算。
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：
+
+  訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## 接口端點
+
+```
+GET /v1/user/balance
+GET /user/balance
+```
+
+兩個端點功能相同，可以任選其一使用。
+
+<RequestExample>
+```bash cURL
+curl --request GET \
+  --url 'https://toapis.com/v1/user/balance' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```python Python
+import requests
+
+API_BASE = 'https://toapis.com'
+API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx'
+
+headers = {
+    'Authorization': f'Bearer {API_KEY}'
+}
+
+def get_user_balance():
+    response = requests.get(f'{API_BASE}/v1/user/balance', headers=headers)
+    data = response.json()
+
+    if data.get('success'):
+        if data.get('unlimited_quota'):
+            print("用戶額度: 無限")
+        else:
+            print(f"用戶剩餘餘額: {data['remain_balance']}")
+            print(f"用戶剩餘積分: {data['remain_credits']}")
+        print(f"用戶已使用: {data['used_balance']}")
+        print(f"用戶已使用積分: {data['used_credits']}")
+    else:
+        print(f"查詢失敗: {data.get('message')}")
+
+    return data
+
+get_user_balance()
+```
+
+```javascript JavaScript
+const API_BASE = 'https://toapis.com';
+const API_KEY = 'sk-xxxxxxxxxxxxxxxxxxxxxx';
+
+async function getUserBalance() {
+  const response = await fetch(`${API_BASE}/v1/user/balance`, {
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`
+    }
+  });
+
+  const data = await response.json();
+
+  if (data.success) {
+    if (data.unlimited_quota) {
+      console.log('用戶額度: 無限');
+    } else {
+      console.log(`用戶剩餘餘額: ${data.remain_balance}`);
+      console.log(`用戶剩餘積分: ${data.remain_credits}`);
+    }
+    console.log(`用戶已使用: ${data.used_balance}`);
+    console.log(`用戶已使用積分: ${data.used_credits}`);
+  } else {
+    console.error('查詢失敗:', data.message);
+  }
+
+  return data;
+}
+
+getUserBalance();
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io/ioutil"
+    "net/http"
+)
+
+type UserBalanceResponse struct {
+    Success        bool    `json:"success"`
+    Message        string  `json:"message,omitempty"`
+    RemainBalance  float64 `json:"remain_balance"`
+    UsedBalance    float64 `json:"used_balance"`
+    RemainCredits  float64 `json:"remain_credits"`
+    UsedCredits    float64 `json:"used_credits"`
+    CreditsPerUSD  float64 `json:"credits_per_usd"`
+    UnlimitedQuota bool    `json:"unlimited_quota"`
+}
+
+func main() {
+    url := "https://toapis.com/v1/user/balance"
+
+    req, _ := http.NewRequest("GET", url, nil)
+    req.Header.Set("Authorization", "Bearer <token>")
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+
+    body, _ := ioutil.ReadAll(resp.Body)
+
+    var result UserBalanceResponse
+    json.Unmarshal(body, &result)
+
+    if result.Success {
+        if result.UnlimitedQuota {
+            fmt.Println("額度: 無限")
+        } else {
+            fmt.Printf("剩餘餘額: %.2f\n", result.RemainBalance)
+            fmt.Printf("剩餘積分: %.2f\n", result.RemainCredits)
+        }
+        fmt.Printf("已使用: %.2f\n", result.UsedBalance)
+        fmt.Printf("已使用積分: %.2f\n", result.UsedCredits)
+    }
+}
+```
+
+```java Java
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String url = "https://toapis.com/v1/user/balance";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", "Bearer <token>")
+            .GET()
+            .build();
+
+        HttpResponse<String> response = client.send(request,
+            HttpResponse.BodyHandlers.ofString());
+
+        System.out.println(response.body());
+    }
+}
+```
+
+```php PHP
+<?php
+
+$api_key = 'sk-xxxxxxxxxxxxxxxxxxxxxx';
+
+$ch = curl_init('https://toapis.com/v1/user/balance');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Authorization: Bearer $api_key"
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+$data = json_decode($response, true);
+
+if ($data['success']) {
+    if ($data['unlimited_quota']) {
+        echo "額度: 無限\n";
+    } else {
+        echo "剩餘餘額: " . $data['remain_balance'] . "\n";
+    }
+    echo "已使用: " . $data['used_balance'] . "\n";
+} else {
+    echo "查詢失敗: " . $data['message'] . "\n";
+}
+?>
+```
+
+```ruby Ruby
+require 'net/http'
+require 'json'
+require 'uri'
+
+api_key = 'sk-xxxxxxxxxxxxxxxxxxxxxx'
+
+url = URI("https://toapis.com/v1/user/balance")
+
+http = Net::HTTP.new(url.host, url.port)
+http.use_ssl = true
+
+request = Net::HTTP::Get.new(url)
+request["Authorization"] = "Bearer #{api_key}"
+
+response = http.request(request)
+data = JSON.parse(response.body)
+
+if data['success']
+  if data['unlimited_quota']
+    puts "額度: 無限"
+  else
+    puts "剩餘餘額: #{data['remain_balance']}"
+  end
+  puts "已使用: #{data['used_balance']}"
+else
+  puts "查詢失敗: #{data['message']}"
+end
+```
+
+```swift Swift
+import Foundation
+
+let apiKey = "sk-xxxxxxxxxxxxxxxxxxxxxx"
+let url = URL(string: "https://toapis.com/v1/user/balance")!
+
+var request = URLRequest(url: url)
+request.httpMethod = "GET"
+request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+let task = URLSession.shared.dataTask(with: request) { data, response, error in
+    if let error = error {
+        print("Error: \(error)")
+        return
+    }
+
+    if let data = data, let responseString = String(data: data, encoding: .utf8) {
+        print(responseString)
+    }
+}
+
+task.resume()
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200 - 查詢成功
+{
+  "success": true,
+  "remain_balance": 100.0,
+  "used_balance": 25.5,
+  "remain_credits": 20000,
+  "used_credits": 5100,
+  "credits_per_usd": 200,
+  "unlimited_quota": false
+}
+```
+
+```json 200 - 無限額度用戶
+{
+  "success": true,
+  "remain_balance": -1,
+  "used_balance": 25.5,
+  "remain_credits": 20000,
+  "used_credits": 5100,
+  "credits_per_usd": 200,
+  "unlimited_quota": true
+}
+```
+
+```json 200 - 用戶額度查詢失敗
+{
+  "success": false,
+  "message": "獲取用戶額度失敗"
+}
+```
+
+```json 200 - 已使用額度查詢失敗
+{
+  "success": false,
+  "message": "獲取已使用額度失敗"
+}
+```
+
+```json 401
+{
+  "error": {
+    "code": 401,
+    "message": "身份驗證失敗，請檢查您的API密鑰",
+    "type": "authentication_error"
+  }
+}
+```
+
+```json 429
+{
+  "error": {
+    "code": 429,
+    "message": "請求過於頻繁，請稍後再試",
+    "type": "rate_limit_error"
+  }
+}
+```
+</ResponseExample>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  請求是否成功
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  錯誤信息（僅失敗時返回）
+</ResponseField>
+
+<ResponseField name="remain_balance" type="float">
+  用戶剩餘餘額（成功時返回）。當 `unlimited_quota` 爲 `true` 時，該值爲 `-1`
+</ResponseField>
+
+<ResponseField name="used_balance" type="float">
+  用戶已使用餘額（成功時返回）
+</ResponseField>
+
+<ResponseField name="remain_credits" type="float">
+  用戶剩餘積分（成功時返回），固定按 `1 USD = 200 積分` 換算
+</ResponseField>
+
+<ResponseField name="used_credits" type="float">
+  用戶已使用積分（成功時返回）
+</ResponseField>
+
+<ResponseField name="credits_per_usd" type="float">
+  積分換算比例，當前返回 `200`
+</ResponseField>
+
+<ResponseField name="unlimited_quota" type="boolean">
+  是否爲無限額度用戶。`true` 表示無限額度，`false` 表示有限額度
+</ResponseField>
+
+## 令牌餘額 vs 用戶餘額
+
+| 對比項 | 令牌餘額 (`/v1/balance`) | 用戶餘額 (`/v1/user/balance`) |
+| --- | --- | --- |
+| 作用範圍 | 單個令牌 | 整個用戶賬戶 |
+| 數據來源 | Token 的 RemainQuota 和 UsedQuota | User 的 quota 和 used\_quota |
+| 使用場景 | 監控單個 API Key 的使用情況 | 查看用戶賬戶總體餘額 |
+| 受限於 | 令牌級別的額度限制 | 用戶級別的額度限制 |
+
+## 使用場景
+
+* 查看用戶賬戶的總體餘額
+* 用於充值提醒和餘額告警
+* 在用戶控制面板顯示賬戶餘額
+
+<Note>
+  **餘額單位說明**
+
+  餘額數值的單位取決於系統配置：
+
+  * **USD** - 美元
+  * **CNY** - 人民幣
+  * **Tokens** - Token 數量
+
+  如果需要穩定讀取積分，請優先使用 `remain_credits` 和 `used_credits`。這兩個字段固定按 `1 USD = 200 積分` 換算，不受餘額展示配置影響。
+</Note>
+
+<Tip>
+  **無限額度用戶**
+
+  當用戶被設置爲無限額度時：
+
+  * `unlimited_quota` 字段返回 `true`
+  * `remain_balance` 字段返回 `-1`
+  * 該用戶不受額度限制，可無限使用
+</Tip>
+
+## 常見錯誤
+
+| 錯誤信息 | 原因 | 解決方案 |
+| --- | --- | --- |
+| 無 Authorization 頭 | 未提供 Authorization 請求頭 | 添加 `Authorization: Bearer sk-xxxxx` 請求頭 |
+| 獲取用戶額度失敗 | 用戶不存在 | 檢查令牌關聯的用戶是否存在 |
+| 獲取已使用額度失敗 | 數據庫查詢錯誤 | 聯繫管理員檢查系統狀態 |
+
+<Warning>
+  **安全提示**
+
+  API Key 相當於密碼，請妥善保管，不要泄露給他人。生產環境請務必使用 HTTPS。
+</Warning>

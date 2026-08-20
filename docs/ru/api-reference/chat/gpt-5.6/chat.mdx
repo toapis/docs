@@ -1,0 +1,72 @@
+---
+title: "Чат с семейством GPT-5.6"
+sidebarTitle: "семейство gpt-5.6"
+api: "POST https://toapis.com/v1/chat/completions"
+description: "GPT-5.6 Sol, Terra и Luna через совместимый с OpenAI Chat Completions API"
+---
+
+GPT-5.6 — семейство моделей для разных требований к качеству, стоимости и пропускной способности.
+
+| ID модели | Позиционирование | Рекомендуемые задачи |
+|-----------|------------------|----------------------|
+| `gpt-5.6-sol` | Флагманское качество | Сложное рассуждение, важные задачи программирования, анализ длинного контекста |
+| `gpt-5.6-terra` | Баланс качества и стоимости | Основной production-трафик, агентные процессы и генерация контента |
+| `gpt-5.6-luna` | Экономичная высокая пропускная способность | Классификация, извлечение, маршрутизация, пакетные и чувствительные к задержке задачи |
+
+<Note>
+Официальный псевдоним OpenAI `gpt-5.6` направляется на Sol. В ToAPIs используйте явные ID из текущего каталога моделей.
+</Note>
+
+## Основные параметры
+
+<ParamField body="model" type="string" required>
+  `gpt-5.6-sol`, `gpt-5.6-terra` или `gpt-5.6-luna`.
+</ParamField>
+
+<ParamField body="messages" type="object[]" required>
+  Массив сообщений Chat Completions с ролями `system`, `user` и `assistant`.
+</ParamField>
+
+<ParamField body="reasoning_effort" type="string" default="medium">
+  Значения: `none`, `low`, `medium`, `high`, `xhigh`, `max`. Начните с `medium`, затем сравните с уровнем ниже на реальных задачах.
+</ParamField>
+
+<ParamField body="max_completion_tokens" type="integer">
+  Максимальное число выходных токенов — до 128K с учетом лимитов аккаунта, канала и входного контекста.
+</ParamField>
+
+<ParamField body="stream" type="boolean" default={false}>
+  При `true` ответ передается потоком SSE.
+</ParamField>
+
+<Warning>
+Текущий шлюз GPT-5 игнорирует `temperature` и `top_p`. Управляйте результатом через промпт, `reasoning_effort` и явный формат ответа.
+</Warning>
+
+## Пример запроса
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/chat/completions \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "Преобразуй эти требования в план реализации."}
+    ],
+    "reasoning_effort": "medium",
+    "max_completion_tokens": 4096
+  }'
+```
+</RequestExample>
+
+## Рекомендации по миграции
+
+- Для флагманских задач GPT-5.5 или GPT-5.4 сначала оцените `gpt-5.6-sol`.
+- Для чувствительных к стоимости и задержке маршрутов сначала оцените Terra или Luna.
+- Сохраните текущий уровень рассуждения как базовый, затем протестируйте уровень ниже.
+- Для function tools в Chat Completions требуется эффективный уровень `none`; перед переносом процессов «рассуждение + инструменты» проверьте доступность Responses API.
+
+Полный формат см. в [Chat Completions API](../chat).

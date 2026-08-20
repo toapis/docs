@@ -1,0 +1,32 @@
+---
+title: "Лимиты асинхронных задач"
+description: "Лимиты отправки и проверки задач ToAPIs"
+---
+
+ToAPIs использует независимые token bucket для submit и query; они не расходуют лимит синхронных модельных запросов.
+
+| Группа | Submit RPM / RPS / burst 10с | Query RPM / RPS / burst 10с |
+| --- | --- | --- |
+| `default` | 300 / 5 / 50 | 3 000 / 50 / 500 |
+| `vip` | 1 000 / 16,7 / 167 | 10 000 / 166,7 / 1 667 |
+| `svip` | 2 000 / 33,3 / 334 | 30 000 / 500 / 5 000 |
+
+Лимиты считаются по user ID и общие для всех Token пользователя. Submit и query независимы. Бизнес-ошибки расходуют лимит, отклонённые `429` — нет. Один batch-запрос считается один раз и содержит максимум 100 задач.
+
+```text
+Retry-After
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+X-RateLimit-Category: async_submit | async_query
+```
+
+```json 429
+{"error":{"code":"rate_limit_exceeded","message":"Async task request rate exceeded"}}
+```
+
+```json 503
+{"error":{"code":"rate_limit_unavailable","message":"The async task submit limiter is temporarily unavailable"}}
+```
+
+Ошибка submit-limiter возвращает `503`, query пропускается. Основной канал — [Webhook](/docs/ru/api-reference/webhooks/task-webhooks). Polling выполняйте не чаще 5–10 секунд с random jitter; для `429/503` сначала используйте `Retry-After`, иначе exponential backoff.

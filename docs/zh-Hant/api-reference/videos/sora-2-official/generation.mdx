@@ -1,0 +1,200 @@
+---
+title: "Azure Sora 2 視頻生成"
+sidebarTitle: "Sora 2 Official"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "使用 Azure Sora 2 模型生成高質量視頻"
+---
+
+- Azure Sora 2 視頻生成模型（Azure OpenAI 官方端點）
+- 通過 model 參數選擇 `sora-2-official`
+- 支持文本到視頻、圖生視頻、remix
+- 異步任務管理，通過任務 ID 查詢結果
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" required>
+  視頻生成模型名稱
+
+  支持的模型：
+  - `sora-2-official` - Azure Sora 2 官方模型
+
+  示例：`"sora-2-official"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  視頻生成的自然語言描述
+
+  包含鏡頭類型、主體、動作、場景、光線和相機運動，以減少歧義。保持描述單一目的以獲得最佳效果。
+
+  示例：`"一隻金毛犬在草地上奔跑，陽光明媚"`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="4">
+  視頻時長（秒）
+
+  支持的值：
+  - `4` - 4 秒
+  - `8` - 8 秒
+  - `12` - 12 秒
+
+  默認值：`4`
+
+  示例：`12`
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="9:16">
+  視頻寬高比
+
+  支持的格式：
+  - `16:9` (橫屏，1280×720)
+  - `9:16` (豎屏，720×1280)
+
+  默認值：`9:16`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  用於圖生視頻的參考圖像 URL 數組
+
+  **⚠️ 僅支持 URL 格式**
+
+  - 公開可訪問的圖像 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+  - 僅使用第一張圖片作爲參考
+  - 支持格式：JPEG、PNG、WebP
+  - **圖片尺寸必須爲 1280×720（16:9）或 720×1280（9:16）**
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據，包含尺寸和時長信息
+</ResponseField>
+
+<RequestExample>
+```bash cURL（文生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-official",
+    "prompt": "一隻金毛犬在草地上奔跑，陽光明媚",
+    "duration": 12,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```bash cURL（圖生視頻）
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "sora-2-official",
+    "prompt": "讓這隻狗動起來，在草地上奔跑",
+    "image_urls": ["https://example.com/dog.jpg"],
+    "duration": 8,
+    "aspect_ratio": "16:9"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/videos/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "sora-2-official",
+        "prompt": "一隻金毛犬在草地上奔跑，陽光明媚",
+        "duration": 12,
+        "aspect_ratio": "16:9"
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/videos/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'sora-2-official',
+    prompt: '一隻金毛犬在草地上奔跑，陽光明媚',
+    duration: 12,
+    aspect_ratio: '16:9'
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "video_01K8SGYNNNVBQTXNR4MM964S7K",
+  "object": "generation.task",
+  "model": "sora-2-official",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1768380224,
+  "metadata": {
+    "size": "1280x720",
+    "seconds": "12"
+  }
+}
+```
+</ResponseExample>

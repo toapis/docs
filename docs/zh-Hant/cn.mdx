@@ -1,0 +1,155 @@
+---
+title: "API 手冊"
+sidebarTitle: "API 手冊"
+description: ""
+---
+
+統一的 OpenAI 兼容端點，支持 GPT-5、Claude 和 Gemini。只需將 Base URL 更改爲 `https://toapis.com/v1`，即可在幾分鐘內從 OpenAI 遷移——保留現有 SDK，無需重寫代碼。多供應商路由確保低延遲和高可用性。透明定價、企業 SLA 和全球 CDN 加速。
+## [​](#快速開始)快速開始
+
+[## 立即開始
+
+OpenAI 兼容的聊天 API，支持 GPT-5、Claude Sonnet 4.5、Gemini 2.0。切換 Base URL，無需修改代碼。](./api-reference/chat/chat)
+## [​](#openai-兼容端點)OpenAI 兼容端點
+
+ToAPIs 提供 OpenAI 風格的端點，實現無縫遷移。只需更改 Base URL 並繼續使用現有 SDK。所有接口遵循 OpenAI 標準，擴展支持 Claude、Gemini、Sora 和 VEO 模型。
+### [​](#聊天補全-api)聊天補全 API
+
+支持 GPT-5、GPT-4o、Claude Sonnet 4.5、Gemini 2.0 Flash。OpenAI 兼容 API，支持流式傳輸和低延遲。
+[## 聊天補全 API
+
+支持流式傳輸和低延遲](./api-reference/chat/chat)
+### [​](#圖像生成-api)圖像生成 API
+
+支持 GPT-4o Image、Gemini 2.5 Flash Image-preview 模型。OpenAI 風格 API，無縫集成。
+[## 圖像生成 API
+
+文本到圖像生成](./api-reference/images/gpt-4o/generation)
+### [​](#視頻生成-api)視頻生成 API
+
+支持 OpenAI Sora2、Google VEO3 模型。異步任務管理，支持狀態追蹤和 Webhook。
+[## 視頻生成 API
+
+異步任務管理，支持 Webhook](./api-reference/videos/veo3/generation)
+## [​](#平臺優勢)平臺優勢
+
+### [​](#透明定價)透明定價
+
+按需付費，無需訂閱。所有模型清晰的按 Token 計費，比官方供應商更實惠，同時保持相同質量和低延遲。
+
+- 所有模型清晰的按 Token 計費
+- 企業用量批量折扣
+- 無隱藏費用
+- 只爲實際使用量付費
+
+### [​](#多供應商路由與企業-sla)多供應商路由與企業 SLA
+
+內置智能路由，跨多個 LLM 供應商確保高可用性和低延遲。當某個供應商出現問題時，請求自動路由到備用供應商，無服務中斷。
+### [​](#99-9%-可用性-sla)99.9% 可用性 SLA
+
+企業級可靠性，自動故障轉移。多供應商路由確保您的請求始終以最小延遲響應。
+### [​](#全球-cdn-加速)全球 CDN 加速
+
+全球邊緣節點，實現最低延遲。優化路由減少響應時間，提升全球用戶體驗。
+### [​](#速率限制管理)速率限制管理
+
+跨供應商自動處理速率限制。智能請求分發防止節流，確保平穩運行。
+### [​](#實時狀態監控)實時狀態監控
+
+監控端點健康和性能。追蹤圖像和視頻生成的異步任務進度，支持 Webhook 通知。[查看視頻狀態 →](./api-reference/tasks/video-status)
+## [​](#sdk-與代碼示例)SDK 與代碼示例
+
+官方 SDK 支持 Python、Node.js 和 Java。所有 SDK 均 OpenAI 兼容，僅需更改 Base URL 配置即可無縫遷移。
+### [​](#python-sdk)Python SDK
+
+通過 `pip install openai` 安裝。設置 Base URL 並使用現有 OpenAI 代碼，無需修改。
+複製
+```shiki
+from openai import OpenAI
+client = OpenAI(
+    base_url="https://toapis.com/v1",
+    api_key="your-ToAPIs-key"
+)
+
+```
+### [​](#node-js-sdk)Node.js SDK
+
+通過 `npm install openai` 安裝。配置 baseURL 參數爲 ToAPIs 端點，保留現有集成。
+複製
+```shiki
+import OpenAI from 'openai';
+const client = new OpenAI({
+  baseURL: 'https://toapis.com/v1',
+  apiKey: 'your-ToAPIs-key'
+});
+
+```
+### [​](#java-sdk)Java SDK
+
+OpenAI 兼容的 Java 客戶端。簡單配置更改即可訪問所有 ToAPIs 模型和供應商。
+## [​](#從-openai-遷移)從 OpenAI 遷移
+
+5 分鐘內切換到 ToAPIs。無需重寫代碼——只需更改 Base URL 和 API Key。
+1
+
+獲取 API Key
+
+註冊 ToAPIs 並從[控制檯](https://toapis.com/console/token)獲取 API Key。2
+
+更新 Base URL
+
+將 OpenAI Base URL 改爲 ToAPIs 端點。現有 SDK 集成無需修改即可工作。3
+
+測試端點
+
+使用新的 Base URL 運行現有代碼。所有 OpenAI 兼容端點響應格式完全相同。在控制檯查看延遲和速率限制。
+## [​](#統一端點支持的模型)統一端點支持的模型
+
+通過一個 OpenAI 兼容網關訪問領先的 LLM 供應商。所有模型支持一致的請求/響應格式。
+### [​](#聊天補全模型)聊天補全模型
+
+用於聊天、補全和代碼任務的領先語言模型：
+
+- **GPT-5**：OpenAI 旗艦模型，增強推理能力
+- **GPT-4o & GPT-4o Mini**：多模態模型，平衡性能與成本
+- **Claude Sonnet 4.5 & Haiku 4.5**：Anthropic 複雜推理模型
+- **Gemini 2.0 Flash & Flash Thinking**：Google 多模態模型
+
+### [​](#圖像生成模型)圖像生成模型
+
+從文本提示生成圖像：
+
+- **GPT-4o Image**：OpenAI 圖像生成模型
+- **Gemini 2.5 Flash Image-preview**：Google 高效圖像模型
+
+### [​](#視頻生成模型)視頻生成模型
+
+支持異步任務追蹤和 Webhook 回調的視頻生成：
+
+- **OpenAI Sora2**：OpenAI 視頻生成模型
+- **Google VEO3**：Google 視頻生成模型
+
+### [​](#語音模型)語音模型
+
+通過 OpenAI 兼容端點實現語音轉文本和文本轉語音：
+
+- **Whisper-1**：OpenAI 轉錄模型
+- **TTS**：多種音色的文本轉語音
+
+## [​](#常見問題)常見問題
+
+如何從 OpenAI 遷移？
+
+只需將 Base URL 更改爲 `https://toapis.com/v1` 並使用您的 ToAPIs API Key。保留現有 SDK——無需重寫代碼。遷移通常在 5 分鐘內完成。
+
+SLA 包含什麼？
+
+我們的企業 SLA 包括 99.9% 可用性保證、全球 CDN 加速、多供應商路由自動故障轉移和實時狀態監控。包含速率限制管理和 Webhook 支持。
+
+定價如何與 OpenAI 比較？
+
+ToAPIs 提供透明的按 Token 定價，比官方供應商更實惠。按需付費無需訂閱，企業用量享受批量折扣，無隱藏費用。
+
+延遲和性能如何？
+
+通過全球 CDN 加速和智能多供應商路由保證低延遲。全球邊緣節點確保最優響應時間。實時狀態監控讓您追蹤性能。[通用對話接口](./api-reference/chat/chat)

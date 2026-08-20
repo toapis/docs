@@ -1,0 +1,68 @@
+---
+title: "Seedance 2.5 動画生成"
+sidebarTitle: "Seedance 2.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "seedance-2-5 モデルで動画を生成する"
+---
+
+Seedance 2.5 の公開モデル名は `seedance-2-5`、Volcengine の上流モデル ID は `doubao-seedance-2-5-260628` です。
+
+- テキストからの動画生成、先頭フレーム/先頭・末尾フレーム、動画編集、動画延長、マルチモーダル参照に対応します。
+- 画像・動画・音声参照と音声のみの参照に対応します。
+- 非同期タスクです。送信後に `generation.task` が返り、完成動画はタスク状態 API から取得します。
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>すべてのリクエストで Bearer Token を使用します。[API Key 管理](https://toapis.com/console/token) からキーを取得し、`Authorization: Bearer YOUR_API_KEY` を設定してください。</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="seedance-2-5" required>ToAPIs の公開モデル名。`seedance-2-5` を使用します。</ParamField>
+<ParamField body="prompt" type="string">シーン、カメラワーク、被写体の動き、スタイル、音声の雰囲気を説明します。参照素材は「画像1」「動画1」「音声1」のように指定します。</ParamField>
+<ParamField body="video_operation" type="string" default="generate">動画操作：`generate`、`edit`、`extend`。編集と延長には `video_with_roles` が少なくとも 1 件必要で、延長には正の `duration` が必要です。3 つの操作は同じエンドポイントを使用します。</ParamField>
+<ParamField body="client_business_id" type="string">注文番号や内部ジョブ ID。`GET /v1/videos/generations/{client_business_id}` で後から検索できます。</ParamField>
+<ParamField body="duration" type="integer">秒単位の長さ。公式範囲は `4`–`30`、`-1` は自動長です。編集・延長・上流が指定する先頭/末尾フレームでは `-1` を使用します。</ParamField>
+<ParamField body="aspect_ratio" type="string">`21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`、`adaptive`。編集・延長・先頭/末尾フレームでは上流仕様に従い `adaptive` を使用します。</ParamField>
+<ParamField body="image_urls" type="string[]">互換用の画像 URL 配列。新規連携では用途を明示できる `image_with_roles` を推奨します。両方は同時に送信できません。</ParamField>
+<ParamField body="image_with_roles" type="array">`url` と `role` を持つ画像配列。role は `first_frame`、`last_frame`、`reference_image`。最大 30 枚で、フレームモードと参照画像モードは併用できません。</ParamField>
+<ParamField body="video_with_roles" type="array">参照動画配列。role は `reference_video`、最大 10 本です。</ParamField>
+<ParamField body="audio_with_roles" type="array">参照音声配列。role は `reference_audio`、最大 10 個です。音声のみの参照にも対応します。</ParamField>
+<ParamField body="resolution" type="string">解像度：`480p` または `720p`。</ParamField>
+<ParamField body="output_format" type="string" default="mp4">`mp4` と `mov` に対応します。</ParamField>
+<ParamField body="generate_audio" type="boolean" default={true}>同期音声を生成するかどうか。</ParamField>
+<ParamField body="return_last_frame" type="boolean" default={false}>完了結果に最後のフレーム画像を含めるかどうか。</ParamField>
+<ParamField body="tools" type="array">使用できるツールは `[{ "type": "web_search" }]`。テキストのみの動画生成で利用でき、メディア入力とは併用できません。</ParamField>
+<ParamField body="callback_url" type="string">ToAPIs タスク完了コールバック。[タスク Webhook](/docs/ja/api-reference/webhooks/task-webhooks) を参照してください。</ParamField>
+<ParamField body="trace_id" type="string">呼び出し側のトレース ID。</ParamField>
+
+## 参照素材の制限
+
+合計 50 個まで（画像 30、動画 10、音声 10）です。明示的な role を使ってください。
+
+<Warning>不正な組み合わせは非同期処理中に `InvalidParameter.TaskTypeConstraint` で失敗することがあります。編集・延長・先頭/末尾フレームでは `aspect_ratio=adaptive` を指定してください。</Warning>
+
+## Response
+
+<ResponseField name="id" type="string">状態取得に使うタスク ID。</ResponseField>
+<ResponseField name="client_business_id" type="string">リクエストに指定した場合に返されます。</ResponseField>
+<ResponseField name="object" type="string">`generation.task` 固定。</ResponseField>
+<ResponseField name="model" type="string">使用したモデル名。</ResponseField>
+<ResponseField name="status" type="string">`queued`、`in_progress`、`completed`、`failed`。</ResponseField>
+<ResponseField name="progress" type="integer">`0`–`100` の進捗率。</ResponseField>
+<ResponseField name="created_at" type="integer">作成時刻の Unix タイムスタンプ。</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"model":"seedance-2-5","prompt":"映画的な製品クローズアップ。","duration":10,"aspect_ratio":"16:9","resolution":"720p","generate_audio":true}'
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{"id":"tsk_vid_xxx","object":"generation.task","model":"seedance-2-5","status":"in_progress","progress":10,"created_at":1781577600}
+```
+</ResponseExample>

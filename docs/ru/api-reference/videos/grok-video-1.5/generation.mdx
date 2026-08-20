@@ -1,0 +1,99 @@
+---
+title: "Grok Video 1.5 Генерация"
+sidebarTitle: "Grok Video 1.5"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация видео из одного обязательного первого кадра через grok-video-1.5"
+---
+
+- Поддерживается только image-to-video; text-to-video не поддерживается.
+- Требуется ровно один публичный URL первого кадра.
+- Длительность: от `1` до `15` секунд, по умолчанию `8`.
+- Разрешение: `480p` или `720p`.
+- Async task API: проверяйте статус видео по возвращенному task ID.
+
+<Warning>
+Не передавайте base64 изображения. Сначала загрузите локальные файлы через [API загрузки изображений](../../uploads/images), затем передайте публичный URL в `image`.
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все API запросы требуют Bearer Token.
+
+  ```text
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Тело запроса
+
+<ParamField body="model" type="string" default="grok-video-1.5" required>
+  Используйте `grok-video-1.5`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Опишите движение, камеру и визуальное направление для reference изображения.
+</ParamField>
+
+<ParamField body="image" type="string" required>
+  Передайте ровно один обязательный публичный URL первого кадра.
+
+  - Maximum: `1`
+  - Supported URL schemes: `http://`, `https://`
+</ParamField>
+
+<ParamField body="duration" type="integer" default="8">
+  Длительность видео: от `1` до `15` секунд.
+</ParamField>
+
+<ParamField body="resolution" type="string" default="720p">
+  Разрешение видео: `480p` или `720p`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон: `1:1`, `16:9`, `9:16`, `3:2`, `2:3`.
+</ParamField>
+
+## Pricing
+
+| Billing unit | Price |
+| --- | --- |
+| Generated second | `$0.01 / second` |
+
+## Ответ
+
+<ResponseField name="id" type="string">
+  ID задачи для проверки статуса видео.
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Тип объекта, всегда `generation.task`.
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  Название модели, использованной для задачи.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Статус задачи: `queued`, `in_progress`, `completed` или `failed`.
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/videos/generations \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "grok-video-1.5",
+    "prompt": "Animate this product photo into a cinematic commercial video",
+    "image": "https://example.com/product.jpg",
+    "duration": 10,
+    "aspect_ratio": "16:9"
+  }'
+```
+</RequestExample>
+
+## Проверка статуса задачи
+
+Используйте возвращенный `id` с [Video Task Status](../../tasks/video-status).

@@ -1,0 +1,30 @@
+---
+title: "Vidu Image Generation"
+sidebarTitle: "Vidu Image"
+api: "POST https://toapis.com/v1/images/generations"
+description: "Generate images with the Vidu reference-image family and receive a unified generation.task response."
+---
+
+- Unified async image generation API
+- Supports `vidu-image`, `viduq3-fast`, `viduq2-pro`, and `viduq2-fast`
+- Works for text-to-image and reference-image-to-image flows
+
+## Supported Models
+
+- `vidu-image`
+- `viduq3-fast`
+- `viduq2-pro`
+- `viduq2-fast`
+
+## Parameters
+
+- `model`: one of the four model IDs above
+- `prompt`: text prompt
+- `image_urls`: optional reference image URLs, up to 7 images
+- `size`: `1:1`, `4:3`, `3:4`, `16:9`, `9:16`, `3:2`, `2:3`
+- `metadata.resolution`: `1K`, `2K`, `4K`
+- `n`: only `1`
+- `seed`: optional integer
+- `metadata.watermark`: optional boolean, default `false`
+
+`viduq2-fast` supports `1K` only.

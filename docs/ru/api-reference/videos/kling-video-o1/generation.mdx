@@ -1,0 +1,228 @@
+---
+title: "Генерация видео Kling Video O1"
+sidebarTitle: "Kling Video O1"
+api: "POST https://toapis.com/v1/videos/generations"
+description: "Генерация Kling Video O1 с усиленным рассуждением и официальными Omni-ссылками"
+---
+
+- Асинхронный API, после отправки возвращает ID задачи
+- Использует официальные Omni-структуры ссылок: `image_list`, `video_list` и `element_list`
+- `mode=std` соответствует 720P, `mode=pro` соответствует 1080P
+- `audio=true` генерирует видео со звуком и тарифицируется как Sound
+- Запросы с `video_list` тарифицируются как Video
+- `audio` и `video_list` взаимоисключающие
+
+<Warning>
+Используйте публично доступные URL изображений и видео. Не передавайте base64-данные медиа напрямую. Для локальных изображений сначала используйте [API загрузки изображений](../../uploads/images).
+</Warning>
+
+## Авторизация
+
+<ParamField header="Authorization" type="string" required>
+  Все эндпоинты требуют Bearer Token.
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Параметры запроса
+
+<ParamField body="model" type="string" required>
+  Название модели генерации видео, фиксированное значение `kling-video-o1`.
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Текстовый промпт. Используйте официальные Omni-плейсхолдеры для ссылок на входные материалы:
+  - `<<<image_N>>>` ссылается на `metadata.image_list`
+  - `<<<video_N>>>` ссылается на `video_list`
+  - `<<<element_N>>>` ссылается на `metadata.element_list`
+
+  Пример: `"Пусть персонаж на <<<image_1>>> машет рукой в камеру"`
+
+  <Note>
+    Порядок списков должен совпадать с порядком соответствующих плейсхолдеров в prompt. Система не добавляет первый кадр и не вставляет плейсхолдеры автоматически.
+  </Note>
+</ParamField>
+
+<ParamField body="mode" type="string" default="std">
+  Режим генерации: `std` для 720P или `pro` для 1080P.
+</ParamField>
+
+<ParamField body="duration" type="integer" default="5">
+  Длительность видео в секундах. Возможные значения: `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`.
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string" default="16:9">
+  Соотношение сторон видео. Частые значения: `16:9`, `9:16`, `1:1`.
+</ParamField>
+
+<ParamField body="audio" type="boolean" default="false">
+  Генерировать ли видео со звуком.
+
+  <Warning>
+    `audio` и `video_list` взаимоисключающие. Не передавайте `audio=true`, если указан `video_list`.
+  </Warning>
+</ParamField>
+
+<ParamField body="video_list" type="object[]">
+  Официальный Omni-список референс-видео. В prompt используйте `<<<video_1>>>`, `<<<video_2>>>` и так далее.
+
+  <Expandable title="Поля объекта video_list">
+    <ParamField body="video_url" type="string" required>
+      URL референс-видео, публично доступный.
+    </ParamField>
+
+    <ParamField body="refer_type" type="string" default="base">
+      Тип референса: `base` для редактируемого исходного видео или `feature` для референса движения/особенностей.
+    </ParamField>
+
+    <ParamField body="keep_original_sound" type="string" default="no">
+      Сохранять ли оригинальный звук видео: `yes` или `no`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  Расширенные параметры.
+
+  <Expandable title="Поля metadata">
+    <ParamField body="image_list" type="object[]">
+      Официальный Omni-список изображений. В prompt используйте `<<<image_1>>>`, `<<<image_2>>>` и так далее.
+
+      <Expandable title="Поля объекта image_list">
+        <ParamField body="image_url" type="string" required>
+          URL изображения, публично доступный.
+        </ParamField>
+
+        <ParamField body="type" type="string">
+          Тип изображения. Для первого/последнего кадра используйте `first_frame` или `end_frame`. Если указан `end_frame`, также требуется `first_frame`.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="element_list" type="object[]">
+      Официальный Omni-список субъектов/ролей. В prompt используйте `<<<element_1>>>`, `<<<element_2>>>` и так далее.
+
+      <Expandable title="Поля объекта element_list">
+        <ParamField body="url" type="string" required>
+          URL изображения субъекта, ассета персонажа или другого поддерживаемого материала.
+        </ParamField>
+
+        <ParamField body="type" type="string">
+          Тип элемента, например `image` или `video`.
+        </ParamField>
+
+        <ParamField body="role" type="string">
+          Ролевая семантика, поддерживаемая официальной моделью.
+        </ParamField>
+      </Expandable>
+    </ParamField>
+
+    <ParamField body="watermark" type="boolean">
+      Добавить водяной знак.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Синтаксис Omni-ссылок
+
+| Синтаксис | Описание |
+|-----------|----------|
+| `<<<image_1>>>` | Ссылка на первый элемент `metadata.image_list` |
+| `<<<video_1>>>` | Ссылка на первый элемент `video_list` |
+| `<<<element_1>>>` | Ссылка на первый элемент `metadata.element_list` |
+
+<Warning>
+Порядок `image_list`, `video_list` и `element_list` должен совпадать с порядком соответствующих плейсхолдеров в `prompt`.
+</Warning>
+
+## Примеры
+
+### Текст-в-видео
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Городской горизонт в золотой час, кинематографическое качество",
+  "mode": "std",
+  "duration": 5,
+  "aspect_ratio": "16:9"
+}
+```
+
+### Ссылка на изображение
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Пусть персонаж на <<<image_1>>> машет рукой в камеру",
+  "mode": "pro",
+  "duration": 5,
+  "metadata": {
+    "image_list": [
+      {"image_url": "https://example.com/portrait.jpg"}
+    ]
+  }
+}
+```
+
+### Первый и последний кадр
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Переход от <<<image_1>>> к <<<image_2>>>",
+  "mode": "pro",
+  "duration": 5,
+  "metadata": {
+    "image_list": [
+      {"image_url": "https://example.com/start.jpg", "type": "first_frame"},
+      {"image_url": "https://example.com/end.jpg", "type": "end_frame"}
+    ]
+  }
+}
+```
+
+### Референс-видео
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Заменить фон в <<<video_1>>> на закат у моря",
+  "mode": "std",
+  "video_list": [
+    {
+      "video_url": "https://example.com/source-video.mp4",
+      "refer_type": "base",
+      "keep_original_sound": "no"
+    }
+  ]
+}
+```
+
+### Субъект и референс движения
+
+```json
+{
+  "model": "kling-video-o1",
+  "prompt": "Пусть <<<element_1>>> повторяет движение из <<<video_1>>>",
+  "mode": "pro",
+  "video_list": [
+    {
+      "video_url": "https://example.com/motion-reference.mp4",
+      "refer_type": "feature",
+      "keep_original_sound": "no"
+    }
+  ],
+  "metadata": {
+    "element_list": [
+      {"url": "https://example.com/character.jpg", "type": "image", "role": "subject"}
+    ]
+  }
+}
+```
+
+<Note>
+  Генерация видео асинхронная. Используйте [статус видео задачи](../../tasks/video-status), чтобы получить прогресс и результат.
+</Note>

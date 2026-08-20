@@ -1,0 +1,484 @@
+---
+title: "Seedream-5.0-Pro 圖像生成"
+sidebarTitle: "Seedream-5.0-Pro"
+api: "POST https://toapis.com/v1/images/generations"
+description: "使用 Seedream 5.0 Pro 模型生成高質量圖像，支持 1K/2K 分辨率"
+---
+
+- Seedream 5.0 Pro 高質量圖像生成模型，由字節跳動 Seed 團隊研發
+- 通過 model 參數選擇 `doubao-seedream-5-0-pro` 模型
+- 參數與 `Seedream-5.0` 基本一致，差異在於 Pro 支持 **1K** 和 **2K** 分辨率
+- 支持文生圖、圖生圖、多圖參考等生成模式
+- **計費規則**：首張參考圖免費，從第 2 張參考圖開始按正常規則計費
+- 異步任務管理，通過任務 ID 查詢結果
+
+<Warning>
+**重要變更**：爲了更好的性能和成本控制，我們不再支持在 `image_urls` 中直接傳入 base64 圖片數據。請先使用 [上傳圖片接口](../../uploads/images) 上傳圖片，獲取 URL 後再調用本接口。
+</Warning>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  所有接口均需要使用 Bearer Token 進行認證
+
+  獲取 API Key：訪問 [API Key 管理頁面](https://toapis.com/console/token) 獲取您的 API Key
+
+  使用時在請求頭中添加：
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="doubao-seedream-5-0-pro" required>
+  圖像生成模型名稱
+
+  示例：`"doubao-seedream-5-0-pro"`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  圖像生成的文本描述
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  圖像寬高比
+
+  啟用 `layer_decomposition` 時，該欄位改為直接傳入分辨率預設 `1K` 或 `2K`。
+
+  支持的寬高比：
+  - `1:1` - 正方形（默認）
+  - `4:3` - 橫向 4:3
+  - `3:4` - 豎向 3:4
+  - `16:9` - 橫向寬屏
+  - `9:16` - 豎向長圖
+  - `3:2` - 橫向 3:2
+  - `2:3` - 豎向 2:3
+  - `21:9` - 超寬屏
+  - `9:21` - 超窄屏
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  生成圖像的數量
+
+  範圍：1-10（最少 1 張，最多 10 張）
+
+  默認：1
+
+  **注意：**
+  - 參考圖像 + 生成圖像總數必須 ≤ 15
+  - **必須輸入純數字（如 `1`），不要加引號，否則會報錯**
+
+  會根據生成數量和參考圖數量進行預扣費，其中首張參考圖免費
+</ParamField>
+
+<ParamField body="layer_decomposition" type="boolean" default={false}>
+  是否啟用 Seedream 5.0 Pro 專屬的圖層拆分能力。
+
+  - `false`：返回一般的扁平圖像（預設）
+  - `true`：返回底圖和多個帶透明通道的獨立 PNG 圖層
+
+  啟用後，每個 `result.data[]` 項目會返回 `z_index`；獨立圖層還會返回 `bounding_box`、`name` 和 `description`。此參數僅支援 Seedream 5.0 Pro。
+</ParamField>
+
+<ParamField body="image_urls" type="string[]">
+  參考圖像 URL 列表，用於圖生圖或圖像編輯
+
+  **⚠️ 僅支持 URL 格式（不再支持 base64）**
+
+  - 公開可訪問的圖像 URL（http:// 或 https://）
+  - 可使用 [上傳圖片接口](../../uploads/images) 上傳本地圖片獲取 URL
+
+  **限制：**
+  - 圖片數量：1-10 張
+  - 圖像格式：jpeg, png
+  - 寬高比（寬/高）範圍：[1/3, 3]
+  - 寬度和高度（px）> 14
+  - 大小：不超過 10MB
+  - 總像素：不超過 6000×6000 px
+
+  **計費說明：**
+  - 首張參考圖免費
+  - 從第 2 張參考圖開始按正常規則計費
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  渠道特有參數，用於傳遞 Seedream 5.0 Pro 模型的高級配置
+
+  <Expandable title="metadata 屬性">
+    <ParamField body="metadata.resolution" type="string" default="2K">
+      圖像分辨率
+
+      支持的分辨率：
+      - `1K` - 基礎分辨率
+      - `2K` - 標準分辨率（默認）
+
+      > **注意：** Seedream 5.0 Pro 不支持 3K 和 4K 分辨率；非 Pro 的 Seedream 5.0 支持 2K 和 3K
+    </ParamField>
+
+    <ParamField body="metadata.sequential_image_generation" type="string" default="disabled">
+      順序圖像生成模式（豆包專屬功能）
+
+      控制是否生成多張圖像：
+      - `disabled`：禁用順序模式，即使有多張參考圖像也只生成 1 張（默認）
+      - `auto`：啓用順序模式，可以生成多張圖像
+
+      **使用說明：**
+      - ✅ 設置 `n: 3` 或使用 `sequential_image_generation: "auto"` + `max_images: 3`
+      - ✅ 支持文生組圖：僅提供文本提示詞，最多生成 10 張圖像
+      - ✅ 支持圖生圖/圖生組圖：提供 `image_urls`，基於參考圖像生成多張圖像
+      - ⚠️ 當 `n > 1` 時，會自動設置爲 `auto`
+
+      **注意：**
+      - 輸入的參考圖數量 + 最終生成圖片數量 ≤ 15 張
+    </ParamField>
+
+    <ParamField body="metadata.sequential_image_generation_options" type="object">
+      順序圖像生成選項
+
+      當 `sequential_image_generation` 設置爲 `auto` 時可用
+
+      **屬性：**
+      - `max_images`（整數）：指定生成的圖像數量，範圍：1-10
+
+      **示例：**
+      ```json
+      "sequential_image_generation_options": { "max_images": 3 }
+      ```
+    </ParamField>
+
+    <ParamField body="metadata.watermark" type="boolean" default={false}>
+      是否爲生成的圖像添加水印
+
+      - `true`：添加水印
+      - `false`：不添加水印（默認）
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  任務唯一標識符，用於查詢任務狀態
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  對象類型，固定爲 `generation.task`
+</ResponseField>
+
+<ResponseField name="model" type="string">
+  使用的模型名稱
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  任務狀態
+  - `queued` - 排隊等待處理
+  - `in_progress` - 處理中
+  - `completed` - 成功完成
+  - `failed` - 失敗
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  任務進度百分比（0-100）
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  任務創建時間戳（Unix 時間戳）
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  任務元數據
+</ResponseField>
+
+<ResponseField name="completed_at" type="integer">
+  任務完成時間戳（Unix 時間戳）。僅在任務完成後返回。
+</ResponseField>
+
+<ResponseField name="expires_at" type="integer">
+  結果檔案的過期時間戳（Unix 時間戳）。請在過期前下載或轉存結果檔案。
+</ResponseField>
+
+<ResponseField name="result" type="object">
+  任務成功後的生成結果。僅當 `status` 為 `completed` 時返回。
+</ResponseField>
+
+<ResponseField name="result.type" type="string">
+  結果類型，圖片任務固定為 `image`。
+</ResponseField>
+
+<ResponseField name="result.data" type="array">
+  圖片結果列表。啟用圖層拆分時，第一個元素通常為底圖，其餘元素為帶透明通道的獨立 PNG 圖層。
+</ResponseField>
+
+<ResponseField name="result.data[].url" type="string">
+  底圖或獨立圖層的公開存取網址。
+</ResponseField>
+
+<ResponseField name="result.data[].z_index" type="integer">
+  圖層疊放順序。啟用圖層拆分時，底圖通常為 `0`，獨立圖層依次遞增。
+</ResponseField>
+
+<ResponseField name="result.data[].size" type="string">
+  當前底圖或獨立圖層的像素尺寸，例如 `2048x2048`。
+</ResponseField>
+
+<ResponseField name="result.data[].output_format" type="string">
+  當前結果項目的檔案格式。底圖可使用請求的格式，透明獨立圖層則為 `png`。
+</ResponseField>
+
+<ResponseField name="result.data[].bounding_box" type="object">
+  獨立圖層在底圖中的位置，包含 `absolute` 絕對座標和 `normalized` 正規化座標。
+</ResponseField>
+
+<ResponseField name="result.data[].bounding_box.absolute" type="array">
+  圖層在底圖中的絕對像素座標，格式為 `[x1, y1, x2, y2]`，分別表示左上角和右下角座標。
+</ResponseField>
+
+<ResponseField name="result.data[].bounding_box.normalized" type="array">
+  圖層的正規化座標，格式為 `[x1, y1, x2, y2]`，座標範圍為 `0-1000`。
+</ResponseField>
+
+<ResponseField name="result.data[].name" type="string">
+  圖層名稱。
+</ResponseField>
+
+<ResponseField name="result.data[].description" type="string">
+  圖層內容描述。
+</ResponseField>
+
+<RequestExample>
+```bash cURL
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-5-0-pro",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 1,
+    "metadata": {
+      "resolution": "2K"
+    }
+  }'
+```
+
+```bash cURL (圖生圖)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-5-0-pro",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 1,
+    "image_urls": [
+      "https://example.com/panda.jpg"
+    ],
+    "metadata": {
+      "resolution": "1K"
+    }
+  }'
+```
+
+```bash cURL (圖層拆分)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-5-0-pro",
+    "prompt": "將圖片進行精確圖層分離，返回底圖和多個獨立透明 PNG 圖層。",
+    "image_urls": [
+      "https://example.com/office-desk.png"
+    ],
+    "size": "2K",
+    "n": 1,
+    "layer_decomposition": true
+  }'
+```
+
+<Note>
+啟用 `layer_decomposition` 時，`size` 請直接使用 `1K` 或 `2K` 分辨率預設，不要使用 `WIDTHxHEIGHT` 明確像素尺寸。提交成功後，通過 `GET /v1/images/generations/{task_id}` 查詢完整圖層結果。
+</Note>
+
+```bash cURL (組圖)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "doubao-seedream-5-0-pro",
+    "prompt": "可愛的熊貓在竹林中玩耍",
+    "size": "1:1",
+    "n": 4,
+    "metadata": {
+      "resolution": "2K",
+      "sequential_image_generation": "auto",
+      "sequential_image_generation_options": { "max_images": 4 },
+      "watermark": false
+    }
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedream-5-0-pro",
+        "prompt": "可愛的熊貓在竹林中玩耍",
+        "size": "1:1",
+        "n": 1,
+        "metadata": {
+            "resolution": "2K"
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```python Python (圖生圖)
+import requests
+
+response = requests.post(
+    "https://toapis.com/v1/images/generations",
+    headers={
+        "Authorization": "Bearer your-ToAPIs-key",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "doubao-seedream-5-0-pro",
+        "prompt": "可愛的熊貓在竹林中玩耍",
+        "size": "1:1",
+        "n": 1,
+        "image_urls": ["https://example.com/panda.jpg"],
+        "metadata": {
+            "resolution": "1K"
+        }
+    }
+)
+
+task = response.json()
+print(f"任務 ID: {task['id']}")
+print(f"狀態: {task['status']}")
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedream-5-0-pro',
+    prompt: '可愛的熊貓在竹林中玩耍',
+    size: '1:1',
+    n: 1,
+    metadata: {
+      resolution: '2K'
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+
+```javascript JavaScript (圖生圖)
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'doubao-seedream-5-0-pro',
+    prompt: '可愛的熊貓在竹林中玩耍',
+    size: '1:1',
+    n: 1,
+    image_urls: ['https://example.com/panda.jpg'],
+    metadata: {
+      resolution: '1K'
+    }
+  })
+});
+
+const task = await response.json();
+console.log(`任務 ID: ${task.id}`);
+console.log(`狀態: ${task.status}`);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "task_img_abc123def456",
+  "object": "generation.task",
+  "model": "doubao-seedream-5-0-pro",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+
+```json 200 圖層拆分完成
+{
+  "completed_at": 1787128810,
+  "created_at": 1787128650,
+  "expires_at": 1787215210,
+  "id": "tsk_img_example_layer_decomposition",
+  "model": "doubao-seedream-5-0-pro",
+  "object": "generation.task",
+  "progress": 100,
+  "result": {
+    "type": "image",
+    "data": [
+      {
+        "url": "https://files.toapis.com/images/example/base.jpg",
+        "size": "1600x2848",
+        "output_format": "jpeg",
+        "z_index": 0
+      },
+      {
+        "url": "https://files.toapis.com/images/example/layer-1.png",
+        "size": "3040x955",
+        "output_format": "png",
+        "z_index": 1,
+        "bounding_box": {
+          "absolute": [0, 0, 1600, 503],
+          "normalized": [0, 0, 999, 176]
+        },
+        "name": "背景辦公設備組",
+        "description": "提取畫面背景的顯示器邊緣和文件收納架，無多餘內容"
+      },
+      {
+        "url": "https://files.toapis.com/images/example/layer-2.png",
+        "size": "1982x1162",
+        "output_format": "png",
+        "z_index": 2,
+        "bounding_box": {
+          "absolute": [800, 589, 1599, 1058],
+          "normalized": [500, 207, 999, 371]
+        },
+        "name": "堆疊白色紙張",
+        "description": "提取桌面上堆疊的數張白色辦公紙張，無多餘內容"
+      }
+    ]
+  },
+  "status": "completed"
+}
+```
+</ResponseExample>

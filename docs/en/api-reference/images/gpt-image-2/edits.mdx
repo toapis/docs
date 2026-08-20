@@ -1,0 +1,199 @@
+---
+title: "GPT-Image-2 Official Channel Image Editing"
+sidebarTitle: "Image Editing (Edits)"
+api: "POST https://toapis.com/v1/images/generations"
+description: "Edit images, blend references, or apply inpainting with gpt-image-2 using the same endpoint as generation"
+---
+
+- Uses the same `/v1/images/generations` endpoint as text-to-image generation
+- Editing mode is triggered automatically when `image_urls` is included in the request
+- Supports multi-reference blending (up to 16 images) and mask-based inpainting
+- Reference images must be publicly accessible PNG / JPG, max 50MB each
+
+<Note>
+Image editing is fully compatible with the generation API: simply add `image_urls` (and optionally `mask_url`) to your generation request — no endpoint switch required.
+</Note>
+
+## Authorizations
+
+<ParamField header="Authorization" type="string" required>
+  All endpoints require Bearer Token authentication
+
+  Get your API Key from the [API Key Management Page](https://toapis.com/console/token)
+
+  ```
+  Authorization: Bearer YOUR_API_KEY
+  ```
+</ParamField>
+
+## Body
+
+<ParamField body="model" type="string" default="gpt-image-2" required>
+  Use `gpt-image-2`
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  Describe the desired edit
+
+  Example: `"Replace the background with a starry sky, keep the subject unchanged"`
+</ParamField>
+
+<ParamField body="image_urls" type="string[]" required>
+  Reference image URL array (the field that triggers editing mode)
+
+  - Maximum **16 images**
+  - Must be publicly accessible stable URLs (PNG / JPG, max 50MB each)
+  - Use the [Upload Image API](../../uploads/images) to get URLs for local files
+</ParamField>
+
+<ParamField body="mask_url" type="string">
+  Mask image URL for inpainting
+
+  - Must be PNG format with an Alpha channel
+  - Transparent areas (alpha = 0) will be repainted; opaque areas are preserved
+  - Must match the dimensions of the first reference image
+</ParamField>
+
+<ParamField body="size" type="string" default="1:1">
+  Output aspect ratio
+
+  Supports 13 ratios or `auto`:
+
+  `1:1` · `3:2` · `2:3` · `4:3` · `3:4` · `5:4` · `4:5` · `16:9` · `9:16` · `2:1` · `1:2` · `21:9` · `9:21`
+</ParamField>
+
+<ParamField body="resolution" type="string" default="1k">
+  Resolution tier: `1k` / `2k` / `4k`
+
+  1K and 2K support all 13 ratios. 4K only supports 6 ratios: `16:9` / `9:16` / `2:1` / `1:2` / `21:9` / `9:21`
+</ParamField>
+
+<ParamField body="quality" type="string" default="high">
+  Image quality: `low` / `medium` / `high`
+</ParamField>
+
+<ParamField body="n" type="integer" default={1}>
+  Number of images to generate, range `1 ~ 10`
+</ParamField>
+
+<ParamField body="output_format" type="string" default="png">
+  Output format: `png` / `jpeg`
+
+  <Note>Azure OpenAI does not support `webp` format.</Note>
+</ParamField>
+
+<ParamField body="output_compression" type="integer" default={100}>
+  JPEG compression level, range `0–100` (only applies when `output_format` is `"jpeg"`)
+</ParamField>
+
+## Response
+
+<ResponseField name="id" type="string">
+  Unique task identifier for status queries
+</ResponseField>
+
+<ResponseField name="object" type="string">
+  Always `generation.task`
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Task status: `queued` / `in_progress` / `completed` / `failed`
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+  Task progress percentage (0-100)
+</ResponseField>
+
+<ResponseField name="created_at" type="integer">
+  Task creation timestamp (Unix timestamp)
+</ResponseField>
+
+<RequestExample>
+```bash Image-to-Image (Multi-reference Blend)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Blend these two references into a cyberpunk illustrated poster",
+    "image_urls": [
+      "https://example.com/input-a.png",
+      "https://example.com/input-b.png"
+    ],
+    "size": "1:1",
+    "quality": "high",
+    "n": 1
+  }'
+```
+
+```bash Inpainting (Mask)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Replace the background with a desert sunset, keep the person unchanged",
+    "image_urls": ["https://example.com/photo.png"],
+    "mask_url": "https://example.com/mask.png",
+    "size": "1:1",
+    "quality": "medium"
+  }'
+```
+
+```bash Style Transfer (High-res Output)
+curl --request POST \
+  --url https://toapis.com/v1/images/generations \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "model": "gpt-image-2",
+    "prompt": "Convert this photo to watercolor style, preserve the scene composition",
+    "image_urls": ["https://example.com/landscape.jpg"],
+    "size": "16:9",
+    "resolution": "2k",
+    "quality": "high",
+    "output_format": "jpeg",
+    "output_compression": 85
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://toapis.com/v1/images/generations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer your-ToAPIs-key',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    model: 'gpt-image-2',
+    prompt: 'Blend these two references into a cyberpunk illustrated poster',
+    image_urls: [
+      'https://example.com/input-a.png',
+      'https://example.com/input-b.png',
+    ],
+    size: '1:1',
+    quality: 'high',
+    n: 1,
+  }),
+});
+
+const task = await response.json();
+console.log(task.id, task.status);
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "id": "tsk_img_01KPTXXXXXXXXXXXXXXX",
+  "object": "generation.task",
+  "model": "gpt-image-2",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1703884800,
+  "metadata": {}
+}
+```
+</ResponseExample>
