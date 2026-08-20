@@ -10,7 +10,7 @@
 
 </div>
 
-This repository contains the public documentation source for [ToAPIs](https://toapis.com), a unified AI API gateway. It is a read-only source mirror — the canonical, live documentation is published at [docs.toapis.com](https://docs.toapis.com).
+Official documentation for [ToAPIs](https://toapis.com), a unified AI API gateway for OpenAI-compatible chat, image generation, and video generation. Live at [docs.toapis.com](https://docs.toapis.com).
 
 ## Supported APIs
 
