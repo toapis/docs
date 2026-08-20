@@ -26,7 +26,7 @@ Official documentation for [ToAPIs](https://toapis.com), a unified AI API gatewa
 
 | Category | What's covered | Docs |
 | --- | --- | --- |
-| **Chat** | OpenAI-compatible completions, Anthropic Messages, OpenAI Responses, streaming, and vision input. GPT-5.6, Claude Opus 4.6, Claude Sonnet 4.6, DeepSeek V3.2, GLM-5, Kimi K2.5, MiniMax M2.5, Qwen3.5 Plus, Qwen3.5 Flash. | [API reference](https://docs.toapis.com/docs/en/api-reference/chat/chat) |
+| **Chat** | OpenAI-compatible completions, Anthropic Messages, OpenAI Responses, streaming, and vision input. GPT-5.6, Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5, Gemini 3.1 Pro, DeepSeek V3.2, GLM-5, Kimi K2.5, MiniMax M2.5, Qwen3.5 Plus, Qwen3.5 Flash. | [API reference](https://docs.toapis.com/docs/en/api-reference/chat/chat) |
 | **Image** | Text-to-image and reference-image generation. GPT-Image-2, GPT-Image-2 VIP, GPT-4o, Gemini 3.1 Flash, Gemini 3 Pro Image, Seedream 5.0 Pro, Flux 2, Grok Imagine 1.0, Vidu Image. | [API reference](https://docs.toapis.com/docs/en/api-reference/images/gpt-image-2/generation) |
 | **Video** | Text/image-to-video generation. Veo 3, Sora 2, Kling 3, Wan 2.6, MiniMax Hailuo 2.3, Seedance 2.5, Gemini Omni Flash, Grok Video 1.5, ViduQ3, HappyHorse. | [API reference](https://docs.toapis.com/docs/en/api-reference/videos/sora2/generation) |
 | **Platform** | Async task status, uploads, rate limits, webhooks, account & API-key management. | [Webhooks](https://docs.toapis.com/docs/en/api-reference/webhooks/task-webhooks) |
