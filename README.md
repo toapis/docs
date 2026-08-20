@@ -1,43 +1,39 @@
-<div align="center">
+<p align="center">
+  <a href="https://toapis.com"><strong>Website</strong></a> •
+  <a href="https://docs.toapis.com"><strong>Documentation</strong></a> •
+  <a href="https://toapis.com/console/token"><strong>API Keys</strong></a> •
+  <a href="https://docs.toapis.com/docs/en/quickstart"><strong>Quickstart</strong></a>
+</p>
 
 # ToAPIs Documentation
 
-**Official documentation for the ToAPIs unified AI API gateway** — OpenAI-compatible chat, plus unified async image and video generation.
-
-[![Website](https://img.shields.io/badge/Website-toapis.com-2563EB?style=flat-square)](https://toapis.com)
-[![Documentation](https://img.shields.io/badge/Docs-docs.toapis.com-2563EB?style=flat-square)](https://docs.toapis.com)
-[![Dashboard](https://img.shields.io/badge/API_Keys-toapis.com/console-2563EB?style=flat-square)](https://toapis.com/console/token)
-
-</div>
-
-Official documentation for [ToAPIs](https://toapis.com), a unified AI API gateway for OpenAI-compatible chat, image generation, and video generation. Live at [docs.toapis.com](https://docs.toapis.com).
+Official documentation for [ToAPIs](https://toapis.com), a unified AI API gateway that provides OpenAI-compatible chat plus async image and video generation across leading model providers.
 
 ## Supported APIs
 
-### Chat
+| Category | What's covered | Docs |
+| --- | --- | --- |
+| **Chat** | OpenAI-compatible completions, Anthropic Messages, OpenAI Responses, streaming, structured output, and tool calling. GPT-5, Claude, DeepSeek, Gemini, Qwen, Kimi, GLM, MiniMax. | [API reference](https://docs.toapis.com/docs/en/api-reference/chat/chat) |
+| **Image** | Text-to-image and reference-image generation. GPT-Image-2, GPT-4o, Gemini, Seedream, Flux, Grok Image. | [API reference](https://docs.toapis.com/docs/en/api-reference/images/gpt-image-2/generation) |
+| **Video** | Text/image-to-video generation. Veo 3, Sora 2, Kling, Wan, MiniMax Hailuo, Seedance, Gemini Omni Flash. | [API reference](https://docs.toapis.com/docs/en/api-reference/videos/sora2/generation) |
+| **Platform** | Async task status, uploads, rate limits, webhooks, and account / API-key management. | [Webhooks](https://docs.toapis.com/docs/en/api-reference/webhooks/task-webhooks) |
 
-OpenAI-compatible completions plus Anthropic Messages and OpenAI Responses formats, covering GPT-5, Claude, DeepSeek, Gemini, Qwen, Kimi, GLM, MiniMax and more.
+## Quickstart
 
-### Image Generation
+```bash
+curl https://toapis.com/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "gpt-5.6-terra", "messages": [{"role": "user", "content": "Hello"}]}'
+```
 
-GPT-Image-2, GPT-4o, Gemini, Seedream, Flux, Grok Image and more.
-
-### Video Generation
-
-Veo 3, Sora 2, Kling, Wan, MiniMax Hailuo, Doubao Seedance, Seedance, Gemini Omni Flash and more.
-
-### Platform
-
-Task status polling, uploads, rate limits, webhooks, and account / API-key management.
+Create an API key at [toapis.com/console/token](https://toapis.com/console/token), then follow the full [quickstart guide](https://docs.toapis.com/docs/en/quickstart).
 
 ## Languages
 
-- [English](https://docs.toapis.com/docs/en)
-- [简体中文](https://docs.toapis.com/docs/cn)
-- [繁體中文](https://docs.toapis.com/docs/zh-Hant)
-- [日本語](https://docs.toapis.com/docs/ja)
-- [한국어](https://docs.toapis.com/docs/ko)
-- [Русский](https://docs.toapis.com/docs/ru)
+This documentation is available in:
+
+[English](https://docs.toapis.com/docs/en) · [简体中文](https://docs.toapis.com/docs/cn) · [繁體中文](https://docs.toapis.com/docs/zh-Hant) · [日本語](https://docs.toapis.com/docs/ja) · [한국어](https://docs.toapis.com/docs/ko) · [Русский](https://docs.toapis.com/docs/ru)
 
 ## Development
 
